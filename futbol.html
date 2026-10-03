@@ -1,0 +1,455 @@
+<title>Golazo de Bolsillo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@600;800&display=swap">
+<style>
+  /* Una sola pantalla vertical: cancha de noche con marcador de estadio arriba, joystick y botón de patear abajo */
+  :root {
+    --night: #0d1a14;
+    --grass-a: #2f8a3e;
+    --grass-b: #2a7c37;
+    --chalk: #f2f5ea;
+    --home: #2f7bff;
+    --away: #ff3b3b;
+    --board: #101418;
+    --led: #ffd23f;
+    --display: "Bungee", "Arial Black", system-ui, sans-serif;
+    --body: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--night);
+    color: var(--chalk);
+    font-family: var(--body);
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #wrap { position: relative; height: 100%; width: 100%; display: flex; flex-direction: column; }
+
+  #board {
+    flex: none;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 8px 16px;
+    background: var(--board);
+    border-bottom: 3px solid var(--led);
+  }
+  .team { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 18px; letter-spacing: .08em; text-transform: uppercase; }
+  .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--chalk); }
+  .dot.home { background: var(--home); }
+  .dot.away { background: var(--away); }
+  #score { font-family: var(--display); font-size: 28px; color: var(--led); font-variant-numeric: tabular-nums; min-width: 90px; text-align: center; }
+  #clock { font-family: var(--display); font-size: 14px; color: var(--chalk); opacity: .8; font-variant-numeric: tabular-nums; min-width: 44px; text-align: center; }
+
+  #field { position: relative; flex: 1; min-height: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  #kick {
+    position: absolute; right: 20px; bottom: 24px;
+    width: 92px; height: 92px; border-radius: 50%;
+    border: 4px solid var(--chalk);
+    background: var(--home); color: var(--chalk);
+    font-family: var(--display); font-size: 15px;
+    box-shadow: 0 5px 0 rgba(0,0,0,.35);
+  }
+  #kick:active, #kick.on { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+  #kick:focus-visible { outline: 3px solid var(--led); outline-offset: 3px; }
+  #hint {
+    position: absolute; left: 20px; bottom: 30px;
+    font-size: 15px; font-weight: 600; opacity: .7; pointer-events: none;
+    max-width: 45%;
+  }
+
+  #banner {
+    position: absolute; left: 0; right: 0; top: 38%;
+    text-align: center; font-family: var(--display); font-size: 54px; color: var(--led);
+    text-shadow: 0 4px 0 rgba(0,0,0,.45);
+    pointer-events: none;
+  }
+
+  #panel {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding-inline: 16px;
+    background: rgba(13,26,20,.72);
+  }
+  .card {
+    background: var(--board); border: 3px solid var(--led); border-radius: 14px;
+    padding: 24px 22px; max-width: 340px; width: 100%;
+    display: flex; flex-direction: column; gap: 14px; text-align: center;
+  }
+  .card h1 { margin: 0; font-family: var(--display); font-size: 30px; line-height: 1.05; color: var(--led); text-wrap: balance; font-weight: 400; }
+  .card p { margin: 0; font-size: 18px; line-height: 1.35; }
+  .card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 17px; text-align: left; }
+  .card li b { color: var(--led); }
+  #play {
+    font-family: var(--display); font-size: 20px; padding: 14px;
+    border: none; border-radius: 10px; background: var(--led); color: var(--board);
+  }
+  #play:focus-visible { outline: 3px solid var(--chalk); outline-offset: 3px; }
+</style>
+
+<div id="wrap">
+  <div id="board">
+    <div class="team"><span class="dot home"></span>Tú</div>
+    <div id="score">0 - 0</div>
+    <div class="team">CPU<span class="dot away"></span></div>
+    <div id="clock">0'</div>
+  </div>
+  <div id="field">
+    <canvas id="c"></canvas>
+    <div id="hint">Arrastra aquí para moverte</div>
+    <button id="kick" type="button" aria-label="Patear">PATEA</button>
+    <div id="banner" hidden>¡GOL!</div>
+    <div id="panel">
+      <div class="card">
+        <h1 id="ptitle">Golazo de Bolsillo</h1>
+        <p id="ptext">Partido de 2 minutos contra la CPU. Atacas hacia arriba.</p>
+        <ul id="prules">
+          <li><b>Mover:</b> arrastra el dedo en la mitad izquierda</li>
+          <li><b>Patear:</b> botón azul (o barra espaciadora)</li>
+          <li><b>Robar:</b> choca con el rival que lleva el balón</li>
+        </ul>
+        <button id="play" type="button">Jugar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const W = 340, H = 560;            // cancha lógica (vertical)
+  const GOAL_W = 110, PR = 13, BR = 6, KR = 14;
+  const MATCH_SECONDS = 120;
+
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const scoreEl = $('score'), clockEl = $('clock'), banner = $('banner'), panel = $('panel');
+
+  let scale = 1, offX = 0, offY = 0;
+  function resize() {
+    const r = cv.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = r.width * dpr; cv.height = r.height * dpr;
+    scale = Math.min(r.width / (W + 24), r.height / (H + 24));
+    offX = (r.width - W * scale) / 2; offY = (r.height - H * scale) / 2;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+
+  // --- estado ---
+  const me  = { x: W/2, y: H*0.62, fx: 0, fy: -1, speed: 2.7, color: '--home' };
+  const cpu = { x: W/2, y: H*0.38, fx: 0, fy: 1,  speed: 2.25, color: '--away' };
+  const myKeeper  = { x: W/2, y: H - 14 };
+  const cpuKeeper = { x: W/2, y: 14 };
+  const ball = { x: W/2, y: H/2, vx: 0, vy: 0 };
+  let owner = null, stealCD = 0, kickCD = 0;
+  let goals = [0, 0], elapsed = 0, running = false, pause = 0, cpuKickWait = 0;
+
+  function kickoff(toMe) {
+    me.x = W/2; me.y = H*0.62; cpu.x = W/2; cpu.y = H*0.38;
+    me.fx = 0; me.fy = -1; cpu.fx = 0; cpu.fy = 1;
+    ball.x = W/2; ball.y = H/2; ball.vx = ball.vy = 0;
+    myKeeper.x = cpuKeeper.x = W/2;
+    owner = null; stealCD = 0;
+    if (toMe) me.y = H/2 + PR + BR + 2; else cpu.y = H/2 - PR - BR - 2;
+  }
+
+  // --- controles ---
+  const input = { x: 0, y: 0, kick: false };
+  let stick = null; // {id, ox, oy, x, y}
+  const keys = {};
+  cv.addEventListener('pointerdown', e => {
+    if (stick) return;
+    stick = { id: e.pointerId, ox: e.offsetX, oy: e.offsetY, x: e.offsetX, y: e.offsetY };
+    cv.setPointerCapture(e.pointerId);
+    $('hint').hidden = true;
+  });
+  cv.addEventListener('pointermove', e => {
+    if (stick && e.pointerId === stick.id) { stick.x = e.offsetX; stick.y = e.offsetY; }
+  });
+  const endStick = e => { if (stick && e.pointerId === stick.id) stick = null; };
+  cv.addEventListener('pointerup', endStick);
+  cv.addEventListener('pointercancel', endStick);
+
+  const kickBtn = $('kick');
+  kickBtn.addEventListener('pointerdown', e => { e.preventDefault(); input.kick = true; kickBtn.classList.add('on'); });
+  ['pointerup','pointerleave','pointercancel'].forEach(t => kickBtn.addEventListener(t, () => kickBtn.classList.remove('on')));
+  kickBtn.addEventListener('click', e => { if (e.detail === 0) input.kick = true; }); // teclado
+
+  window.addEventListener('keydown', e => {
+    keys[e.key.toLowerCase()] = true;
+    if (e.key === ' ') { input.kick = true; e.preventDefault(); }
+  });
+  window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+  function readInput() {
+    let x = 0, y = 0;
+    if (stick) {
+      const dx = stick.x - stick.ox, dy = stick.y - stick.oy, d = Math.hypot(dx, dy);
+      if (d > 6) { const m = Math.min(1, d / 45); x = dx / d * m; y = dy / d * m; }
+    }
+    if (keys['arrowleft'] || keys['a']) x -= 1;
+    if (keys['arrowright'] || keys['d']) x += 1;
+    if (keys['arrowup'] || keys['w']) y -= 1;
+    if (keys['arrowdown'] || keys['s']) y += 1;
+    const d = Math.hypot(x, y);
+    if (d > 1) { x /= d; y /= d; }
+    input.x = x; input.y = y;
+  }
+
+  // --- utilidades ---
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function move(p, dx, dy, sp) {
+    const d = Math.hypot(dx, dy);
+    if (d < 0.01) return;
+    const m = Math.min(1, d);
+    p.x += dx / d * sp * m; p.y += dy / d * sp * m;
+    p.fx = dx / d; p.fy = dy / d;
+    p.x = clamp(p.x, PR, W - PR); p.y = clamp(p.y, PR, H - PR);
+  }
+  function kick(p, tx, ty, power) {
+    let dx = tx, dy = ty; const d = Math.hypot(dx, dy) || 1;
+    dx /= d; dy /= d;
+    ball.vx = dx * power; ball.vy = dy * power;
+    ball.x = p.x + dx * (PR + BR + 2); ball.y = p.y + dy * (PR + BR + 2);
+    owner = null; kickCD = 14;
+  }
+
+  function scored(mine) {
+    goals[mine ? 0 : 1]++;
+    updateBoard();
+    banner.textContent = mine ? '¡GOL!' : 'Gol CPU';
+    banner.hidden = false;
+    pause = 80;
+    owner = null; ball.vx = ball.vy = 0;
+    setTimeout(() => { banner.hidden = true; kickoff(!mine); }, 1300);
+  }
+
+  function updateBoard() {
+    scoreEl.textContent = goals[0] + ' - ' + goals[1];
+    clockEl.textContent = Math.min(90, Math.floor(elapsed / MATCH_SECONDS * 90)) + "'";
+  }
+
+  // --- lógica por cuadro ---
+  function step() {
+    readInput();
+    if (!running) { input.kick = false; return; }
+    if (pause > 0) { pause--; input.kick = false; return; }
+
+    elapsed += 1/60;
+    if (elapsed >= MATCH_SECONDS) return endMatch();
+    if (stealCD > 0) stealCD--;
+    if (kickCD > 0) kickCD--;
+
+    // jugador
+    move(me, input.x, input.y, owner === me ? me.speed * 0.88 : me.speed);
+    if (input.kick && owner === me) {
+      // apuntar: dirección del jugador, con un poco de ayuda hacia el arco rival si va hacia arriba
+      let tx = me.fx, ty = me.fy;
+      if (ty < -0.3) {
+        const gx = W/2 - me.x, gy = 0 - me.y, gd = Math.hypot(gx, gy);
+        tx = tx * 0.6 + gx / gd * 0.4; ty = ty * 0.6 + gy / gd * 0.4;
+      }
+      kick(me, tx, ty, 9.5);
+    }
+    input.kick = false;
+
+    // CPU
+    if (owner === cpu) {
+      const gx = W/2 + (Math.sin(elapsed * 1.7) * 30) - cpu.x, gy = H - cpu.y;
+      // esquiva un poco al jugador
+      let ax = gx, ay = gy;
+      const mdx = cpu.x - me.x, mdy = cpu.y - me.y, md = Math.hypot(mdx, mdy);
+      if (md < 60 && me.y > cpu.y) ax += mdx / md * 80;
+      move(cpu, ax, ay, cpu.speed * 0.85);
+      cpuKickWait++;
+      const nearGoal = cpu.y > H - 190;
+      const pressured = md < 32 && cpuKickWait > 25;
+      if ((nearGoal && cpuKickWait > 20) || pressured) {
+        kick(cpu, W/2 + (Math.random() - 0.5) * GOAL_W * 0.8 - cpu.x, H - cpu.y, 8.2);
+      }
+    } else {
+      cpuKickWait = 0;
+      // persigue el balón, anticipando su movimiento
+      const tx = ball.x + ball.vx * 8 - cpu.x, ty = ball.y + ball.vy * 8 - cpu.y;
+      // si el balón está en su mitad defensiva y libre, se pone entre balón y arco
+      move(cpu, tx, ty, cpu.speed);
+    }
+
+    // posesión y robos
+    for (const p of [me, cpu]) {
+      const d = Math.hypot(ball.x - p.x, ball.y - p.y);
+      if (d < PR + BR + 3 && kickCD === 0) {
+        if (owner === null) { owner = p; }
+        else if (owner !== p && stealCD === 0) { owner = p; stealCD = 45; }
+      }
+    }
+    // separación entre jugadores
+    const sx = me.x - cpu.x, sy = me.y - cpu.y, sd = Math.hypot(sx, sy);
+    if (sd < PR * 2 && sd > 0) {
+      const push = (PR * 2 - sd) / 2;
+      me.x += sx / sd * push; me.y += sy / sd * push;
+      cpu.x -= sx / sd * push; cpu.y -= sy / sd * push;
+    }
+
+    // balón
+    if (owner) {
+      ball.x = owner.x + owner.fx * (PR + BR);
+      ball.y = owner.y + owner.fy * (PR + BR);
+      ball.vx = ball.vy = 0;
+    } else {
+      ball.x += ball.vx; ball.y += ball.vy;
+      ball.vx *= 0.982; ball.vy *= 0.982;
+      if (ball.x < BR) { ball.x = BR; ball.vx = Math.abs(ball.vx) * 0.8; }
+      if (ball.x > W - BR) { ball.x = W - BR; ball.vx = -Math.abs(ball.vx) * 0.8; }
+      const inMouth = Math.abs(ball.x - W/2) < GOAL_W / 2;
+      if (ball.y < 0) { if (inMouth) return scored(true); ball.y = BR; ball.vy = Math.abs(ball.vy) * 0.8; }
+      if (ball.y > H) { if (inMouth) return scored(false); ball.y = H - BR; ball.vy = -Math.abs(ball.vy) * 0.8; }
+    }
+    if (owner) {
+      ball.x = clamp(ball.x, BR, W - BR);
+      ball.y = clamp(ball.y, BR, H - BR);
+    }
+
+    // porteros
+    for (const [k, top] of [[cpuKeeper, true], [myKeeper, false]]) {
+      const target = clamp(ball.x, W/2 - GOAL_W/2 + 6, W/2 + GOAL_W/2 - 6);
+      const sp = 1.75;
+      k.x += clamp(target - k.x, -sp, sp);
+      const d = Math.hypot(ball.x - k.x, ball.y - k.y);
+      if (d < KR + BR) {
+        // atajada: despeja el balón hacia afuera
+        const awayY = top ? 1 : -1;
+        if (owner) owner = null;
+        ball.vx = (ball.x - k.x) * 0.25 + (Math.random() - 0.5) * 3;
+        ball.vy = awayY * 6.5;
+        ball.y = k.y + awayY * (KR + BR + 1);
+        kickCD = 10;
+      }
+    }
+  }
+
+  function endMatch() {
+    running = false;
+    elapsed = MATCH_SECONDS; updateBoard();
+    const [a, b] = goals;
+    $('ptitle').textContent = a > b ? '¡Ganaste!' : a < b ? 'Perdiste' : 'Empate';
+    $('ptext').textContent = 'Final: Tú ' + a + ' - ' + b + ' CPU';
+    $('prules').hidden = true;
+    $('play').textContent = 'Revancha';
+    panel.hidden = false;
+  }
+
+  // --- dibujo ---
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  let C = {};
+  function loadColors() { C = { a: css('--grass-a'), b: css('--grass-b'), chalk: css('--chalk'), home: css('--home'), away: css('--away'), night: css('--night'), led: css('--led') }; }
+
+  function draw() {
+    const r = cv.getBoundingClientRect();
+    ctx.fillStyle = C.night; ctx.fillRect(0, 0, r.width, r.height);
+    ctx.save();
+    ctx.translate(offX, offY); ctx.scale(scale, scale);
+
+    // césped a franjas
+    const stripes = 10;
+    for (let i = 0; i < stripes; i++) {
+      ctx.fillStyle = i % 2 ? C.a : C.b;
+      ctx.fillRect(0, i * H / stripes, W, H / stripes + 1);
+    }
+    // líneas
+    ctx.strokeStyle = C.chalk; ctx.lineWidth = 2; ctx.globalAlpha = 0.85;
+    ctx.strokeRect(1, 1, W - 2, H - 2);
+    ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(W/2, H/2, 46, 0, Math.PI * 2); ctx.stroke();
+    const bw = 200, bh = 80, sw = 120, sh = 30;
+    ctx.strokeRect(W/2 - bw/2, 0, bw, bh); ctx.strokeRect(W/2 - bw/2, H - bh, bw, bh);
+    ctx.strokeRect(W/2 - sw/2, 0, sw, sh); ctx.strokeRect(W/2 - sw/2, H - sh, sw, sh);
+    ctx.beginPath(); ctx.arc(W/2, bh, 30, 0, Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(W/2, H - bh, 30, Math.PI, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = C.chalk;
+    ctx.beginPath(); ctx.arc(W/2, H/2, 3, 0, Math.PI * 2); ctx.fill();
+    // arcos (red)
+    for (const top of [true, false]) {
+      const y = top ? -10 : H;
+      ctx.fillStyle = 'rgba(242,245,234,.25)';
+      ctx.fillRect(W/2 - GOAL_W/2, y, GOAL_W, 10);
+      ctx.strokeStyle = C.chalk; ctx.lineWidth = 3;
+      ctx.strokeRect(W/2 - GOAL_W/2, y, GOAL_W, 10);
+    }
+
+    // sombras y jugadores
+    const body = (x, y, rad, color, ring) => {
+      ctx.fillStyle = 'rgba(0,0,0,.28)';
+      ctx.beginPath(); ctx.ellipse(x + 2, y + 4, rad, rad * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 2.5; ctx.strokeStyle = ring;
+      ctx.stroke();
+    };
+    body(cpuKeeper.x, cpuKeeper.y, KR, C.away, C.led);
+    body(myKeeper.x, myKeeper.y, KR, C.home, C.led);
+    for (const p of [me, cpu]) {
+      const col = p === me ? C.home : C.away;
+      body(p.x, p.y, PR, col, C.chalk);
+      // nariz: hacia dónde mira
+      ctx.fillStyle = C.chalk;
+      ctx.beginPath(); ctx.arc(p.x + p.fx * (PR - 4), p.y + p.fy * (PR - 4), 3, 0, Math.PI * 2); ctx.fill();
+    }
+    // indicador del jugador controlado
+    ctx.strokeStyle = C.led; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(me.x, me.y, PR + 6, 0, Math.PI * 2); ctx.stroke();
+
+    // balón
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.beginPath(); ctx.arc(ball.x + 2, ball.y + 3, BR, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, BR, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#111'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(ball.x, ball.y, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // joystick
+    if (stick) {
+      ctx.globalAlpha = 0.35; ctx.fillStyle = C.chalk;
+      ctx.beginPath(); ctx.arc(stick.ox, stick.oy, 45, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 0.8;
+      const dx = stick.x - stick.ox, dy = stick.y - stick.oy, d = Math.hypot(dx, dy), m = Math.min(d, 45);
+      const kx = d ? stick.ox + dx / d * m : stick.ox, ky = d ? stick.oy + dy / d * m : stick.oy;
+      ctx.beginPath(); ctx.arc(kx, ky, 20, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  let acc = 0, last = performance.now();
+  function frame(t) {
+    acc += Math.min(100, t - last); last = t;
+    while (acc >= 1000 / 60) { step(); acc -= 1000 / 60; }
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  function start() {
+    goals = [0, 0]; elapsed = 0; pause = 0;
+    kickoff(true); updateBoard();
+    panel.hidden = true; banner.hidden = true;
+    running = true;
+  }
+  $('play').addEventListener('click', start);
+
+  window.claude?.hot?.snapshot?.(() => ({ goals, elapsed, running }));
+  function boot(data) {
+    loadColors(); resize(); kickoff(true);
+    if (data && data.running) { goals = data.goals; elapsed = data.elapsed; panel.hidden = true; running = true; }
+    updateBoard();
+    requestAnimationFrame(frame);
+  }
+  window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
