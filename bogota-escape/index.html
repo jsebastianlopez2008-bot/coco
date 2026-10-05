@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f1a">
+<title>Bogotá Escape</title>
+<meta name="description" content="Juego top-down de mundo abierto en una Bogotá estilizada: camella, compra moto, abre negocio y vuélate de la policía.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- ===================== HUD ===================== -->
+<div id="hud" hidden>
+  <div id="hud-left" class="glass">
+    <div class="h-top"><span id="h-name">Parce</span><span id="h-wanted" class="wanted"></span></div>
+    <div id="h-money" class="h-money">$50.000</div>
+    <div class="bar"><span>❤️</span><div class="track"><div id="h-health" class="fill health"></div></div></div>
+    <div class="bar"><span>⚡</span><div class="track"><div id="h-energy" class="fill energy"></div></div></div>
+    <div class="h-rep">⭐ <b id="h-rep">0</b> <small id="h-next"></small></div>
+    <div id="escape-bar" hidden><span>Perdiendo a la policía…</span><div class="track"><div id="escape-fill" class="fill"></div></div></div>
+  </div>
+
+  <div id="hud-mission" class="glass" hidden>
+    <div id="m-title" class="m-title"></div>
+    <div id="m-text" class="m-text"></div>
+    <div class="m-row"><span id="m-extra" class="m-extra"></span><span id="m-timer" class="m-timer"></span></div>
+    <div id="m-hint" class="m-hint"></div>
+  </div>
+
+  <div id="hud-right" class="glass">
+    <div id="h-clock" class="h-clock">7:00 a.m.</div>
+    <div class="h-sub"><span id="h-day">Día 1</span> · <span id="h-weather"></span></div>
+  </div>
+  <div id="toasts"></div>
+
+  <div id="minimap-wrap" class="glass">
+    <canvas id="minimap"></canvas>
+    <div id="mm-addr"></div>
+  </div>
+
+  <div id="veh-box" class="glass" hidden>
+    <div id="v-name" class="v-name"></div>
+    <div class="v-speed"><b id="v-speed">0</b><small>km/h</small></div>
+    <div class="track"><div id="v-hp" class="fill vhp"></div></div>
+    <div id="v-extra" class="v-extra"></div>
+  </div>
+
+  <div id="prompt" hidden></div>
+  <div id="banner" hidden><div class="b-title"></div><div class="b-sub"></div></div>
+  <div id="district-banner" hidden><div class="db-name"></div><div class="db-tag"></div></div>
+</div>
+
+<div id="overlay" hidden><div class="ov-title"></div><div class="ov-sub"></div></div>
+<div id="fade"></div>
+<div id="menu" hidden></div>
+
+<div id="bigmap" hidden>
+  <canvas id="bigmap-canvas"></canvas>
+  <div class="bm-bar">
+    <b>🗺️ Mapa de Bogotá</b>
+    <span>🏠 Casa · 🛵 💰 🚌 ✈️ 🍻 🌧️ 🚨 Misiones · 🚉 TransMilenio · 🔑 Tu vehículo · Toca/clic para poner destino</span>
+    <button class="bm-close">Cerrar (M)</button>
+  </div>
+</div>
+
+<!-- ===================== TÍTULO ===================== -->
+<div id="title">
+  <div class="t-card">
+    <div class="t-flag"><i></i><i></i><i></i></div>
+    <h1>BOGOTÁ<br><span>ESCAPE</span></h1>
+    <p class="t-tag">Arrancas con <b>$50.000</b> y una pieza en Kennedy.<br>Camella, compra moto, abre negocio… y vuélate de la tomba.</p>
+    <label class="t-label" for="name-input">¿Cómo te dicen?</label>
+    <input id="name-input" maxlength="14" placeholder="Parce" autocomplete="off" spellcheck="false">
+    <div class="t-label">Color de tu camiseta</div>
+    <div id="swatches"></div>
+    <button id="btn-continue" class="t-btn primary" hidden>▶ Continuar<small></small></button>
+    <button id="btn-new" class="t-btn">★ Nueva partida</button>
+    <button id="btn-help" class="t-btn ghost">🎮 Cómo se juega</button>
+    <div id="help" hidden>
+      <div class="ctl-grid">
+        <b>WASD / Flechas</b><span>Caminar y manejar</span>
+        <b>Shift</b><span>Correr</span>
+        <b>F</b><span>Subir/bajar de vehículos (o robarlos…)</span>
+        <b>E</b><span>Hablar, comprar, esconderse</span>
+        <b>Espacio</b><span>Freno de mano</span>
+        <b>H</b><span>Pitar</span>
+        <b>C</b><span>Celular (domicilios)</span>
+        <b>M</b><span>Mapa · <b>Esc</b> Pausa</span>
+      </div>
+      <p>Haz misiones para ganar <b>plata</b> y <b>reputación ⭐</b>. Con reputación desbloqueas barrios nuevos (Chapinero, Suba, El Dorado, Zona T, Usaquén) y misiones mejor pagadas. Si cometes delitos, la policía te persigue: escóndete o pierde su rastro.</p>
+    </div>
+    <div class="t-foot">Ciudad ficticia inspirada en Bogotá · Se guarda solo en tu navegador</div>
+  </div>
+</div>
+
+<!-- ===================== CONTROLES TÁCTILES ===================== -->
+<div id="touch" hidden>
+  <div id="joy"><div id="joy-knob"></div></div>
+  <div class="t-btns">
+    <button data-k="e" class="tb big">E<small>Acción</small></button>
+    <button data-k="f" class="tb big">🚗<small>Subir</small></button>
+    <button data-k="space" class="tb">🏃<small>Correr/Freno</small></button>
+    <button data-k="h" class="tb">📯<small>Pito</small></button>
+  </div>
+  <div class="t-top">
+    <button data-k="c" class="tb sm">📱</button>
+    <button data-k="m" class="tb sm">🗺️</button>
+    <button data-k="esc" class="tb sm">⏸</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
