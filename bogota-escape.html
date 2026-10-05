@@ -1,3 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f1a">
+<title>Bogotá Escape</title>
+<meta name="description" content="Juego top-down de mundo abierto en una Bogotá estilizada: camella, compra moto, abre negocio y vuélate de la policía.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Barlow+Condensed:wght@500;600;700;800&display=swap">
+<style>
+/* ==========================================================================
+   BOGOTÁ ESCAPE — estilos del HUD, menús y pantalla de título
+   Paneles oscuros tipo vidrio sobre el canvas; acentos con los colores
+   de la bandera (amarillo, azul, rojo) y del neón de la Zona T.
+   ========================================================================== */
+:root {
+  --ink: #0b0f1a;
+  --glass: rgba(12, 16, 28, 0.72);
+  --glass-2: rgba(22, 28, 44, 0.86);
+  --line: rgba(255, 255, 255, 0.12);
+  --text: #f4f1ea;
+  --mute: #a9b0c0;
+  --yellow: #ffd54f;
+  --blue: #2f6fdb;
+  --red: #e53935;
+  --green: #69f0ae;
+  --display: "Bungee", "Impact", system-ui, sans-serif;
+  --body: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  backdrop-filter: blur(10px) saturate(1.3);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.track { height: 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; flex: 1; }
+.fill { height: 100%; border-radius: 6px; transition: width 0.25s ease; }
+.fill.health { background: linear-gradient(90deg, #ff5252, #ff8a80); }
+.fill.energy { background: linear-gradient(90deg, #ffb300, #ffe082); }
+.fill.low { animation: blink 0.6s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0.35; } }
+
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+
+/* --- Panel de estado (arriba a la izquierda) --- */
+#hud-left {
+  position: absolute; top: calc(12px + var(--safe-t)); left: 12px;
+  width: 230px; padding: 10px 14px 12px;
+  transition: box-shadow 0.3s, border-color 0.3s;
+}
+#hud-left.hunted { border-color: rgba(255, 60, 60, 0.7); animation: hunted 0.8s infinite alternate; }
+@keyframes hunted { from { box-shadow: 0 0 0 rgba(255, 30, 60, 0); } to { box-shadow: 0 0 26px rgba(80, 120, 255, 0.55); } }
+.h-top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 15px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.06em; }
+.wanted i { font-style: normal; font-size: 18px; color: rgba(255, 255, 255, 0.18); margin-left: 2px; }
+.wanted i.on { color: #ff5252; text-shadow: 0 0 8px #ff1744; animation: blink 0.5s steps(2) infinite; }
+.h-money { font-family: var(--display); font-size: 27px; color: var(--green); letter-spacing: 0.02em; margin: 2px 0 6px; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.4); }
+.bar { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 13px; }
+.h-rep { margin-top: 6px; font-size: 15px; }
+.h-rep b { color: var(--yellow); font-size: 18px; }
+.h-rep small { color: var(--mute); font-size: 13px; }
+#escape-bar { margin-top: 8px; font-size: 12px; color: #90caf9; }
+#escape-bar .track { margin-top: 4px; }
+#escape-fill { background: linear-gradient(90deg, #2979ff, #69f0ae); }
+
+/* --- Misión (arriba al centro) --- */
+#hud-mission {
+  position: absolute; top: calc(12px + var(--safe-t)); left: 50%; transform: translateX(-50%);
+  width: min(460px, calc(100vw - 520px)); min-width: 300px;
+  padding: 10px 16px; border-left: 4px solid var(--yellow);
+}
+.m-title { font-family: var(--display); font-size: 15px; letter-spacing: 0.03em; }
+.m-text { font-size: 17px; font-weight: 600; margin-top: 3px; line-height: 1.15; }
+.m-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 4px; }
+.m-extra { font-size: 14px; color: var(--mute); }
+.m-timer { font-family: var(--display); font-size: 20px; color: var(--yellow); }
+.m-timer.urgent { color: #ff5252; animation: blink 0.5s steps(2) infinite; }
+.m-hint:empty { display: none; }
+.m-hint { margin-top: 5px; font-size: 14px; color: #ffab40; font-weight: 600; }
+
+/* --- Reloj (arriba a la derecha) --- */
+#hud-right { position: absolute; top: calc(12px + var(--safe-t)); right: 12px; padding: 8px 14px; text-align: right; min-width: 170px; }
+.h-clock { font-family: var(--display); font-size: 22px; }
+.h-sub { font-size: 14px; color: var(--mute); }
+
+/* --- Notificaciones --- */
+#toasts {
+  position: absolute; top: calc(84px + var(--safe-t)); right: 12px; width: 300px;
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+}
+.toast {
+  background: var(--glass-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 7px 12px; font-size: 15px; font-weight: 600; max-width: 300px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: toastIn 0.35s cubic-bezier(.2, 1.4, .4, 1);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.toast.card { border-left: 4px solid var(--c, var(--yellow)); width: 300px; }
+.toast.card b { display: block; font-size: 16px; color: var(--c, var(--yellow)); }
+.toast.card span { display: block; font-size: 14px; font-weight: 500; color: #dfe3ee; margin-top: 1px; line-height: 1.2; }
+.toast.out { opacity: 0; transform: translateX(40px); }
+@keyframes toastIn { from { opacity: 0; transform: translateX(40px) scale(0.95); } }
+
+/* --- Minimapa --- */
+#minimap-wrap { position: absolute; right: 12px; bottom: calc(12px + var(--safe-b)); padding: 6px; border-radius: 16px; }
+#minimap { width: 190px; height: 190px; display: block; border-radius: 11px; }
+#mm-addr { font-size: 12px; color: var(--mute); text-align: center; margin-top: 4px; max-width: 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* --- Velocímetro --- */
+#veh-box { position: absolute; left: 12px; bottom: calc(12px + var(--safe-b)); width: 200px; padding: 10px 14px; }
+.v-name { font-weight: 700; font-size: 15px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.05em; }
+.v-speed b { font-family: var(--display); font-size: 40px; line-height: 1; }
+.v-speed small { margin-left: 6px; color: var(--mute); }
+.fill.vhp { background: linear-gradient(90deg, #26c6da, #69f0ae); }
+.v-extra { font-size: 12px; color: var(--mute); margin-top: 6px; }
+
+/* --- Sugerencia de interacción --- */
+#prompt {
+  position: absolute; left: 50%; bottom: calc(26px + var(--safe-b)); transform: translateX(-50%);
+  background: var(--glass-2); border: 1px solid var(--line); border-radius: 30px;
+  padding: 8px 18px; font-size: 17px; font-weight: 600; white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+kbd {
+  display: inline-block; min-width: 24px; padding: 1px 7px; margin-right: 6px;
+  border-radius: 6px; background: var(--yellow); color: #1a1a1a;
+  font-family: var(--display); font-size: 14px; text-align: center;
+  box-shadow: 0 2px 0 #b38f00;
+}
+
+/* --- Anuncios grandes --- */
+#banner {
+  position: absolute; left: 50%; top: 28%; transform: translate(-50%, -50%);
+  text-align: center; pointer-events: none; width: 92vw;
+}
+#banner.show { animation: bannerIn 0.5s cubic-bezier(.2, 1.4, .4, 1); }
+.b-title { font-family: var(--display); font-size: clamp(22px, 4vw, 38px); color: var(--c); text-shadow: 0 3px 0 rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 0, 0, 0.6); }
+#banner.big .b-title { font-size: clamp(30px, 6vw, 60px); }
+.b-sub { font-size: clamp(16px, 2.2vw, 22px); font-weight: 700; margin-top: 6px; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9); }
+@keyframes bannerIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.6); } }
+
+#district-banner { position: absolute; left: 50%; bottom: 22%; transform: translateX(-50%); text-align: center; }
+#district-banner.show { animation: districtIn 2.8s ease both; }
+.db-name { font-family: var(--display); font-size: clamp(26px, 5vw, 48px); color: var(--c); text-shadow: 0 4px 0 rgba(0, 0, 0, 0.6); letter-spacing: 0.04em; }
+.db-tag { font-size: 18px; font-weight: 600; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9); }
+@keyframes districtIn { 0% { opacity: 0; transform: translate(-50%, 20px); } 12%, 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; } }
+
+/* --- Overlay de muerte / arresto --- */
+#overlay {
+  position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+  background: radial-gradient(circle, rgba(80, 0, 0, 0.35), rgba(0, 0, 0, 0.82));
+  animation: fadeIn 0.6s ease;
+}
+#overlay.busted { background: radial-gradient(circle, rgba(10, 30, 90, 0.4), rgba(0, 0, 0, 0.85)); }
+.ov-title { font-family: var(--display); font-size: clamp(36px, 8vw, 80px); color: #ff5252; text-shadow: 0 5px 0 #000; }
+#overlay.busted .ov-title { color: #64b5f6; }
+.ov-sub { font-size: 22px; font-weight: 700; margin-top: 10px; }
+@keyframes fadeIn { from { opacity: 0; } }
+#fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 30; }
+#fade.on { opacity: 1; }
+
+/* --- Menús --- */
+#menu {
+  position: fixed; inset: 0; z-index: 25; display: flex; align-items: center; justify-content: center;
+  background: rgba(4, 6, 12, 0.5); padding: 16px;
+  animation: fadeIn 0.18s ease;
+}
+.menu-card {
+  width: min(520px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column;
+  background: linear-gradient(180deg, rgba(26, 32, 50, 0.95), rgba(14, 18, 30, 0.96));
+  border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  animation: cardIn 0.25s cubic-bezier(.2, 1.3, .4, 1);
+}
+@keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(0.97); } }
+.menu-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px 10px; }
+.menu-icon { font-size: 34px; width: 52px; height: 52px; display: grid; place-items: center; border-radius: 14px; background: rgba(255, 255, 255, 0.06); flex: none; }
+.menu-ht { flex: 1; min-width: 0; }
+.menu-title { font-family: var(--display); font-size: 21px; color: var(--accent); line-height: 1.1; }
+.menu-sub { color: var(--mute); font-size: 15px; margin-top: 2px; }
+.menu-x { background: none; border: 0; color: var(--mute); font-size: 20px; cursor: pointer; padding: 6px; align-self: flex-start; }
+.menu-x:hover { color: #fff; }
+.menu-info { margin: 0 16px 8px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 15px; line-height: 1.3; color: #dfe3ee; }
+.menu-list { overflow-y: auto; padding: 4px 10px 8px; }
+.menu-section { padding: 10px 8px 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mute); font-weight: 700; }
+.menu-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin: 3px 0;
+  border-radius: 12px; border: 1px solid transparent; cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.menu-item:hover { background: rgba(255, 255, 255, 0.05); }
+.menu-item.sel { background: rgba(255, 255, 255, 0.09); border-color: var(--accent); }
+.menu-item.disabled { opacity: 0.45; }
+.mi-main { flex: 1; min-width: 0; }
+.mi-label { font-size: 18px; font-weight: 700; }
+.mi-sub { font-size: 14px; color: var(--mute); margin-top: 1px; }
+.mi-right { font-family: var(--display); font-size: 15px; color: var(--green); white-space: nowrap; }
+.mi-btns { display: flex; gap: 6px; flex: none; }
+.mi-btn {
+  font-family: var(--body); font-weight: 700; font-size: 14px; color: var(--text);
+  background: rgba(255, 255, 255, 0.08); border: 1px solid var(--line); border-radius: 9px;
+  padding: 6px 9px; cursor: pointer; white-space: nowrap;
+}
+.mi-btn.sel { border-color: var(--accent); background: rgba(255, 213, 79, 0.18); }
+.mi-btn.disabled { opacity: 0.4; }
+.menu-foot { padding: 8px 16px 12px; font-size: 13px; color: var(--mute); text-align: center; border-top: 1px solid var(--line); }
+.ctl-grid { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 15px; }
+.ctl-grid b { color: var(--yellow); white-space: nowrap; }
+
+/* --- Mapa grande --- */
+#bigmap { position: fixed; inset: 0; z-index: 22; background: rgba(6, 9, 16, 0.94); display: flex; flex-direction: column; }
+#bigmap-canvas { flex: 1; width: 100%; min-height: 0; cursor: crosshair; }
+.bm-bar { display: flex; align-items: center; gap: 14px; padding: 10px 16px calc(10px + var(--safe-b)); border-top: 1px solid var(--line); font-size: 14px; color: var(--mute); flex-wrap: wrap; }
+.bm-bar b { color: var(--yellow); font-family: var(--display); font-weight: 400; }
+.bm-bar span { flex: 1; min-width: 200px; }
+.bm-close { font-family: var(--body); font-weight: 700; font-size: 15px; color: #1a1a1a; background: var(--yellow); border: 0; border-radius: 10px; padding: 8px 14px; cursor: pointer; }
+
+/* --- Pantalla de título --- */
+#title {
+  position: fixed; inset: 0; z-index: 15; display: flex; align-items: center; justify-content: flex-start;
+  padding: 24px 24px 24px max(24px, 7vw); overflow-y: auto;
+  background: linear-gradient(90deg, rgba(5, 7, 14, 0.9) 0%, rgba(5, 7, 14, 0.55) 45%, rgba(5, 7, 14, 0) 75%);
+}
+.t-card { width: min(400px, 100%); margin: auto 0; animation: cardIn 0.6s ease; }
+.t-flag { display: flex; height: 8px; width: 120px; border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+.t-flag i { flex: 1; } .t-flag i:nth-child(1) { flex: 2; background: #fcd116; } .t-flag i:nth-child(2) { background: #003893; } .t-flag i:nth-child(3) { background: #ce1126; }
+#title h1 {
+  font-family: var(--display); font-weight: 400; margin: 0; line-height: 0.92;
+  font-size: clamp(48px, 9vw, 84px); color: var(--yellow);
+  text-shadow: 0 5px 0 #8a5a00, 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+#title h1 span { color: #fff; text-shadow: 0 5px 0 var(--red), 0 12px 30px rgba(0, 0, 0, 0.6); }
+.t-tag { font-size: 19px; line-height: 1.3; color: #e5e8f0; margin: 14px 0 18px; }
+.t-tag b { color: var(--green); }
+.t-label { display: block; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mute); margin: 10px 0 6px; font-weight: 700; }
+#name-input {
+  width: 100%; font-family: var(--body); font-size: 20px; font-weight: 700; color: #fff;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; outline: none;
+  user-select: text; -webkit-user-select: text;
+}
+#name-input:focus { border-color: var(--yellow); }
+#swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.swatch { width: 32px; height: 32px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, 0.15); cursor: pointer; transition: transform 0.15s; }
+.swatch.on { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 0 3px rgba(255, 213, 79, 0.5); }
+.t-btn {
+  display: block; width: 100%; margin: 8px 0; padding: 13px 16px; text-align: left;
+  font-family: var(--display); font-size: 18px; color: #fff; letter-spacing: 0.02em;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid var(--line); border-radius: 14px; cursor: pointer;
+  transition: transform 0.12s, background 0.12s;
+}
+.t-btn:hover { transform: translateX(4px); background: rgba(255, 255, 255, 0.14); }
+.t-btn.primary { background: linear-gradient(90deg, #ffd54f, #ffb300); color: #1a1a1a; border: 0; box-shadow: 0 6px 0 #9c6b00; }
+.t-btn small { display: block; font-family: var(--body); font-size: 14px; font-weight: 600; opacity: 0.75; margin-top: 2px; letter-spacing: 0; }
+.t-btn.ghost { background: transparent; }
+#help { margin-top: 10px; padding: 12px 14px; border-radius: 12px; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--line); }
+#help p { font-size: 15px; line-height: 1.3; color: #dfe3ee; margin: 10px 0 0; }
+.t-foot { margin-top: 18px; font-size: 13px; color: var(--mute); }
+
+/* --- Controles táctiles --- */
+#touch { position: fixed; inset: 0; z-index: 8; pointer-events: none; }
+body:not(.playing) #touch { display: none; }
+#joy {
+  position: absolute; left: 22px; bottom: calc(26px + var(--safe-b)); width: 132px; height: 132px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07); border: 2px solid rgba(255, 255, 255, 0.18); pointer-events: auto;
+}
+#joy-knob {
+  position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28); border: 2px solid rgba(255, 255, 255, 0.5);
+}
+.t-btns { position: absolute; right: 18px; bottom: calc(22px + var(--safe-b)); display: grid; grid-template-columns: repeat(2, 72px); gap: 10px; pointer-events: auto; }
+.tb {
+  width: 72px; height: 58px; border-radius: 18px; border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(12, 16, 28, 0.6); color: #fff; font-family: var(--display); font-size: 18px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;
+}
+.tb small { font-family: var(--body); font-size: 11px; font-weight: 700; margin-top: 3px; opacity: 0.8; }
+.tb.big { height: 72px; font-size: 24px; background: rgba(255, 213, 79, 0.22); border-color: rgba(255, 213, 79, 0.6); }
+.tb.on { background: rgba(255, 213, 79, 0.5); }
+.t-top { position: absolute; left: 50%; transform: translateX(-50%); top: calc(8px + var(--safe-t)); display: flex; gap: 8px; pointer-events: auto; }
+.tb.sm { width: 46px; height: 40px; font-size: 18px; border-radius: 12px; }
+
+@media (max-width: 900px) {
+  #hud-left { width: 190px; padding: 8px 11px; }
+  .h-money { font-size: 22px; }
+  #hud-mission { top: auto; bottom: calc(80px + var(--safe-b)); width: min(440px, calc(100vw - 24px)); min-width: 0; }
+  .toast.card, .toast { width: 250px; }
+  #toasts { width: 250px; }
+}
+@media (max-width: 600px) {
+  #hud-left { width: 168px; }
+  .h-top { font-size: 13px; }
+  .h-money { font-size: 19px; }
+  .h-rep small { display: none; }
+  #hud-right .h-sub { display: none; }
+  .h-clock { font-size: 17px; }
+  .v-speed b { font-size: 28px; }
+  #title { justify-content: center; padding: 20px; background: rgba(5, 7, 14, 0.75); }
+}
+/* --- Pantallas táctiles: retrato --- */
+body.touch #hud-left { top: calc(10px + var(--safe-t)); left: 10px; width: 170px; padding: 8px 11px; }
+body.touch #hud-right { top: calc(10px + var(--safe-t)); right: 10px; padding: 6px 10px; min-width: 0; }
+body.touch #hud-right .h-sub { display: none; }
+body.touch #minimap-wrap { top: calc(62px + var(--safe-t)); bottom: auto; right: 10px; padding: 4px; }
+body.touch #minimap { width: 124px; height: 124px; }
+body.touch #mm-addr { display: none; }
+body.touch .t-top { left: auto; right: 10px; transform: none; top: calc(198px + var(--safe-t)); }
+body.touch #toasts { top: calc(252px + var(--safe-t)); left: 10px; right: 10px; width: auto; align-items: stretch; }
+body.touch .toast, body.touch .toast.card { width: auto; max-width: none; font-size: 14px; }
+body.touch #hud-mission { top: auto; bottom: calc(272px + var(--safe-b)); left: 10px; right: 10px; width: auto; min-width: 0; transform: none; }
+body.touch #prompt { bottom: calc(184px + var(--safe-b)); font-size: 15px; }
+body.touch #veh-box { left: 10px; right: auto; top: calc(168px + var(--safe-t)); bottom: auto; width: 140px; padding: 6px 10px; }
+body.touch .v-extra { display: none; }
+body.touch .v-name { font-size: 12px; }
+body.touch .v-speed b { font-size: 28px; }
+body.touch #district-banner { bottom: auto; top: 36%; }
+body.touch #banner { top: 40%; }
+body.touch .m-text { font-size: 15px; }
+body.touch .m-title { font-size: 13px; }
+body.touch #escape-bar span { display: none; }
+
+/* --- Pantallas táctiles: horizontal --- */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.touch #minimap { width: 100px; height: 100px; }
+  body.touch #minimap-wrap { top: calc(54px + var(--safe-t)); }
+  body.touch .h-rep small { display: none; }
+  body.touch .t-top { top: calc(10px + var(--safe-t)); left: 50%; right: auto; transform: translateX(-50%); }
+  body.touch #toasts { top: calc(58px + var(--safe-t)); left: 50%; right: auto; width: min(320px, calc(100vw - 400px)); transform: translateX(-50%); }
+  body.touch #hud-mission { bottom: calc(10px + var(--safe-b)); left: 164px; right: 300px; width: auto; transform: none; padding: 6px 12px; }
+  body.touch .m-extra { display: none; }
+  body.touch #banner { top: 34%; }
+  body.touch #prompt { bottom: calc(118px + var(--safe-b)); }
+  body.touch .t-btns { grid-template-columns: repeat(4, 60px); gap: 8px; }
+  body.touch .tb, body.touch .tb.big { width: 60px; height: 56px; font-size: 18px; }
+  body.touch #veh-box { left: auto; right: 10px; bottom: auto; top: calc(180px + var(--safe-t)); width: 120px; }
+  body.touch #district-banner { top: 28%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- ===================== HUD ===================== -->
+<div id="hud" hidden>
+  <div id="hud-left" class="glass">
+    <div class="h-top"><span id="h-name">Parce</span><span id="h-wanted" class="wanted"></span></div>
+    <div id="h-money" class="h-money">$50.000</div>
+    <div class="bar"><span>❤️</span><div class="track"><div id="h-health" class="fill health"></div></div></div>
+    <div class="bar"><span>⚡</span><div class="track"><div id="h-energy" class="fill energy"></div></div></div>
+    <div class="h-rep">⭐ <b id="h-rep">0</b> <small id="h-next"></small></div>
+    <div id="escape-bar" hidden><span>Perdiendo a la policía…</span><div class="track"><div id="escape-fill" class="fill"></div></div></div>
+  </div>
+
+  <div id="hud-mission" class="glass" hidden>
+    <div id="m-title" class="m-title"></div>
+    <div id="m-text" class="m-text"></div>
+    <div class="m-row"><span id="m-extra" class="m-extra"></span><span id="m-timer" class="m-timer"></span></div>
+    <div id="m-hint" class="m-hint"></div>
+  </div>
+
+  <div id="hud-right" class="glass">
+    <div id="h-clock" class="h-clock">7:00 a.m.</div>
+    <div class="h-sub"><span id="h-day">Día 1</span> · <span id="h-weather"></span></div>
+  </div>
+  <div id="toasts"></div>
+
+  <div id="minimap-wrap" class="glass">
+    <canvas id="minimap"></canvas>
+    <div id="mm-addr"></div>
+  </div>
+
+  <div id="veh-box" class="glass" hidden>
+    <div id="v-name" class="v-name"></div>
+    <div class="v-speed"><b id="v-speed">0</b><small>km/h</small></div>
+    <div class="track"><div id="v-hp" class="fill vhp"></div></div>
+    <div id="v-extra" class="v-extra"></div>
+  </div>
+
+  <div id="prompt" hidden></div>
+  <div id="banner" hidden><div class="b-title"></div><div class="b-sub"></div></div>
+  <div id="district-banner" hidden><div class="db-name"></div><div class="db-tag"></div></div>
+</div>
+
+<div id="overlay" hidden><div class="ov-title"></div><div class="ov-sub"></div></div>
+<div id="fade"></div>
+<div id="menu" hidden></div>
+
+<div id="bigmap" hidden>
+  <canvas id="bigmap-canvas"></canvas>
+  <div class="bm-bar">
+    <b>🗺️ Mapa de Bogotá</b>
+    <span>🏠 Casa · 🛵 💰 🚌 ✈️ 🍻 🌧️ 🚨 Misiones · 🚉 TransMilenio · 🔑 Tu vehículo · Toca/clic para poner destino</span>
+    <button class="bm-close">Cerrar (M)</button>
+  </div>
+</div>
+
+<!-- ===================== TÍTULO ===================== -->
+<div id="title">
+  <div class="t-card">
+    <div class="t-flag"><i></i><i></i><i></i></div>
+    <h1>BOGOTÁ<br><span>ESCAPE</span></h1>
+    <p class="t-tag">Arrancas con <b>$50.000</b> y una pieza en Kennedy.<br>Camella, compra moto, abre negocio… y vuélate de la tomba.</p>
+    <label class="t-label" for="name-input">¿Cómo te dicen?</label>
+    <input id="name-input" maxlength="14" placeholder="Parce" autocomplete="off" spellcheck="false">
+    <div class="t-label">Color de tu camiseta</div>
+    <div id="swatches"></div>
+    <button id="btn-continue" class="t-btn primary" hidden>▶ Continuar<small></small></button>
+    <button id="btn-new" class="t-btn">★ Nueva partida</button>
+    <button id="btn-help" class="t-btn ghost">🎮 Cómo se juega</button>
+    <div id="help" hidden>
+      <div class="ctl-grid">
+        <b>WASD / Flechas</b><span>Caminar y manejar</span>
+        <b>Shift</b><span>Correr</span>
+        <b>F</b><span>Subir/bajar de vehículos (o robarlos…)</span>
+        <b>E</b><span>Hablar, comprar, esconderse</span>
+        <b>Espacio</b><span>Freno de mano</span>
+        <b>H</b><span>Pitar</span>
+        <b>C</b><span>Celular (domicilios)</span>
+        <b>M</b><span>Mapa · <b>Esc</b> Pausa</span>
+      </div>
+      <p>Haz misiones para ganar <b>plata</b> y <b>reputación ⭐</b>. Con reputación desbloqueas barrios nuevos (Chapinero, Suba, El Dorado, Zona T, Usaquén) y misiones mejor pagadas. Si cometes delitos, la policía te persigue: escóndete o pierde su rastro.</p>
+    </div>
+    <div class="t-foot">Ciudad ficticia inspirada en Bogotá · Se guarda solo en tu navegador</div>
+  </div>
+</div>
+
+<!-- ===================== CONTROLES TÁCTILES ===================== -->
+<div id="touch" hidden>
+  <div id="joy"><div id="joy-knob"></div></div>
+  <div class="t-btns">
+    <button data-k="e" class="tb big">E<small>Acción</small></button>
+    <button data-k="f" class="tb big">🚗<small>Subir</small></button>
+    <button data-k="space" class="tb">🏃<small>Correr/Freno</small></button>
+    <button data-k="h" class="tb">📯<small>Pito</small></button>
+  </div>
+  <div class="t-top">
+    <button data-k="c" class="tb sm">📱</button>
+    <button data-k="m" class="tb sm">🗺️</button>
+    <button data-k="esc" class="tb sm">⏸</button>
+  </div>
+</div>
+
+<script>
 'use strict';
 /* ==========================================================================
    BOGOTÁ ESCAPE
@@ -4201,3 +4670,7 @@ function init() {
   requestAnimationFrame(frame);
 }
 window.addEventListener('load', init);
+
+</script>
+</body>
+</html>
