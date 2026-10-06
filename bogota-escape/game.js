@@ -609,7 +609,7 @@ const CITIES = {
     landmark: null,
   },
 };
-const CITY_ORDER = ['bogota', 'medellin', 'cali', 'cartagena', 'barranquilla'];
+const CITY_ORDER = ['bogota', 'medellin']; // Cali, Cartagena y Barranquilla ya tienen datos; se activan después
 let CITY = CITIES.bogota;
 let DISTRICTS, DISTRICT_GRID, STYLE, PARKS, POI_DEFS;
 /** Activa una ciudad: todas las funciones del mundo leen estas variables. */
@@ -3883,7 +3883,7 @@ function checkUnlocks() {
   for (const k in DISTRICTS) {
     const d = DISTRICTS[k];
     if (d.rep > 0 && G.rep >= d.rep && !G.unlockedSeen[k] && CITY.id === 'bogota') { G.unlockedSeen[k] = true;
-      if (k === 'A') setTimeout(() => notify('✈️ ¡Ya puedes viajar!', 'Desde El Dorado vuelas a Medellín, Cali, Cartagena y Barranquilla.', '#4fc3f7'), 1500); notify(`🔓 ¡Desbloqueaste ${d.name}!`, d.tagline, d.color); minimapDirty = true; }
+      if (k === 'A') setTimeout(() => notify('✈️ ¡Ya puedes viajar!', 'Desde El Dorado vuelas a Medellín, la ciudad de la eterna primavera.', '#4fc3f7'), 1500); notify(`🔓 ¡Desbloqueaste ${d.name}!`, d.tagline, d.color); minimapDirty = true; }
   }
   if (G.rep >= 100) unlock('legend');
 }
@@ -3919,7 +3919,9 @@ function updateHUD() {
   setHTML('h-wanted', [0, 1, 2].map(i => `<i class="${i < G.wanted ? 'on' : ''}">★</i>`).join(''));
   document.getElementById('hud-left').classList.toggle('hunted', G.wanted > 0);
   setText('h-clock', clockStr());
-  setText('h-day', `Día ${G.day}`);
+  setText('h-day', `Día ${G.day} · ${CITY.name}`);
+  const wpn = WEAPONS[G.weapon];
+  setText('h-weapon', `${wpn.icon} ${wpn.n}${wpn.melee ? '' : ' · ' + (G.ammo[G.weapon] || 0)}  ${isTouch() ? '' : '(Q cambia)'}`);
   const wIcon = { sol: G.minutes > 18 * 60 || G.minutes < 6 * 60 ? '🌙 Despejado' : '☀️ Soleado', nublado: '☁️ Nublado', lluvia: '🌧️ Lluvia', tormenta: '⛈️ Tormenta' }[G.weather];
   setText('h-weather', wIcon + (G.events.bonus > 0 ? ' · 🛵x2' : '') + (G.events.strike > 0 ? ' · 🚕 Paro' : ''));
   const j = clamp(Math.round((p.y - 48) / PT), 0, BY), i = clamp(Math.round((p.x - 48) / PT), 0, BX);
@@ -3948,7 +3950,7 @@ function updateHUD() {
     setText('v-speed', String(Math.round(Math.abs(v.speed) * 0.3)));
     setStyle('v-hp', 'width', Math.round(v.hp / v.spec.hp * 100) + '%');
     document.getElementById('v-hp').classList.toggle('low', v.hp < v.spec.hp * 0.3);
-    setText('v-extra', v.spec.engine ? (Sound.radio.on ? '📻 Radio Tropicana (R)' : '📻 Apagada (R)') : '🚲 Pedalear gasta energía');
+    setText('v-extra', Sound.radio.on ? `📻 ${STATIONS[Sound.radio.station].name} (R)` : '📻 Apagada (R)');
   }
   // Barra de escape
   setHidden('escape-bar', G.wanted <= 0);
@@ -4085,12 +4087,13 @@ function updateGPS(dt) {
 }
 
 // ---------- Mapa grande ----------
-function openBigMap() { G.bigmap = true; $('#bigmap').hidden = false; drawBigMap(); }
+function openBigMap() { $('#bm-title').textContent = '🗺️ Mapa de ' + CITY.name; G.bigmap = true; $('#bigmap').hidden = false; bmInit(); drawBigMap(); }
 function closeBigMap() { G.bigmap = false; $('#bigmap').hidden = true; }
 function bigMapGeom() {
   const c = $('#bigmap-canvas'), W = c.clientWidth, H = c.clientHeight;
-  const sc = Math.min(W / MW, H / MH) * 0.94;
-  return { c, W, H, sc, ox: (W - MW * sc) / 2, oy: (H - MH * sc) / 2 };
+  if (!G.bm) bmInit();
+  const sc = G.bm.sc;
+  return { c, W, H, sc, ox: W / 2 - G.bm.cx * sc, oy: H / 2 - G.bm.cy * sc };
 }
 function drawBigMap() {
   const { c, W, H, sc, ox, oy } = bigMapGeom();
@@ -4117,10 +4120,10 @@ function drawBigMap() {
     const L = acc[d], cx = L.reduce((s, b) => s + b[0], 0) / L.length, cy = L.reduce((s, b) => s + b[1], 0) / L.length;
     const x = ox + ((cx + 0.5) * P + RW / 2) * sc, y = oy + ((cy + 0.5) * P + RW / 2) * sc;
     const info = DISTRICTS[d], locked = !districtUnlocked(d);
-    g.font = `800 ${Math.max(12, sc * 7)}px Barlow Condensed, sans-serif`;
+    g.font = `800 ${clamp(sc * 4.5, 12, 26)}px Barlow Condensed, sans-serif`;
     g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,.75)'; g.strokeText(info.name.toUpperCase(), x, y);
     g.fillStyle = locked ? '#9e9e9e' : info.color; g.fillText(info.name.toUpperCase(), x, y);
-    if (locked) { g.font = `600 ${Math.max(10, sc * 4.5)}px Barlow Condensed, sans-serif`; g.strokeText(`🔒 ${info.rep} ⭐`, x, y + sc * 8); g.fillStyle = '#eee'; g.fillText(`🔒 ${info.rep} ⭐`, x, y + sc * 8); }
+    if (locked) { g.font = `600 ${clamp(sc * 3, 10, 18)}px Barlow Condensed, sans-serif`; g.strokeText(`🔒 ${info.rep} ⭐`, x, y + sc * 8); g.fillStyle = '#eee'; g.fillText(`🔒 ${info.rep} ⭐`, x, y + sc * 8); }
   }
   g.font = `${Math.max(11, sc * 4.5)}px sans-serif`;
   for (const q of World.pois) {
@@ -4320,6 +4323,9 @@ function render(time, dt) {
     }
     ctx.globalAlpha = 1;
   }
+  // Marcas de explosiones
+  for (const sc of G.scorch) if (inView(sc.x, sc.y, 60)) { ctx.globalAlpha = Math.min(0.55, sc.t / 40); ctx.fillStyle = '#111'; circ(ctx, sc.x, sc.y, sc.r); }
+  ctx.globalAlpha = 1;
   // Huellas de derrape
   for (const s of G.skids) if (inView(s.x, s.y)) {
     ctx.globalAlpha = Math.min(0.45, s.t / 7 * 0.45); ctx.fillStyle = '#111';
@@ -4382,6 +4388,13 @@ function render(time, dt) {
     ctx.globalAlpha = 1;
     ctx.strokeStyle = 'rgba(255,213,79,.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, TAU); ctx.stroke();
   }
+  // Balas (trazadoras) y papas bomba
+  ctx.lineWidth = 2;
+  for (const b of G.bullets) if (inView(b.x, b.y)) {
+    ctx.strokeStyle = b.owner === 'player' ? 'rgba(255,236,150,.95)' : 'rgba(255,120,90,.95)';
+    ctx.beginPath(); ctx.moveTo(b.px, b.py); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  for (const gr of G.grenades) { ctx.fillStyle = '#6d4c41'; circ(ctx, gr.x, gr.y, 4); ctx.fillStyle = (time * 10) % 2 < 1 ? '#ff1744' : '#ffd740'; circ(ctx, gr.x + 2, gr.y - 3, 1.6); }
   // Techos y árboles (encima de todo lo del piso)
   for (const b of World.buildings) if (b.x < X1 && b.x + b.w > X0 && b.y - b.lift < Y1 && b.y + b.h > Y0) drawRoof(ctx, b, time);
   for (const st of World.stalls) if (inView(st.x, st.y, 30)) drawStall(ctx, st);
@@ -4399,6 +4412,10 @@ function render(time, dt) {
     const a = f.t / f.max;
     if (f.type === 'smoke') { ctx.fillStyle = `rgba(90,90,95,${a * 0.5})`; circ(ctx, f.x, f.y, 4 + (1 - a) * 10); }
     else if (f.type === 'spark') { ctx.fillStyle = `rgba(255,214,90,${a})`; ctx.fillRect(f.x, f.y, 2, 2); }
+    else if (f.type === 'fire') { ctx.fillStyle = `rgba(255,${120 + (1 - a) * 100 | 0},40,${a})`; circ(ctx, f.x, f.y, 3 + (1 - a) * 7); }
+    else if (f.type === 'flash') { ctx.fillStyle = 'rgba(255,240,160,.95)'; circ(ctx, f.x, f.y, 5); }
+    else if (f.type === 'hit') { ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.font = '12px sans-serif'; ctx.fillText('💥', f.x, f.y); }
+    else if (f.type === 'confetti') { ctx.fillStyle = `hsla(${(f.x * 7) % 360},90%,60%,${a})`; ctx.fillRect(f.x, f.y, 3, 3); }
     else if (f.type === 'note') { ctx.fillStyle = `rgba(255,128,255,${a})`; ctx.font = 'bold 14px sans-serif'; ctx.fillText('♪', f.x, f.y); }
   }
   // Íconos flotantes de lugares
@@ -4449,7 +4466,15 @@ function render(time, dt) {
     ctx.fillStyle = '#1a1a1a'; ctx.fillText(b.text, x, y);
   }
   ctx.globalAlpha = 1;
+  // Mira del arma cuando se apunta con el mouse
+  if (G.state === 'play' && p.onFoot && G.mouse && !isTouch() && performance.now() - G.mouse.t < 5000 && !WEAPONS[G.weapon].melee) {
+    const mx = cam.x + (G.mouse.sx - VW / 2) / cam.zoom, my = cam.y + (G.mouse.sy - VH / 2) / cam.zoom;
+    ctx.strokeStyle = 'rgba(255,82,82,.9)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(mx, my, 8, 0, TAU); ctx.moveTo(mx - 12, my); ctx.lineTo(mx - 4, my); ctx.moveTo(mx + 4, my); ctx.lineTo(mx + 12, my);
+    ctx.moveTo(mx, my - 12); ctx.lineTo(mx, my - 4); ctx.moveTo(mx, my + 4); ctx.lineTo(mx, my + 12); ctx.stroke();
+  }
   renderLighting(time, inView, X0, X1, Y0, Y1);
+  if (G.flash > 0) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = `rgba(255,230,180,${G.flash * 0.6})`; ctx.fillRect(0, 0, cv.width, cv.height); }
   renderRain(dt);
   // Atardecer
   const h = G.minutes / 60;
@@ -4692,8 +4717,9 @@ function updateBullets(dt) {
   const p = G.player;
   for (const b of G.bullets) {
     b.px = b.x; b.py = b.y;
-    for (let sub = 0; sub < 2 && b.life > 0; sub++) {
-      b.x += b.vx * dt / 2; b.y += b.vy * dt / 2;
+    const subs = Math.max(2, Math.ceil(Math.hypot(b.vx, b.vy) * dt / 6));
+    for (let sub = 0; sub < subs && b.life > 0; sub++) {
+      b.x += b.vx * dt / subs; b.y += b.vy * dt / subs;
       if (solidAt(b.x, b.y)) { addFx('spark', b.x, b.y, rand(-50, 50), rand(-50, 50), 0.25); b.life = 0; break; }
       // Vehículos
       for (const v of G.vehicles) {
@@ -4730,6 +4756,9 @@ function updateBullets(dt) {
     if (solidAt(nx, ny)) { g.vx *= -0.4; g.vy *= -0.4; } else { g.x = nx; g.y = ny; }
     g.vx *= 0.97; g.vy *= 0.97;
     if (Math.random() < 0.5) addFx('smoke', g.x, g.y, 0, -10, 0.4);
+    // Explota al pegarle a un carro o a una persona
+    if (G.vehicles.some(v => v !== G.player.vehicle && vehCircles(v).some(c => dist(c[0], c[1], g.x, g.y) < c[2] + 3)) ||
+        G.peds.some(o => o.mode !== 'gone' && o.mode !== 'down' && dist(o.x, o.y, g.x, g.y) < 9)) g.t = 0;
     if (g.t <= 0) explode(g.x, g.y, WEAPONS.papa.radius, WEAPONS.papa.dmg, g.owner);
   }
   G.grenades = G.grenades.filter(g => g.t > 0);
@@ -5370,7 +5399,8 @@ function saveGame() {
     v: 1, name: G.name, shirt: G.shirt, money: G.money, rep: G.rep, day: G.day, minutes: G.minutes,
     health: p.health, energy: p.energy, phone: G.phone, clothes: G.clothes, homes: G.homes, home: G.home,
     biz: G.biz, inv: G.inv, invCost: G.invCost, garage: G.garage, stats: G.stats, ach: G.ach, visited: G.visited,
-    unlockedSeen: G.unlockedSeen, muted: Sound.muted, radio: Sound.radio.on, savedAt: Date.now(),
+    unlockedSeen: G.unlockedSeen, muted: Sound.muted, radio: Sound.radio.on, station: Sound.radio.station, savedAt: Date.now(),
+    city: G.city, cityVisited: G.cityVisited, weapons: G.weapons, ammo: G.ammo, weapon: G.weapon,
   };
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) { /* almacenamiento lleno o bloqueado */ }
 }
@@ -5406,7 +5436,13 @@ function startGame(save) {
   G.ach = d.ach || {}; G.visited = d.visited || {}; G.unlockedSeen = d.unlockedSeen || {};
   if (save) { Sound.muted = !!d.muted; Sound.radio.on = d.radio !== false; }
   G.weather = 'sol'; G.weatherT = 120; G.rain = 0; G.wetness = 0;
-  const home = poi('home_' + G.home) || poi('home_kennedy');
+  G.city = CITIES[d.city] && CITY_ORDER.includes(d.city) ? d.city : 'bogota';
+  G.cityVisited = d.cityVisited || { bogota: true }; G.weapons = d.weapons || { punos: true }; G.ammo = d.ammo || {}; G.weapon = d.weapon || 'punos';
+  if (save) Sound.radio.station = d.station || 0;
+  if (CITY.id !== G.city) { applyCity(G.city); genWorld(); buildMiniBase(); }
+  // Las partidas viejas guardaban barrios sin ciudad
+  for (const k of Object.keys(G.visited)) if (k.length === 1) { G.visited['bogota:' + k] = true; delete G.visited[k]; }
+  const home = G.city === 'bogota' ? (poi('home_' + G.home) || poi('home_kennedy')) : poi('hotel');
   G.player = newPlayer(home.x, home.y);
   if (save) { G.player.health = d.health || 100; G.player.energy = d.energy != null ? Math.max(20, d.energy) : 100; }
   cam.x = home.x; cam.y = home.y; cam.zoom = cam.base;
@@ -5606,16 +5642,14 @@ function init() {
     const it = e.target.closest('.menu-item');
     if (it && !e.target.closest('.mi-btns')) { G.menu.sel = +it.dataset.i; activate(+it.dataset.i, 0); }
   });
-  // Mapa grande: clic = destino
-  $('#bigmap-canvas').addEventListener('click', e => {
-    const { c, sc, ox, oy } = bigMapGeom();
-    const r = c.getBoundingClientRect();
-    const x = (e.clientX - r.left - ox) / sc * T, y = (e.clientY - r.top - oy) / sc * T;
-    if (x < 0 || y < 0 || x > WORLD_W || y > WORLD_H) return;
-    if (G.waypoint && dist(x, y, G.waypoint.x, G.waypoint.y) < 3 * T) G.waypoint = null;
-    else G.waypoint = { x, y };
-    G.gpsT = 0; updateGPS(0); drawBigMap(); Sound.sfx('click');
-  });
+  // Mapa grande: arrastrar, zoom y toque = destino
+  setupBigMapInput();
+  $('#minimap-wrap').addEventListener('click', () => { if (G.state === 'play' && !G.menu) openBigMap(); });
+  // Mouse: apuntar y disparar
+  cv.addEventListener('mousemove', e => { G.mouse = { sx: e.clientX, sy: e.clientY, t: performance.now() }; });
+  cv.addEventListener('mousedown', e => { if (e.button !== 0 || G.state !== 'play') return; Sound.init(); G.mouse = { sx: e.clientX, sy: e.clientY, t: performance.now() }; Input.keys.fire = true; Input.hits.fire = true; });
+  window.addEventListener('mouseup', () => { Input.keys.fire = false; });
+  cv.addEventListener('contextmenu', e => e.preventDefault());
   $('#bigmap .bm-close').onclick = closeBigMap;
   requestAnimationFrame(frame);
 }

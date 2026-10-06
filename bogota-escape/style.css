@@ -68,6 +68,11 @@ body {
 .h-rep { margin-top: 6px; font-size: 15px; }
 .h-rep b { color: var(--yellow); font-size: 18px; }
 .h-rep small { color: var(--mute); font-size: 13px; }
+.h-weapon { margin-top: 5px; font-size: 14px; font-weight: 700; color: #ffcc80; }
+#minimap-wrap { pointer-events: auto; cursor: pointer; }
+.bm-btn { font-family: var(--body); font-weight: 800; font-size: 20px; width: 44px; height: 40px; color: var(--text); background: rgba(255,255,255,.1); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+#bigmap-canvas { touch-action: none; cursor: grab; }
+#fade { display: flex; align-items: center; justify-content: center; font-family: var(--display); font-size: clamp(22px, 4vw, 36px); color: var(--yellow); }
 #escape-bar { margin-top: 8px; font-size: 12px; color: #90caf9; }
 #escape-bar .track { margin-top: 4px; }
 #escape-fill { background: linear-gradient(90deg, #2979ff, #69f0ae); }
@@ -317,8 +322,9 @@ body.touch #mm-addr { display: none; }
 body.touch .t-top { left: auto; right: 10px; transform: none; top: calc(198px + var(--safe-t)); }
 body.touch #toasts { top: calc(252px + var(--safe-t)); left: 10px; right: 10px; width: auto; align-items: stretch; }
 body.touch .toast, body.touch .toast.card { width: auto; max-width: none; font-size: 14px; }
-body.touch #hud-mission { top: auto; bottom: calc(272px + var(--safe-b)); left: 10px; right: 10px; width: auto; min-width: 0; transform: none; }
-body.touch #prompt { bottom: calc(184px + var(--safe-b)); font-size: 15px; }
+body.touch #hud-mission { top: auto; bottom: calc(282px + var(--safe-b)); left: 10px; right: 10px; width: auto; min-width: 0; transform: none; }
+body.touch #prompt { bottom: calc(226px + var(--safe-b)); font-size: 15px; }
+body.touch .tb:not(.big) { height: 50px; }
 body.touch #veh-box { left: 10px; right: auto; top: calc(168px + var(--safe-t)); bottom: auto; width: 140px; padding: 6px 10px; }
 body.touch .v-extra { display: none; }
 body.touch .v-name { font-size: 12px; }
@@ -339,8 +345,8 @@ body.touch #escape-bar span { display: none; }
   body.touch #hud-mission { bottom: calc(10px + var(--safe-b)); left: 164px; right: 300px; width: auto; transform: none; padding: 6px 12px; }
   body.touch .m-extra { display: none; }
   body.touch #banner { top: 34%; }
-  body.touch #prompt { bottom: calc(118px + var(--safe-b)); }
-  body.touch .t-btns { grid-template-columns: repeat(4, 60px); gap: 8px; }
+  body.touch #prompt { bottom: calc(150px + var(--safe-b)); }
+  body.touch .t-btns { grid-template-columns: repeat(3, 60px); gap: 8px; }
   body.touch .tb, body.touch .tb.big { width: 60px; height: 56px; font-size: 18px; }
   body.touch #veh-box { left: auto; right: 10px; bottom: auto; top: calc(180px + var(--safe-t)); width: 120px; }
   body.touch #district-banner { top: 28%; }

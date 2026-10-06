@@ -21,6 +21,7 @@
     <div class="bar"><span>❤️</span><div class="track"><div id="h-health" class="fill health"></div></div></div>
     <div class="bar"><span>⚡</span><div class="track"><div id="h-energy" class="fill energy"></div></div></div>
     <div class="h-rep">⭐ <b id="h-rep">0</b> <small id="h-next"></small></div>
+    <div id="h-weapon" class="h-weapon"></div>
     <div id="escape-bar" hidden><span>Perdiendo a la policía…</span><div class="track"><div id="escape-fill" class="fill"></div></div></div>
   </div>
 
@@ -61,8 +62,11 @@
 <div id="bigmap" hidden>
   <canvas id="bigmap-canvas"></canvas>
   <div class="bm-bar">
-    <b>🗺️ Mapa de Bogotá</b>
-    <span>🏠 Casa · 🛵 💰 🚌 ✈️ 🍻 🌧️ 🚨 Misiones · 🚉 TransMilenio · 🔑 Tu vehículo · Toca/clic para poner destino</span>
+    <b id="bm-title">🗺️ Mapa de Bogotá</b>
+    <span>Arrastra para moverte · rueda o pellizco para zoom · toca para poner destino</span>
+    <button id="bm-out" class="bm-btn" aria-label="Alejar">－</button>
+    <button id="bm-in" class="bm-btn" aria-label="Acercar">＋</button>
+    <button id="bm-me" class="bm-btn" aria-label="Centrar en mí">📍</button>
     <button class="bm-close">Cerrar (M)</button>
   </div>
 </div>
@@ -72,7 +76,7 @@
   <div class="t-card">
     <div class="t-flag"><i></i><i></i><i></i></div>
     <h1>BOGOTÁ<br><span>ESCAPE</span></h1>
-    <p class="t-tag">Arrancas con <b>$50.000</b> y una pieza en Kennedy.<br>Camella, compra moto, abre negocio… y vuélate de la tomba.</p>
+    <p class="t-tag">Arrancas con <b>$50.000</b> y una pieza en Kennedy.<br>Camella, compra moto, arma tu parche, vuela a Medellín… y vuélate de la tomba.</p>
     <label class="t-label" for="name-input">¿Cómo te dicen?</label>
     <input id="name-input" maxlength="14" placeholder="Parce" autocomplete="off" spellcheck="false">
     <div class="t-label">Color de tu camiseta</div>
@@ -89,6 +93,8 @@
         <b>Espacio</b><span>Freno de mano</span>
         <b>H</b><span>Pitar</span>
         <b>C</b><span>Celular (domicilios)</span>
+        <b>Clic / Ctrl / J</b><span>Atacar · <b>Q</b> cambiar arma</span>
+        <b>R</b><span>Cambiar emisora (reguetón, cumbia, salsa, champeta)</span>
         <b>M</b><span>Mapa · <b>Esc</b> Pausa</span>
       </div>
       <p>Haz misiones para ganar <b>plata</b> y <b>reputación ⭐</b>. Con reputación desbloqueas barrios nuevos (Chapinero, Suba, El Dorado, Zona T, Usaquén) y misiones mejor pagadas. Si cometes delitos, la policía te persigue: escóndete o pierde su rastro.</p>
@@ -105,6 +111,8 @@
     <button data-k="f" class="tb big">🚗<small>Subir</small></button>
     <button data-k="space" class="tb">🏃<small>Correr/Freno</small></button>
     <button data-k="h" class="tb">📯<small>Pito</small></button>
+    <button data-k="fire" class="tb">🔫<small>Atacar</small></button>
+    <button data-k="q" class="tb">🔄<small>Arma</small></button>
   </div>
   <div class="t-top">
     <button data-k="c" class="tb sm">📱</button>
