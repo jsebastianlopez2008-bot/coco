@@ -74,8 +74,8 @@ const WORLD_W = MW * T, WORLD_H = MH * T;
 const MIN_PER_SEC = 2;   // minutos de juego por segundo real (1 día = 12 min)
 const SAVE_KEY = 'bogotaEscape.save.v1';
 
-const TILE = { ROAD: 0, SIDEWALK: 1, BUILDING: 2, GRASS: 3, PLAZA: 4, WATER: 5, TREE: 6, RUNWAY: 7, APRON: 8 };
-const SOLID_LUT = [0, 0, 1, 0, 0, 1, 1, 0, 0];
+const TILE = { ROAD: 0, SIDEWALK: 1, BUILDING: 2, GRASS: 3, PLAZA: 4, WATER: 5, TREE: 6, RUNWAY: 7, APRON: 8, SAND: 9 };
+const SOLID_LUT = [0, 0, 1, 0, 0, 1, 1, 0, 0, 0];
 const DIRV = [[1, 0], [0, 1], [-1, 0], [0, -1]];            // E S O N
 const DIR_ANG = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
 
@@ -84,7 +84,7 @@ const DIR_ANG = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
 // ==========================================================================
 
 /** Barrios: reputación necesaria para entrar y color en el mapa. */
-const DISTRICTS = {
+const BOG_DISTRICTS = {
   K: { name: 'Kennedy', rep: 0, color: '#d08b4f', tagline: 'Donde arranca todo, parce.' },
   D: { name: 'Centro', rep: 0, color: '#9aa3b0', tagline: 'Rascacielos, afán y San Victorino.' },
   L: { name: 'La Candelaria', rep: 0, color: '#e2b84a', tagline: 'Casitas de colores y calles empedradas.' },
@@ -95,7 +95,7 @@ const DISTRICTS = {
   U: { name: 'Usaquén', rep: 30, color: '#55b082', tagline: 'Colonial, tranquilo y muy caché.' },
 };
 /** Barrio de cada manzana (10 columnas x 8 filas). Norte arriba, cerros al oriente. */
-const DISTRICT_GRID = [
+const BOG_GRID = [
   'SSSSUUUUUU',
   'SSSSUUUUUU',
   'AASSCZZZUU',
@@ -107,7 +107,7 @@ const DISTRICT_GRID = [
 ];
 
 /** Estilo de construcción por barrio. */
-const STYLE = {
+const BOG_STYLE = {
   K: { minS: 3, gap: 0.35, empty: 0.1, court: 0.12, h: [8, 16], roofs: ['#b5523b', '#9c4a35', '#8a8f99', '#6f7d8c', '#c46a3c', '#a65d3f'], walls: ['#a0472f', '#8c3d2a', '#b8603e'], kind: 'tanks' },
   D: { minS: 4, gap: 0.3, empty: 0.06, court: 0, h: [28, 60], roofs: ['#8c929c', '#7a828e', '#9aa3ad', '#6b7380', '#a2a8b0'], walls: ['#5a616c', '#4a515b', '#666d78'], kind: 'ac' },
   L: { minS: 3, gap: 0.18, empty: 0.04, court: 0, h: [8, 14], roofs: ['#c0582f', '#b14d2a', '#cc6a3a', '#b8532d'], walls: ['#f2c94c', '#6fa8dc', '#93c47d', '#e06666', '#f6f1e7', '#c27ba0', '#f6b26b'], kind: 'tejas' },
@@ -118,7 +118,7 @@ const STYLE = {
 };
 
 /** Manzanas que son parques o plazas. */
-const PARKS = {
+const BOG_PARKS = {
   '3,0': { kind: 'park', name: 'Parque Mirador' },
   '2,1': { kind: 'humedal', name: 'Humedal de Suba' },
   '7,0': { kind: 'usaquen', name: 'Parque de Usaquén' },
@@ -147,7 +147,7 @@ function defaultColor(type) {
   if (type === 'taxi') return '#ffd21f';
   if (type === 'police') return '#f4f6f4';
   if (type === 'bus') return '#1c64b5';
-  if (type === 'tm') return '#c8102e';
+  if (type === 'tm') return CITY.troncal.color;
   if (type === 'bici') return pick(['#26a69a', '#e53935', '#fdd835', '#5e35b1']);
   return pick(CAR_COLORS);
 }
@@ -267,7 +267,7 @@ const ACH = {
 };
 
 /** Puntos de interés: manzana [col, fila], lado de la acera y posición. */
-const POI_DEFS = [
+const BOG_POIS = [
   // Viviendas
   { id: 'home_kennedy', type: 'home', home: 'kennedy', b: [1, 6], side: 'E', off: 6 },
   { id: 'home_chapinero', type: 'home', home: 'chapinero', b: [3, 3], side: 'E', off: 6 },
@@ -340,7 +340,7 @@ const POI_DEFS = [
 ];
 
 /** Estaciones de TransMilenio (sobre la Av. Américas y la Av. Caracas). */
-const STATION_DEFS = [
+const BOG_STATIONS = [
   { name: 'Portal Américas', tx: 8, ty: 99, axis: 'h' },
   { name: 'Kennedy', tx: 40, ty: 99, axis: 'h' },
   { name: 'San Victorino', tx: 88, ty: 99, axis: 'h' },
@@ -352,8 +352,8 @@ const STATION_DEFS = [
 ];
 
 /** Nomenclatura bogotana: calles de oriente a occidente, carreras de norte a sur. */
-function calleName(j) { return j === 6 ? 'Av. Américas' : 'Calle ' + ((BY - j) * 10 + 8); }
-function carreraName(i) { return i === 4 ? 'Av. Caracas' : 'Carrera ' + ((BX - i) * 7 + 3); }
+function calleName(j) { return j === 6 ? CITY.avH : 'Calle ' + ((BY - j) * 10 + 8); }
+function carreraName(i) { return i === 4 ? CITY.avV : 'Carrera ' + ((BX - i) * 7 + 3); }
 function carreraNum(i) { return (BX - i) * 7 + 3; }
 function calleNum(j) { return (BY - j) * 10 + 8; }
 /** Dirección tipo "Calle 48 # 24-31" para un punto del mapa. */
@@ -374,12 +374,361 @@ const TOURIST_LINES = ['Wow, ¡cuántas motos!', 'Is it always this traffic?', '
 const HONK_LINES = ['¡Pite pues!', '¡Muévase, señor!', '¡Ay, qué trancón!', '¿Sí o qué?', '¡Uy, qué tal este!', '¡Pilas, pues!'];
 
 // ==========================================================================
+// 2b. CIUDADES DE COLOMBIA — cada una con sus barrios, comida, dichos y radio
+// ==========================================================================
+
+/** Kits de construcción reutilizables. */
+const KIT = {
+  brick: { minS: 3, gap: 0.3, empty: 0.06, court: 0.05, h: [14, 30], roofs: ['#9a5a40', '#8d6e63', '#a1664a', '#7a6157'], walls: ['#b3542f', '#a04a2b', '#bf6a3c'], kind: 'terrace' },
+  comuna: { minS: 2, gap: 0.22, empty: 0.02, court: 0.05, h: [6, 12], roofs: ['#8a8f99', '#b5523b', '#6f7d8c', '#c46a3c', '#9e9e9e'], walls: ['#e53935', '#fdd835', '#1e88e5', '#43a047', '#fb8c00', '#8e24aa', '#00acc1'], kind: 'tanks', graffiti: true },
+  glass: BOG_STYLE.Z,
+  white: { minS: 4, gap: 0.4, empty: 0.05, court: 0, h: [30, 70], roofs: ['#e8e8e4', '#d9dcdf', '#f1efe9', '#cfd8dc'], walls: ['#b0bec5', '#cfd4d8', '#a7b4bc'], kind: 'ac' },
+  colonial: { minS: 3, gap: 0.15, empty: 0.03, court: 0, h: [10, 18], roofs: ['#c0582f', '#b14d2a', '#cc6a3a', '#d27a45'], walls: ['#f2c94c', '#e8a33d', '#3f88c5', '#e86a92', '#69b578', '#f6f1e7', '#ff8a65'], kind: 'tejas', balcony: true },
+  costa: { minS: 3, gap: 0.3, empty: 0.08, court: 0.08, h: [8, 18], roofs: ['#e0e0dc', '#c9c9c4', '#b5523b', '#d7a86e', '#bdbdb6'], walls: ['#f6d6a8', '#a8dadc', '#f4a6a6', '#fff1c1', '#b8e0b0', '#ce93d8'], kind: 'tanks' },
+  centro: BOG_STYLE.D,
+  verde: BOG_STYLE.U,
+  barrio: BOG_STYLE.K,
+};
+const withK = (base, extra) => Object.assign({}, base, extra);
+
+/** Lugares estándar que tiene toda ciudad (posición automática dentro del barrio indicado). */
+function cityPOIs(c) {
+  return [
+    { id: 'hotel', type: 'home', home: 'hotel', d: c.hotel },
+    ...c.food.map((f, i) => ({ id: 'food' + i, type: 'shop', shop: f[0], d: f[1] })),
+    { id: 'drog', type: 'shop', shop: 'drogueria', d: c.misc[0] },
+    { id: 'hosp1', type: 'hospital', d: c.misc[1] },
+    { id: 'police1', type: 'police', d: c.misc[2] },
+    { id: 'ropa', type: 'shop', shop: c.ropa[0], d: c.ropa[1] },
+    { id: 'motos', type: 'shop', shop: 'motos', d: c.misc[3] },
+    { id: 'bikes', type: 'shop', shop: 'bicis', d: c.misc[0] },
+    { id: 'mech1', type: 'mechanic', d: c.misc[4] },
+    { id: 'wash1', type: 'carwash', d: c.misc[5] },
+    { id: 'armas', type: 'shop', shop: 'armas', d: c.misc[5] },
+    { id: 'cel', type: 'shop', shop: 'celulares', d: c.misc[1] },
+    { id: 'atm1', type: 'atm', d: c.misc[3] },
+    { id: 'club', type: 'club', d: c.club[0], name: c.club[1] },
+    ...c.markets.map((m, i) => ({ id: 'm_' + m[0], type: 'market', market: m[0], d: m[1] })),
+    ...c.givers.map(g => Object.assign({ type: 'giver' }, g)),
+    ...['hideA', 'hideB', 'hideC', 'hideD'].map((id, i) => ({ id, type: 'hide', d: c.hides[i % c.hides.length] })),
+  ];
+}
+
+/** Bogotá también tiene misiones nuevas. */
+BOG_POIS.push(
+  { id: 'g_taxi', type: 'giver', mission: 'taxi', b: [4, 5], side: 'N', off: 4, npc: 'Don Pacho, el de los taxis' },
+  { id: 'g_race', type: 'giver', mission: 'carrera', b: [7, 4], side: 'S', off: 4, npc: 'El Pique' },
+  { id: 'g_gang', type: 'giver', mission: 'pandilla', b: [0, 7], side: 'S', off: 5, npc: 'La Junta de Acción Comunal' },
+  { id: 'armas', type: 'shop', shop: 'armas', b: [3, 7], side: 'W', off: 9 },
+);
+
+const CITIES = {
+  bogota: {
+    id: 'bogota', name: 'Bogotá', nick: 'La Nevera', seed: 1538,
+    districts: BOG_DISTRICTS, grid: BOG_GRID, style: BOG_STYLE, parks: BOG_PARKS, pois: BOG_POIS,
+    stationNames: BOG_STATIONS.map(s => s.name),
+    avH: 'Av. Américas', avV: 'Av. Caracas',
+    troncal: { name: 'TransMilenio', short: 'TM', color: '#c8102e', lane: '#7b2d2d', fare: 2950 },
+    airport: 'El Dorado', climate: 'frio', rain: 0.35, palms: false,
+    outside: { N: 'sabana', S: 'sabana', W: 'sabana', E: 'mount' },
+    radio: 1, price: 0,
+    sayings: ['¡Qué más, sumercé!', '¡Uy, qué oso!', 'Ala, ¿sí o qué?', '¡Qué boleta, parce!', '¡Qué frío tan berraco!', 'Llegué tarde por el trancón, ¿sí me entiende?', '¡Chévere, parce!', '¿Me regala un tintico?', '¡Uy, se largó a llover otra vez!', 'Ese man es muy gomelo', '¡Qué chimba, parce!', '¡Pilas con el celular, ome!', '¿Una changüita o qué?', 'Hágale, que yo le camello'],
+    honk: ['¡Pite pues!', '¡Muévase, señor!', '¡Ay, qué trancón!', '¿Sí o qué?', '¡Uy, qué tal este!', '¡Pilas, pues!'],
+    welcome: 'La capital: frío, trancón y oportunidades. ¡A camellar!',
+    landmark: { kind: 'monserrate', x: MW + 4, y: 70 },
+  },
+  medellin: {
+    id: 'medellin', name: 'Medellín', nick: 'La Eterna Primavera', seed: 5021,
+    districts: {
+      T: { name: 'Comuna 13', rep: 0, color: '#e57373', tagline: 'Grafitis, escaleras eléctricas y puro arte.' },
+      L: { name: 'Laureles', rep: 0, color: '#8bc34a', tagline: 'Arborizado, tranquilo y con buena papa.' },
+      C: { name: 'Centro', rep: 0, color: '#b0a8a0', tagline: 'Botero, el Parque Berrío y el metro pasando.' },
+      P: { name: 'El Poblado', rep: 0, color: '#ab47bc', tagline: 'Vidrio, Provenza y el Parque Lleras.' },
+      B: { name: 'Belén', rep: 0, color: '#ffb74d', tagline: 'Arepa, fútbol en la cuadra y señoras en la ventana.' },
+      E: { name: 'Envigado', rep: 0, color: '#4db6ac', tagline: 'El pueblito sabroso pegado a la ciudad.' },
+      N: { name: 'Manrique', rep: 0, color: '#f06292', tagline: 'Las lomas, el metrocable y el tango.' },
+      A: { name: 'Aeropuerto Olaya Herrera', rep: 0, color: '#9fb4c8', tagline: 'Avionetas, turistas y montañas.' },
+    },
+    grid: ['TTTLLCCCNN', 'TTTLLCCCNN', 'AATLLCCCNN', 'AALLLCCPPN', 'AABBBPPPPP', 'AABBBPPPPP', 'BBBBEEEPPP', 'BBBBEEEEEE'],
+    style: { T: KIT.comuna, L: withK(KIT.brick, { empty: 0.1 }), C: withK(KIT.centro, { walls: ['#a0522d', '#8d6e63', '#6d4c41'] }), P: KIT.glass, B: withK(KIT.barrio, { roofs: ['#b5523b', '#a65d3f', '#c46a3c'] }), E: KIT.colonial, N: KIT.comuna },
+    parks: {
+      '6,1': { kind: 'botero', name: 'Plaza Botero' }, '6,2': { kind: 'plaza', name: 'Parque Berrío' },
+      '7,4': { kind: 'park93', name: 'Parque Lleras' }, '3,3': { kind: 'park', name: 'Parque de Laureles' },
+      '5,7': { kind: 'park', name: 'Parque de Envigado' }, '8,0': { kind: 'park', name: 'Entrada al Parque Arví' },
+      '1,0': { kind: 'park', name: 'Mirador de la Comuna 13' },
+    },
+    avH: 'Av. San Juan', avV: 'Av. Oriental',
+    troncal: { name: 'Metroplús', short: 'M+', color: '#2e7d32', lane: '#2f5d34', fare: 2900 },
+    stationNames: ['San Javier', 'Floresta', 'Industriales', 'Poblado', 'Exposiciones', 'Parque Berrío', 'Prado', 'Niquía'],
+    airport: 'Olaya Herrera', climate: 'templado', rain: 0.25, palms: false,
+    outside: { N: 'mount', S: 'mount', W: 'mount', E: 'mount' },
+    metro: true, radio: 0, price: 280000,
+    sayings: ['¡Eh, avemaría, pues!', '¿Qué más pues, parcero?', 'Hágale pues, mijo', '¡Qué chimba de día!', 'Pa\' las que sea, pues', '¡Ome, no sea tan lambón!', 'Bien o qué, ¿todo bien?', 'Eso sí está muy bacano', 'Vamos por una bandeja, pues', '¡Pilas pues con el metro!', 'Medallo es Medallo, parce', 'De una, ¡hagámosle!', '¡Qué gonorrea de calor! Mentiras, aquí es primavera', '¿Y vos qué, pues?'],
+    honk: ['¡Avemaría, avance pues!', '¡Ome, muévase!', '¡Hágale, que voy de afán!'],
+    welcome: 'La ciudad de la eterna primavera 🌸 Metro, flores y bandeja paisa.',
+    hotel: 'P', food: [['fonda', 'C'], ['fonda', 'B'], ['cafepaisa', 'L'], ['cafepaisa', 'P']], misc: ['L', 'C', 'C', 'B', 'B', 'T'],
+    ropa: ['paisa_ropa', 'C'], club: ['P', 'Discoteca Provenza'], hides: ['T', 'N', 'B'],
+    markets: [['hueco', 'C'], ['minorista', 'C'], ['lleras', 'P']],
+    givers: [
+      { id: 'g_domi', mission: 'delivery', d: 'L', npc: 'Domicilios Paisas' },
+      { id: 'g_hustle', mission: 'hustle', d: 'C', npc: 'Doña Gilma' },
+      { id: 'g_taxi', mission: 'taxi', d: 'B', npc: 'Don Efraín, taxista' },
+      { id: 'g_race', mission: 'carrera', d: 'P', npc: 'Los de las Palmas' },
+      { id: 'g_gang', mission: 'pandilla', d: 'B', npc: 'La Junta de Belén' },
+      { id: 'g_silleta', mission: 'silleta', d: 'E', npc: 'Don Arturo, silletero' },
+      { id: 'g_grafiti', mission: 'grafiti', d: 'T', npc: 'Guía de la Comuna 13' },
+    ],
+    landmark: { kind: 'cable', x: MW + 3, y: 20 },
+  },
+  cali: {
+    id: 'cali', name: 'Cali', nick: 'La Sucursal del Cielo', seed: 7311,
+    districts: {
+      G: { name: 'Granada', rep: 0, color: '#ba68c8', tagline: 'Restaurantes, rumba y la Avenida Sexta.' },
+      N: { name: 'San Antonio', rep: 0, color: '#ffb74d', tagline: 'Colinas coloniales y los mejores atardeceres.' },
+      C: { name: 'Centro', rep: 0, color: '#a1a1a1', tagline: 'La Plaza de Caycedo y el Bulevar del Río.' },
+      J: { name: 'Juanchito', rep: 0, color: '#ef5350', tagline: 'Aquí se baila salsa hasta que salga el sol.' },
+      E: { name: 'El Peñón', rep: 0, color: '#4db6ac', tagline: 'El Gato del Río y la brisa de la tarde.' },
+      P: { name: 'Pance', rep: 0, color: '#81c784', tagline: 'Verde, ríos fríos y paseo de olla.' },
+      A: { name: 'Aeropuerto Bonilla Aragón', rep: 0, color: '#9fb4c8', tagline: 'Calorcito apenas se abre la puerta.' },
+    },
+    grid: ['GGGGCCJJJJ', 'GGGNCCJJJJ', 'AANNCCCJJJ', 'AANNECCCJJ', 'AAEEECCCJJ', 'AAEEEPPPJJ', 'PPPPPPPPJJ', 'PPPPPPPPPJ'],
+    style: { G: withK(KIT.brick, { kind: 'glass', roofs: KIT.glass.roofs }), N: KIT.colonial, C: KIT.centro, J: withK(KIT.costa, { graffiti: true }), E: KIT.brick, P: withK(KIT.verde, { empty: 0.14 }) },
+    parks: {
+      '5,3': { kind: 'rio', name: 'Bulevar del Río' }, '3,2': { kind: 'plaza', name: 'Iglesia de San Antonio' },
+      '4,4': { kind: 'gato', name: 'El Gato del Río' }, '7,1': { kind: 'park', name: 'Parque de la Salsa' },
+      '3,7': { kind: 'park', name: 'Parque de la Caña' }, '1,0': { kind: 'park93', name: 'Parque del Perro' },
+    },
+    avH: 'Calle Quinta', avV: 'Av. Sexta',
+    troncal: { name: 'MIO', short: 'MIO', color: '#1565c0', lane: '#1e3f73', fare: 2700 },
+    stationNames: ['Universidades', 'Calipso', 'Santa Librada', 'Plaza de Caycedo', 'Estadio', 'Torre de Cali', 'Chiminangos', 'Menga'],
+    airport: 'Bonilla Aragón', climate: 'calor', rain: 0.2, palms: true,
+    outside: { N: 'cana', S: 'cana', W: 'mount', E: 'cana' },
+    radio: 2, price: 260000,
+    sayings: ['¡Oís, ve, qué más pues!', '¡Mirá ve, qué calor tan berraco!', '¿Vos qué, mor?', 'Cali es Cali, lo demás es loma', '¡Uy, qué chimba de salsa!', 'Ve, ¿y vos de dónde sos?', '¡Ay, no, qué pereza!', 'Pasáme el chontaduro, ve', 'Esta noche es pa\' bailar, mi llave', '¡Ve, qué ricura de brisa!', 'Ole, ¿qué más pues, pelao?', '¡Ahí sí, mor, a gozar!'],
+    honk: ['¡Mirá ve, avanzá pues!', '¡Oís, moveté!', '¡Ve, qué man tan lento!'],
+    welcome: 'La capital mundial de la salsa 💃 Chontaduro, brisa y rumba hasta el amanecer.',
+    hotel: 'G', food: [['chontaduro', 'C'], ['chontaduro', 'J'], ['pandebono', 'N'], ['sancocho', 'E']], misc: ['G', 'C', 'C', 'E', 'J', 'J'],
+    ropa: ['salsero', 'G'], club: ['J', 'Juanchito Salsa Club'], hides: ['J', 'P', 'E'],
+    markets: [['alameda', 'C'], ['santaelena', 'J'], ['granada', 'G']],
+    givers: [
+      { id: 'g_domi', mission: 'delivery', d: 'E', npc: 'Domicilios Caleños' },
+      { id: 'g_hustle', mission: 'hustle', d: 'C', npc: 'Doña Mercedes' },
+      { id: 'g_taxi', mission: 'taxi', d: 'C', npc: 'Taxista Caleño' },
+      { id: 'g_race', mission: 'carrera', d: 'P', npc: 'Los Pilotos de Pance' },
+      { id: 'g_gang', mission: 'pandilla', d: 'J', npc: 'Líder de Juanchito' },
+      { id: 'g_salsa', mission: 'salsa', d: 'J', npc: 'Jurado del Concurso' },
+      { id: 'g_vend', mission: 'vendedor', d: 'C', npc: 'Don Chucho', product: { n: 'chontaduro', icon: '🥥', pay: 12000 } },
+    ],
+    landmark: { kind: 'cristo', x: -5, y: 60 },
+  },
+  cartagena: {
+    id: 'cartagena', name: 'Cartagena', nick: 'La Heroica', seed: 9177,
+    districts: {
+      M: { name: 'Ciudad Amurallada', rep: 0, color: '#f2c94c', tagline: 'Balcones, buganvilias y coches de caballos.' },
+      G: { name: 'Getsemaní', rep: 0, color: '#e86a92', tagline: 'Grafitis, sombrillas de colores y rumba en la plaza.' },
+      B: { name: 'Bocagrande', rep: 0, color: '#4fc3f7', tagline: 'Torres blancas, playa y sol picante.' },
+      Z: { name: 'Manga', rep: 0, color: '#9ccc65', tagline: 'Casas republicanas y la brisa de la bahía.' },
+      K: { name: 'Bazurto', rep: 0, color: '#ff8a65', tagline: 'El mercado más caótico y sabroso del Caribe.' },
+      A: { name: 'Aeropuerto Rafael Núñez', rep: 0, color: '#9fb4c8', tagline: 'Sales del avión y te abraza el calor.' },
+    },
+    grid: ['MMMMGGGZZZ', 'MMMMGGGZZZ', 'AAMMGGGZZZ', 'AABBGGZZKK', 'AABBBZZKKK', 'AABBBZZKKK', 'BBBBBZZKKK', 'BBBBBZZKKK'],
+    style: { M: KIT.colonial, G: withK(KIT.colonial, { graffiti: true, balcony: false }), B: KIT.white, Z: KIT.costa, K: withK(KIT.costa, { minS: 2, empty: 0.04 }) },
+    parks: {
+      '0,0': { kind: 'muralla', name: 'Baluarte de Santo Domingo' }, '1,0': { kind: 'muralla', name: 'Las Murallas' },
+      '0,1': { kind: 'muralla', name: 'Baluarte de San Ignacio' }, '3,1': { kind: 'reloj', name: 'Torre del Reloj' },
+      '2,0': { kind: 'plaza', name: 'Plaza de la Catedral' }, '5,1': { kind: 'usaquen', name: 'Plaza de la Trinidad' },
+      '8,1': { kind: 'castillo', name: 'Castillo San Felipe' }, '0,6': { kind: 'beach', name: 'Playa de Bocagrande' },
+      '0,7': { kind: 'beach', name: 'Playa de Castillogrande' }, '1,7': { kind: 'beach', name: 'Playa del Laguito' },
+      '8,5': { kind: 'usaquen', name: 'Mercado de Bazurto' },
+    },
+    avH: 'Av. Pedro de Heredia', avV: 'Av. Santander',
+    troncal: { name: 'Transcaribe', short: 'TC', color: '#00897b', lane: '#1f5e57', fare: 2900 },
+    stationNames: ['Portal El Gallo', 'Bazurto', 'Chambacú', 'La Popa', 'Bocagrande', 'Centro', 'Getsemaní', 'Crespo'],
+    airport: 'Rafael Núñez', climate: 'calor', rain: 0.1, palms: true,
+    outside: { N: 'sea', S: 'sea', W: 'sea', E: 'manglar' },
+    radio: 3, price: 420000,
+    sayings: ['¡Ajá, y entonces!', '¡Eche, no joda, qué calor!', '¿Qué hubo, mi llave?', '¡Ombe, qué vaina tan buena!', '¡Erda, mi vale!', 'Aquí se vive sabroso, compa', '¡Uy, cuidao con el sol, cachaco!', '¡Ajá, mi rey, a la orden!', '¡Ey, mi vale, cómprame una cocadita!', 'Eso está bacano, ¿oíste?', 'Tranquilo, que aquí todo es con calma', '¡Qué molleja de calor!', '¿Masajito, mi amor? Barato'],
+    honk: ['¡Eche, muévete, mi vale!', '¡Ajá, y qué esperas!', '¡Ombe, avanza!'],
+    welcome: 'La Heroica 🌴 Murallas, playa y un calor que no perdona.',
+    hotel: 'M', food: [['fritos', 'M'], ['mariscos', 'B'], ['raspao', 'G'], ['cocadas', 'B']], misc: ['G', 'Z', 'M', 'K', 'K', 'K'],
+    ropa: ['costa_ropa', 'M'], club: ['G', 'Champetódromo La Trinidad'], hides: ['G', 'K', 'Z'],
+    markets: [['bazurto', 'K'], ['amurallada', 'M'], ['bocagrande', 'B']],
+    givers: [
+      { id: 'g_domi', mission: 'delivery', d: 'Z', npc: 'Domicilios del Caribe' },
+      { id: 'g_hustle', mission: 'hustle', d: 'K', npc: 'Doña Emelina' },
+      { id: 'g_taxi', mission: 'taxi', d: 'Z', npc: 'Los del Mototaxi' },
+      { id: 'g_race', mission: 'carrera', d: 'B', npc: 'Los Pelaos del Laguito' },
+      { id: 'g_gang', mission: 'pandilla', d: 'K', npc: 'Comerciantes de Bazurto' },
+      { id: 'g_guia', mission: 'guia', d: 'M', npc: 'Agencia de Turismo' },
+      { id: 'g_vend', mission: 'vendedor', d: 'B', npc: 'Palenquera Doña Emelina', product: { n: 'cocadas', icon: '🥥', pay: 14000 } },
+    ],
+    landmark: { kind: 'popa', x: MW + 5, y: 30 },
+  },
+  barranquilla: {
+    id: 'barranquilla', name: 'Barranquilla', nick: 'Curramba la Bella', seed: 3343,
+    districts: {
+      N: { name: 'Norte', rep: 0, color: '#7986cb', tagline: 'Edificios, centros comerciales y la Calle 84.' },
+      P: { name: 'El Prado', rep: 0, color: '#aed581', tagline: 'Casonas republicanas y palmeras.' },
+      R: { name: 'Barrio Abajo', rep: 0, color: '#ff7043', tagline: 'Cuna del Carnaval: tambores y marimondas.' },
+      C: { name: 'Centro', rep: 0, color: '#bdbdbd', tagline: 'El Paseo Bolívar y los almacenes.' },
+      S: { name: 'Soledad', rep: 0, color: '#ffd54f', tagline: 'Calor, picó y fritos por todo lado.' },
+      M: { name: 'Gran Malecón', rep: 0, color: '#4dd0e1', tagline: 'El río Magdalena y la brisa de la tarde.' },
+      A: { name: 'Aeropuerto Cortissoz', rep: 0, color: '#9fb4c8', tagline: '¡Bienvenido a Curramba, mi llave!' },
+    },
+    grid: ['NNNNNPPPMM', 'NNNNNPPPMM', 'AANNPPPRMM', 'AARRPPPRRM', 'AARRRCCCRM', 'AASSRCCCCM', 'SSSSSCCCCM', 'SSSSSSCCCM'],
+    style: { N: KIT.white, P: withK(KIT.colonial, { walls: ['#fff1c1', '#f6d6a8', '#e8f5e9', '#ffe0b2', '#f8bbd0'] }), R: withK(KIT.costa, { graffiti: true }), C: KIT.centro, S: KIT.costa, M: KIT.costa },
+    parks: {
+      '8,0': { kind: 'malecon', name: 'Gran Malecón' }, '9,0': { kind: 'malecon', name: 'Gran Malecón' }, '8,1': { kind: 'malecon', name: 'Gran Malecón' },
+      '9,1': { kind: 'malecon', name: 'Gran Malecón' }, '9,2': { kind: 'malecon', name: 'Gran Malecón' }, '9,3': { kind: 'malecon', name: 'Gran Malecón' },
+      '9,4': { kind: 'malecon', name: 'Gran Malecón' }, '9,5': { kind: 'malecon', name: 'Gran Malecón' }, '9,6': { kind: 'malecon', name: 'Gran Malecón' },
+      '9,7': { kind: 'malecon', name: 'Gran Malecón' }, '8,2': { kind: 'malecon', name: 'Gran Malecón' },
+      '6,1': { kind: 'park93', name: 'Parque Washington' }, '5,4': { kind: 'plaza', name: 'Plaza de la Paz' },
+      '3,3': { kind: 'usaquen', name: 'Plaza del Carnaval' }, '2,6': { kind: 'park', name: 'Parque de Soledad' },
+    },
+    avH: 'Calle Murillo', avV: 'Av. Olaya Herrera',
+    troncal: { name: 'Transmetro', short: 'TRM', color: '#43a047', lane: '#2f5a32', fare: 2650 },
+    stationNames: ['Portal de Soledad', 'Joaquín Barrios', 'Barranquillita', 'Paseo Bolívar', 'Hospital', 'Plaza de la Paz', 'Calle 72', 'Portal del Norte'],
+    airport: 'Ernesto Cortissoz', climate: 'calor', rain: 0.15, palms: true,
+    outside: { N: 'sea', S: 'sabana', W: 'sabana', E: 'river' },
+    radio: 3, price: 380000,
+    sayings: ['¡Ajá, mi llave! ¿Qué es la que hay?', '¡Quien lo vive es quien lo goza!', '¡Nojoda, qué brisa tan sabrosa!', '¡Eche, no joda!', 'Ajá, ¿y la mía qué?', '¡Erda, qué calor tan arrecho!', 'Mi vale, vamos pa\' la verbena', '¡Ombe, eso está bueno!', 'Aquí en Curramba todo es bacano', '¡Ey, mi llave, sube el picó!', 'Ajá, ¿te vas a disfrazá pa\'l Carnaval?', '¡Qué vaina tan buena, compa!'],
+    honk: ['¡Ajá, avanza, mi llave!', '¡Eche, el pito no es de adorno!', '¡Nojoda, muévete!'],
+    welcome: 'Curramba la Bella 🎭 ¡Quien lo vive es quien lo goza!',
+    hotel: 'N', food: [['fritos', 'C'], ['sancocho', 'S'], ['raspao', 'P'], ['fritos', 'R']], misc: ['N', 'P', 'C', 'S', 'S', 'R'],
+    ropa: ['carnaval_ropa', 'R'], club: ['N', 'La Troja del Picó'], hides: ['R', 'S', 'C'],
+    markets: [['barranquillita', 'C'], ['paseo', 'C'], ['calle84', 'N']],
+    givers: [
+      { id: 'g_domi', mission: 'delivery', d: 'P', npc: 'Domicilios Curramba' },
+      { id: 'g_hustle', mission: 'hustle', d: 'C', npc: 'Don Abelardo' },
+      { id: 'g_taxi', mission: 'taxi', d: 'S', npc: 'Mototaxista de Soledad' },
+      { id: 'g_race', mission: 'carrera', d: 'N', npc: 'Los Pelaos de la 84' },
+      { id: 'g_gang', mission: 'pandilla', d: 'S', npc: 'La Cuadra de Soledad' },
+      { id: 'g_carnaval', mission: 'carnaval', d: 'R', npc: 'Reina del Carnaval' },
+      { id: 'g_vend', mission: 'vendedor', d: 'S', npc: 'Doña Nena', product: { n: 'bollos de yuca', icon: '🌽', pay: 11000 } },
+    ],
+    landmark: null,
+  },
+};
+const CITY_ORDER = ['bogota', 'medellin', 'cali', 'cartagena', 'barranquilla'];
+let CITY = CITIES.bogota;
+let DISTRICTS, DISTRICT_GRID, STYLE, PARKS, POI_DEFS;
+/** Activa una ciudad: todas las funciones del mundo leen estas variables. */
+function applyCity(id) {
+  CITY = CITIES[id] || CITIES.bogota;
+  DISTRICTS = CITY.districts; DISTRICT_GRID = CITY.grid; STYLE = CITY.style; PARKS = CITY.parks;
+  POI_DEFS = CITY.id === 'bogota' ? CITY.pois : cityPOIs(CITY);
+}
+applyCity('bogota');
+
+// --- Tiendas, mercados y vivienda de las otras ciudades ---
+HOMES.hotel = { name: 'Hotel', price: 0, rent: 0, sleep: 90, night: 70000 };
+Object.assign(SHOPS, {
+  fonda: { name: 'Fonda Paisa La Arriería', icon: '🍛', color: '#ff7043', items: [
+    { n: 'Bandeja paisa', p: 32000, e: 100, h: 20 }, { n: 'Arepa con quesito', p: 4000, e: 18 }, { n: 'Mazamorra con panela', p: 3500, e: 14, h: 3 }] },
+  cafepaisa: { name: 'Café de la 70', icon: '☕', color: '#8d6e63', items: [
+    { n: 'Tinto campesino', p: 2000, e: 10 }, { n: 'Buñuelo', p: 1500, e: 8 }, { n: 'Parva paisa', p: 5000, e: 20 }] },
+  paisa_ropa: { name: 'Almacén El Carriel', icon: '👜', color: '#a1887f', items: [
+    { n: 'Carriel antioqueño', p: 150000, cloth: 'carriel', rep: 5, desc: 'Más paisa que la arepa: +5 reputación.' },
+    { n: 'Poncho', p: 70000, cloth: 'ruana', rep: 2, desc: 'Abriga en las lomas y en la lluvia.' },
+    { n: 'Sombrero aguadeño', p: 90000, cloth: 'sombrero', rep: 3, desc: 'El sol y el calor ya no te cansan.' }] },
+  chontaduro: { name: 'Chontaduro y Cholado', icon: '🥥', color: '#ff9800', items: [
+    { n: 'Chontaduro con sal y miel', p: 3000, e: 16 }, { n: 'Cholado', p: 7000, e: 28, cool: true }, { n: 'Lulada', p: 5000, e: 18, cool: true }] },
+  pandebono: { name: 'Pandebonos del Valle', icon: '🥯', color: '#ffca28', items: [
+    { n: 'Pandebono', p: 1500, e: 10 }, { n: 'Champús', p: 3500, e: 14, cool: true }, { n: 'Empanada valluna', p: 1500, e: 9 }] },
+  sancocho: { name: 'Sancochos Doña Nena', icon: '🍲', color: '#fdd835', items: [
+    { n: 'Sancocho', p: 18000, e: 80, h: 15 }, { n: 'Bollo de yuca', p: 1500, e: 10 }, { n: 'Jugo de níspero', p: 5000, e: 16, cool: true }] },
+  fritos: { name: 'Fritos de Doña Eloísa', icon: '🫓', color: '#ffb300', items: [
+    { n: 'Arepa e\' huevo', p: 4000, e: 20 }, { n: 'Carimañola', p: 2500, e: 12 }, { n: 'Butifarra', p: 3000, e: 14 }] },
+  mariscos: { name: 'La Mojarra de Bocagrande', icon: '🐟', color: '#26c6da', items: [
+    { n: 'Mojarra frita con patacón', p: 35000, e: 85, h: 15 }, { n: 'Cazuela de mariscos', p: 45000, e: 100, h: 20 }, { n: 'Limonada de coco', p: 9000, e: 20, cool: true }] },
+  raspao: { name: 'Raspao y Bolis', icon: '🍧', color: '#f06292', items: [
+    { n: 'Raspao de colores', p: 2500, e: 8, cool: true }, { n: 'Bolis de corozo', p: 1000, e: 5, cool: true }, { n: 'Agua de coco', p: 4000, e: 12, h: 3, cool: true }] },
+  cocadas: { name: 'Palenquera Doña Emelina', icon: '🥥', color: '#8bc34a', items: [
+    { n: 'Cocadas', p: 3000, e: 14 }, { n: 'Alegría de coco', p: 2000, e: 10 }, { n: 'Enyucado', p: 3000, e: 15 }] },
+  costa_ropa: { name: 'Artesanías del Caribe', icon: '👒', color: '#ffb74d', items: [
+    { n: 'Sombrero vueltiao', p: 150000, cloth: 'sombrero', rep: 4, desc: 'El calor ya no te cansa. ¡Puro orgullo costeño!' },
+    { n: 'Guayabera', p: 110000, cloth: 'guayabera', rep: 3, desc: 'Elegante y fresquita.' },
+    { n: 'Chanclas', p: 25000, cloth: 'tenis', rep: 0, desc: 'Corres más (sí, con chanclas).' }] },
+  salsero: { name: 'Pinta Salsera', icon: '🕺', color: '#e91e63', items: [
+    { n: 'Camisa de salsero', p: 120000, cloth: 'salsero', rep: 4, desc: 'Más margen en el concurso de salsa.' },
+    { n: 'Zapatos de baile', p: 90000, cloth: 'tenis', rep: 2, desc: 'Corres 12% más rápido.' }] },
+  carnaval_ropa: { name: 'Disfraces del Carnaval', icon: '🎭', color: '#ffeb3b', items: [
+    { n: 'Máscara de marimonda', p: 80000, cloth: 'marimonda', rep: 5, desc: '¡Quien lo vive es quien lo goza!' },
+    { n: 'Sombrero vueltiao', p: 150000, cloth: 'sombrero', rep: 4, desc: 'El calor ya no te cansa.' }] },
+  armas: { name: 'Los Fierros del Mono', icon: '🔫', color: '#78909c', items: [
+    { n: 'Bate de béisbol', p: 45000, weapon: 'bate', desc: 'Para defenderse en la cuadra.' },
+    { n: 'Pistola', p: 380000, weapon: 'pistola', desc: 'Incluye 24 tiros.' },
+    { n: 'Munición de pistola ×24', p: 30000, ammo: 'pistola', amount: 24 },
+    { n: 'Escopeta', p: 950000, weapon: 'escopeta', desc: 'Pega duro de cerca. Incluye 12 cartuchos.' },
+    { n: 'Cartuchos ×12', p: 45000, ammo: 'escopeta', amount: 12 },
+    { n: 'Mini-Uzi', p: 1700000, weapon: 'uzi', desc: 'Dispara ráfagas. Incluye 60 tiros.' },
+    { n: 'Munición Uzi ×60', p: 60000, ammo: 'uzi', amount: 60 },
+    { n: 'Papas bomba ×3', p: 15000, ammo: 'papa', amount: 3, desc: 'Se tiran y ¡PUM! Ojo dónde caen.' }] },
+});
+Object.assign(MARKETS, {
+  hueco: { name: 'El Hueco', desc: 'El paraíso del contrabando… digo, de lo barato.', m: { paraguas: 0.55, mango: 0.9, cargador: 0.5, ropa: 0.45, flores: 0.7, cafe: 0.8, artesania: 0.85 } },
+  minorista: { name: 'Plaza Minorista', desc: 'Fruta y flores fresquitas.', m: { paraguas: 0.9, mango: 0.5, cargador: 1.0, ropa: 0.9, flores: 0.4, cafe: 0.6, artesania: 1.0 } },
+  lleras: { name: 'Puestos del Parque Lleras', desc: 'Turistas con dólares.', m: { paraguas: 1.4, mango: 1.4, cargador: 1.5, ropa: 1.3, flores: 1.5, cafe: 1.6, artesania: 1.6 } },
+  alameda: { name: 'Galería Alameda', desc: 'La galería más sabrosa de Cali.', m: { paraguas: 0.9, mango: 0.45, cargador: 0.9, ropa: 0.8, flores: 0.9, cafe: 0.75, artesania: 0.9 } },
+  santaelena: { name: 'Galería Santa Elena', desc: 'Al por mayor y con regateo.', m: { paraguas: 0.7, mango: 0.6, cargador: 0.65, ropa: 0.6, flores: 0.85, cafe: 0.8, artesania: 0.95 } },
+  granada: { name: 'Toldos de Granada', desc: 'Gente con plata en la Sexta.', m: { paraguas: 1.3, mango: 1.5, cargador: 1.4, ropa: 1.5, flores: 1.6, cafe: 1.4, artesania: 1.5 } },
+  bazurto: { name: 'Mercado de Bazurto', desc: 'Caos total, precios bajitos.', m: { paraguas: 0.6, mango: 0.4, cargador: 0.6, ropa: 0.55, flores: 1.1, cafe: 0.9, artesania: 0.6 } },
+  amurallada: { name: 'Toldos de la Ciudad Amurallada', desc: 'Cruceros llenos de turistas.', m: { paraguas: 1.6, mango: 1.6, cargador: 1.4, ropa: 1.5, flores: 1.8, cafe: 1.9, artesania: 2.0 } },
+  bocagrande: { name: 'Vendedores de Bocagrande', desc: 'En la playa todo vale doble.', m: { paraguas: 1.9, mango: 1.5, cargador: 1.3, ropa: 1.3, flores: 1.3, cafe: 1.4, artesania: 1.6 } },
+  barranquillita: { name: 'Mercado de Barranquillita', desc: 'Donde se surte media costa.', m: { paraguas: 0.6, mango: 0.45, cargador: 0.6, ropa: 0.55, flores: 1.0, cafe: 0.85, artesania: 0.75 } },
+  paseo: { name: 'Paseo Bolívar', desc: 'Vendedores por todo lado.', m: { paraguas: 0.9, mango: 0.9, cargador: 0.8, ropa: 0.8, flores: 1.1, cafe: 1.0, artesania: 1.0 } },
+  calle84: { name: 'Puestos de la 84', desc: 'La zona rosa de Curramba.', m: { paraguas: 1.6, mango: 1.4, cargador: 1.5, ropa: 1.4, flores: 1.7, cafe: 1.5, artesania: 1.5 } },
+});
+Object.assign(MISSION_INFO, {
+  taxi: { title: 'Taxista Pirata', icon: '🚕', rep: 5, color: '#ffd21f', desc: 'Recoge pasajeros y llévalos rápido. Necesitas carro o moto (en la costa, ¡mototaxi!).' },
+  carrera: { title: 'Pique Ilegal', icon: '🏁', rep: 10, color: '#ff9100', desc: 'Carrera callejera contra dos pilotos. Pasa por todos los puntos antes que ellos. Necesitas vehículo.' },
+  pandilla: { title: 'Guerra de Pandillas', icon: '👊', rep: 8, color: '#d50000', desc: 'Una gallada se tomó un parque y tiene azotado al barrio. Noquéalos a todos. Mejor llega armado (Los Fierros del Mono 🔫).' },
+  silleta: { title: 'Desfile de Silleteros', icon: '💐', rep: 0, color: '#f06292', desc: 'Lleva la silleta llena de flores hasta la tarima del desfile. Pesa harto: no puedes correr ni montarte en nada.' },
+  grafiti: { title: 'Grafitour Comuna 13', icon: '🎨', rep: 0, color: '#ff7043', desc: 'Lleva a los turistas a ver los 4 murales más bacanos de la Comuna 13 antes de que se les acabe la batería del celular.' },
+  salsa: { title: 'Concurso de Salsa', icon: '💃', rep: 0, color: '#e91e63', desc: 'Sube a la pista y demostrá que sos un salsero caleño. Seguí el ritmo con las flechas (o los botones).' },
+  vendedor: { title: 'Venta Ambulante', icon: '🛒', rep: 0, color: '#8bc34a', desc: 'Sal con el carrito y vende en todos los puntos antes de que se acabe el turno.' },
+  guia: { title: 'Guía Turístico', icon: '📸', rep: 0, color: '#26c6da', desc: 'Los turistas quieren conocer lo más bacano de La Heroica. Llévalos a los 3 sitios antes de que se acabe el tour.' },
+  carnaval: { title: 'Batalla de Flores', icon: '🎭', rep: 0, color: '#ffeb3b', desc: 'Métete al desfile del Carnaval y recoge 10 bolsas de maicena antes de que pase la última carroza.' },
+});
+Object.assign(ACH, {
+  viajero: { n: 'Mochilero', d: 'Visita las 5 ciudades.', i: '✈️' },
+  salsero: { n: 'Salsero caleño', d: 'Gana el concurso de salsa.', i: '💃' },
+  carnaval: { n: 'Quien lo vive lo goza', d: 'Termina la Batalla de Flores.', i: '🎭' },
+  silletero: { n: 'Silletero', d: 'Lleva la silleta al desfile.', i: '💐' },
+  piloto: { n: 'Rey del pique', d: 'Gana una carrera ilegal.', i: '🏁' },
+  barrio: { n: 'Defensor del barrio', d: 'Gana una guerra de pandillas.', i: '👊' },
+  bandeja: { n: 'Paisa de corazón', d: 'Cómete una bandeja paisa.', i: '🍛' },
+});
+
+/** Armas: daño, cadencia (s), velocidad de la bala, dispersión. */
+const WEAPONS = {
+  punos: { n: 'Puños', icon: '👊', melee: true, dmg: 12, range: 20, rate: 0.42 },
+  bate: { n: 'Bate', icon: '🏏', melee: true, dmg: 30, range: 27, rate: 0.6 },
+  pistola: { n: 'Pistola', icon: '🔫', dmg: 24, rate: 0.3, speed: 950, spread: 0.04, range: 560, start: 24 },
+  escopeta: { n: 'Escopeta', icon: '💥', dmg: 14, pellets: 6, rate: 0.85, speed: 820, spread: 0.24, range: 320, start: 12 },
+  uzi: { n: 'Mini-Uzi', icon: '🔥', dmg: 13, rate: 0.085, speed: 980, spread: 0.11, range: 480, start: 60 },
+  papa: { n: 'Papa bomba', icon: '💣', thrown: true, dmg: 75, radius: 78, rate: 0.8, range: 260 },
+};
+const WEAPON_ORDER = ['punos', 'bate', 'pistola', 'escopeta', 'uzi', 'papa'];
+
+/** Emisoras de radio (todo sintetizado, nada de canciones con derechos). */
+const STATIONS = [
+  { id: 'mega', name: 'La Mega 🔥 Reguetón', bpm: 94 },
+  { id: 'tropi', name: 'Tropicana · Cumbia', bpm: 100 },
+  { id: 'rumba', name: 'Rumba Estéreo · Salsa', bpm: 104 },
+  { id: 'champe', name: 'Champeta FM', bpm: 112 },
+];
+const WASTED_LINES = ['¡PAILA, PARCE!', '¡QUEDASTE FRITO!', '¡SE LO LLEVÓ EL QUE LO TRAJO!', '¡NO DIO PA\' MÁS!'];
+const BUSTED_LINES = ['¡TE COGIÓ LA TOMBA!', '¡PA\' LA UPJ, MIJO!', '¡SE ACABÓ LA FIESTA!'];
+const SNITCH_LINES = ['🐸 Un sapo llamó a la tomba', '🐸 ¡Lo sapearon!', '🐸 Una señora llamó al 123'];
+
+// ==========================================================================
 // 3. AUDIO — todo sintetizado con WebAudio (no hay archivos de sonido)
 // ==========================================================================
 const Sound = {
   ctx: null, master: null, muted: false, noiseBuf: null,
   engine: null, siren: null, rain: null,
-  radio: { on: true, playing: false, next: 0, step: 0 },
+  radio: { on: true, station: 0, forced: null, playing: false, next: 0, step: 0 },
 
   /** El navegador exige un gesto del usuario antes de arrancar el audio. */
   init() {
@@ -409,12 +758,14 @@ const Sound = {
     const rg = c.createGain(); rg.gain.value = 0;
     rn.connect(rf); rf.connect(rg); rg.connect(this.master); rn.start();
     this.rain = { g: rg };
+    // Bus de la radio (volumen propio)
+    this.radioBus = c.createGain(); this.radioBus.gain.value = 0.9; this.radioBus.connect(this.master);
   },
 
   setMuted(m) { this.muted = m; if (this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.55, this.ctx.currentTime, 0.05); },
 
   /** Tono simple con envolvente. */
-  tone(freq, dur, type = 'sine', vol = 0.15, when = 0, slide = 0) {
+  tone(freq, dur, type = 'sine', vol = 0.15, when = 0, slide = 0, dest) {
     if (!this.ctx || this.muted) return;
     const c = this.ctx, t = c.currentTime + when;
     const o = c.createOscillator(), g = c.createGain();
@@ -422,17 +773,17 @@ const Sound = {
     if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.05);
+    o.connect(g); g.connect(dest || this.master); o.start(t); o.stop(t + dur + 0.05);
   },
 
   /** Golpe de ruido filtrado (choques, truenos, guacharaca). */
-  noise(dur, vol = 0.2, freq = 800, type = 'lowpass', when = 0) {
+  noise(dur, vol = 0.2, freq = 800, type = 'lowpass', when = 0, dest) {
     if (!this.ctx || this.muted) return;
     const c = this.ctx, t = c.currentTime + when;
     const s = c.createBufferSource(); s.buffer = this.noiseBuf;
     const f = c.createBiquadFilter(); f.type = type; f.frequency.value = freq;
     const g = c.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(f); f.connect(g); g.connect(this.master);
+    s.connect(f); f.connect(g); g.connect(dest || this.master);
     s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.05);
   },
 
@@ -453,6 +804,11 @@ const Sound = {
       case 'star': this.tone(880, 0.12, 'square', 0.07); this.tone(660, 0.18, 'square', 0.07, 0.12); break;
       case 'thunder': this.noise(1.6, 0.4, 180); break;
       case 'splash': this.noise(0.2, 0.08, 2500, 'highpass'); break;
+      case 'shot': this.noise(0.09, 0.3, 2400, 'highpass'); this.tone(140, 0.08, 'square', 0.08, 0, -60); break;
+      case 'shotgun': this.noise(0.25, 0.4, 900); this.tone(90, 0.15, 'square', 0.12, 0, -40); break;
+      case 'uzi': this.noise(0.05, 0.2, 2800, 'highpass'); break;
+      case 'boom': this.noise(1.2, 0.55, 220); this.tone(55, 0.6, 'sine', 0.35, 0, -30); break;
+      case 'punch': this.noise(0.08, 0.22, 500); this.tone(110, 0.06, 'sine', 0.12); break;
       case 'achievement': [659, 784, 988, 1319].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.1, i * 0.07)); break;
     }
   },
@@ -479,12 +835,15 @@ const Sound = {
     if (sv > 0) this.siren.o.frequency.setTargetAtTime((now * 2.2) % 1 < 0.5 ? 640 : 920, now, 0.02);
     // Lluvia
     this.rain.g.gain.setTargetAtTime(G.state === 'play' || G.state === 'title' ? G.rain * 0.16 : 0, now, 0.4);
-    // Radio (solo dentro de carro/moto)
-    const wantRadio = this.radio.on && on && G.state === 'play' && !G.menu;
+    // Radio: suena en carro y, más pasito, a pie (audífonos)
+    const forced = this.radio.forced != null;
+    const wantRadio = G.state === 'play' && !G.menu && (forced || (this.radio.on && !G.overlay));
+    this.radioBus.gain.setTargetAtTime(forced ? 1 : on ? 0.95 : 0.45, now, 0.2);
     if (wantRadio && !this.radio.playing) { this.radio.playing = true; this.radio.next = now + 0.05; }
     if (!wantRadio) this.radio.playing = false;
     if (this.radio.playing && !this.muted) {
-      while (this.radio.next < now + 0.15) { this.radioStep(this.radio.next, this.radio.step++); this.radio.next += 60 / 100 / 2; }
+      const bpm = STATIONS[forced ? this.radio.forced : this.radio.station].bpm;
+      while (this.radio.next < now + 0.15) { this.stationStep(this.radio.next, this.radio.step++); this.radio.next += 60 / bpm / 4; }
     }
   },
 
@@ -493,20 +852,20 @@ const Sound = {
     const c = this.ctx, w = t - c.currentTime;
     const s8 = step % 8, bar = Math.floor(step / 8) % 4;
     // guacharaca (ruido agudo con acento largo-corto-corto)
-    this.noise(s8 % 2 === 0 ? 0.09 : 0.04, s8 % 4 === 0 ? 0.05 : 0.025, 5500, 'highpass', w);
+    this.noise(s8 % 2 === 0 ? 0.09 : 0.04, s8 % 4 === 0 ? 0.05 : 0.025, 5500, 'highpass', w, this.radioBus);
     // tambora en 1 y 3
-    if (s8 === 0 || s8 === 4) this.tone(80, 0.18, 'sine', 0.12, w, -30);
+    if (s8 === 0 || s8 === 4) this.tone(80, 0.18, 'sine', 0.12, w, -30, this.radioBus);
     // llamador en contratiempo
-    if (s8 === 2 || s8 === 6) this.tone(220, 0.06, 'triangle', 0.05, w);
+    if (s8 === 2 || s8 === 6) this.tone(220, 0.06, 'triangle', 0.05, w, 0, this.radioBus);
     // bajo: La menor / Mi mayor
     const root = [110, 82.41, 110, 82.41][bar];
-    if (s8 === 0) this.tone(root, 0.3, 'triangle', 0.13, w);
-    if (s8 === 3) this.tone(root * 1.5, 0.2, 'triangle', 0.1, w);
-    if (s8 === 4) this.tone(root, 0.25, 'triangle', 0.12, w);
-    if (s8 === 7) this.tone(root * 2, 0.15, 'triangle', 0.08, w);
+    if (s8 === 0) this.tone(root, 0.3, 'triangle', 0.13, w, 0, this.radioBus);
+    if (s8 === 3) this.tone(root * 1.5, 0.2, 'triangle', 0.1, w, 0, this.radioBus);
+    if (s8 === 4) this.tone(root, 0.25, 'triangle', 0.12, w, 0, this.radioBus);
+    if (s8 === 7) this.tone(root * 2, 0.15, 'triangle', 0.08, w, 0, this.radioBus);
     // melodía tipo acordeón
     const scale = bar % 2 === 0 ? [440, 523, 659, 587, 523, 494] : [415, 494, 659, 587, 494, 330];
-    if ((step * 7919) % 11 < 6) this.tone(scale[(step * 31 + bar) % scale.length], 0.13, 'square', 0.022, w);
+    if ((step * 7919) % 11 < 6) this.tone(scale[(step * 31 + bar) % scale.length], 0.13, 'square', 0.022, w, 0, this.radioBus);
   },
 };
 
@@ -516,7 +875,7 @@ const Sound = {
 const KEYMAP = {
   arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right',
   ' ': 'space', shift: 'shift', e: 'e', f: 'f', enter: 'enter', escape: 'esc', p: 'esc', m: 'm', c: 'c', tab: 'c',
-  n: 'n', r: 'r', h: 'h', x: 'x', backspace: 'back', q: 'q',
+  n: 'n', r: 'r', h: 'h', x: 'x', backspace: 'back', q: 'q', control: 'fire', j: 'fire',
 };
 const Input = {
   keys: Object.create(null), hits: Object.create(null),
@@ -724,8 +1083,14 @@ function randomSidewalkPoint(filter) {
 }
 
 function genWorld() {
-  const rng = mulberry32(1538);
+  const rng = mulberry32(CITY.seed);
   const W = World;
+  Object.assign(W, {
+    h: [], v: [], closed: new Set(), buildings: [], trees: [], lamps: [], potholes: new Map(), puddles: [],
+    pois: [], stations: [], parking: [], courts: [], lots: [], stalls: [], reeds: [], pigeons: [], edges: [],
+    airport: null, planes: [], umbrellas: [], statues: [],
+  });
+  chunkCache.clear();
   W.tiles = new Uint8Array(MW * MH).fill(TILE.GRASS);
   W.dyn = new Uint8Array(MW * MH);
   for (let i = 0; i < BX; i++) { W.h[i] = []; for (let j = 0; j <= BY; j++) W.h[i][j] = true; }
@@ -745,7 +1110,7 @@ function genWorld() {
   genAirport(rng);
   // Hito del Centro: la torre más grande se vuelve el rascacielos icónico
   let tallest = null;
-  for (const b of W.buildings) if (b.d === 'D' && b.kind === 'ac' && (!tallest || b.tw * b.th > tallest.tw * tallest.th)) tallest = b;
+  if (CITY.id === 'bogota') for (const b of W.buildings) if (b.d === 'D' && b.kind === 'ac' && (!tallest || b.tw * b.th > tallest.tw * tallest.th)) tallest = b;
   if (tallest) { tallest.kind = 'tower'; tallest.height = 95; tallest.lift = 26; }
   genPOIs();
   genStreetTrees(rng);
@@ -754,7 +1119,7 @@ function genWorld() {
 }
 
 function addBuilding(tx, ty, tw, th, d, rng, o = {}) {
-  const st = STYLE[d] || STYLE.C;
+  const st = STYLE[d] || KIT.centro;
   const height = o.height || Math.round(lerp(st.h[0], st.h[1], rng()) * (0.75 + Math.min(tw, th) / 12));
   const b = {
     x: tx * T, y: ty * T, w: tw * T, h: th * T, tw, th, d, height,
@@ -763,7 +1128,8 @@ function addBuilding(tx, ty, tw, th, d, rng, o = {}) {
     kind: o.kind || st.kind, seed: (rng() * 1e9) | 0,
     neon: pickR(rng, ['#00e5ff', '#ff3dcd', '#b388ff', '#69f0ae', '#ffd740']),
   };
-  b.patio = d === 'L' && tw >= 4 && th >= 4;
+  b.patio = (st.kind === 'tejas' && st.walls === BOG_STYLE.L.walls || st.balcony) && tw >= 4 && th >= 4 && !o.kind;
+  b.graffiti = !!st.graffiti && !o.kind; b.balcony = !!st.balcony && !o.kind;
   b.roofDark = shade(b.roof, -0.22); b.roofLight = shade(b.roof, 0.18); b.wallDark = shade(b.wall, -0.3);
   World.buildings.push(b);
   fillTiles(tx, ty, tw, th, TILE.BUILDING);
@@ -794,7 +1160,7 @@ function splitLots(rng, x, y, w, h, minS, gapP, out, depth) {
 function addTree(tx, ty, rng, solid = true, r) {
   if (solid) setTile(tx, ty, TILE.TREE);
   const c = pickR(rng, ['#3f8f3a', '#4a9b3f', '#2f7a35', '#3d8a44', '#57a14a']);
-  World.trees.push({ x: (tx + 0.5) * T + (rng() - 0.5) * 6, y: (ty + 0.5) * T + (rng() - 0.5) * 6, r: r || 13 + rng() * 6, c, c2: shade(c, 0.2), solid });
+  World.trees.push({ x: (tx + 0.5) * T + (rng() - 0.5) * 6, y: (ty + 0.5) * T + (rng() - 0.5) * 6, r: r || 13 + rng() * 6, c, c2: shade(c, 0.2), solid, palm: CITY.palms && rng() < 0.6 });
 }
 
 function genBlock(bi, bj, d, rng) {
@@ -877,6 +1243,73 @@ function genPark(park, ix, iy, n, rng, d) {
         if (tileAt(x, y) === TILE.GRASS && rng() < 0.45) addTree(x, y, rng);
       break;
     }
+    case 'beach': { // playa: arena, mar hacia el borde del mapa, palmas y sombrillas
+      fillTiles(ix, iy, n, n, TILE.SAND);
+      const [bi, bj] = blockOf(ix * T, iy * T);
+      if (bi === 0) fillTiles(ix, iy, 4, n, TILE.WATER);
+      if (bj === BY - 1) fillTiles(ix, iy + 7, n, 4, TILE.WATER);
+      const cols = ['#e53935', '#fdd835', '#1e88e5', '#43a047', '#ff6d00', '#ec407a'];
+      for (let y = iy; y < iy + n; y++) for (let x = ix; x < ix + n; x++) {
+        if (tileAt(x, y) !== TILE.SAND) continue;
+        const rr = rng();
+        if (rr < 0.12) addTree(x, y, rng, true, 14);
+        else if (rr < 0.3) W.umbrellas.push({ x: (x + 0.5) * T, y: (y + 0.5) * T, c: pickR(rng, cols) });
+      }
+      break;
+    }
+    case 'muralla': { // baluartes de piedra con cañones
+      fillTiles(ix, iy, n, n, TILE.GRASS);
+      fillTiles(ix + 2, iy + 2, 7, 7, TILE.PLAZA);
+      const o = { height: 26, lift: 12, kind: 'wall', roof: '#c2a878', wall: '#9c8558' };
+      addBuilding(ix, iy, 4, 2, 'M', rng, o); addBuilding(ix + 7, iy, 4, 2, 'M', rng, o);
+      addBuilding(ix, iy + 9, 4, 2, 'M', rng, o); addBuilding(ix + 7, iy + 9, 4, 2, 'M', rng, o);
+      addBuilding(ix, iy + 2, 2, 2, 'M', rng, o); addBuilding(ix, iy + 7, 2, 2, 'M', rng, o);
+      addBuilding(ix + 9, iy + 2, 2, 2, 'M', rng, o); addBuilding(ix + 9, iy + 7, 2, 2, 'M', rng, o);
+      for (let k = 0; k < 4; k++) W.statues.push({ x: (ix + 3 + k * 1.7) * T, y: (iy + 5.5) * T, kind: 'cannon' });
+      break;
+    }
+    case 'reloj': {
+      fillTiles(ix, iy, n, n, TILE.PLAZA);
+      addBuilding(ix + 4, iy + 3, 3, 3, 'M', rng, { height: 60, lift: 24, kind: 'reloj', roof: '#f2c94c', wall: '#e0a93b' });
+      const cols = ['#e53935', '#1e88e5', '#fdd835', '#43a047'];
+      for (let k = 0; k < 4; k++) W.stalls.push({ x: (ix + 1.8 + k * 2.4) * T, y: (iy + 8.6) * T, c: pickR(rng, cols) });
+      break;
+    }
+    case 'castillo': {
+      fillTiles(ix, iy, n, n, TILE.GRASS);
+      fillTiles(ix + 5, iy + 9, 1, 2, TILE.PLAZA);
+      addBuilding(ix + 1, iy + 1, 9, 8, 'M', rng, { height: 44, lift: 18, kind: 'castillo', roof: '#b39b72', wall: '#8f7a55' });
+      break;
+    }
+    case 'botero': {
+      fillTiles(ix, iy, n, n, TILE.PLAZA);
+      for (const [a, b] of [[2, 2], [7, 2], [2, 7], [7, 7], [5, 4], [4, 8]]) addBuilding(ix + a, iy + b, 1, 1, 'C', rng, { height: 16, lift: 8, kind: 'botero', roof: '#6d4c2f', wall: '#4e3620' });
+      for (const [a, b] of [[0, 0], [10, 0], [0, 10], [10, 10]]) addTree(ix + a, iy + b, rng);
+      for (let k = 0; k < 20; k++) W.pigeons.push({ x: (ix + 1 + rng() * 9) * T, y: (iy + 1 + rng() * 9) * T, t: rng() * 10, fly: 0, vx: 0, vy: 0 });
+      break;
+    }
+    case 'rio': { // Bulevar del Río (Cali)
+      fillTiles(ix, iy, n, n, TILE.PLAZA);
+      fillTiles(ix, iy + 4, n, 3, TILE.WATER);
+      for (let x = ix; x < ix + n; x += 2) { addTree(x, iy + 1, rng, true, 13); addTree(x + 1, iy + 9, rng, true, 13); }
+      break;
+    }
+    case 'gato': {
+      fillTiles(ix, iy, n, n, TILE.GRASS);
+      fillTiles(ix + 3, iy + 3, 5, 5, TILE.PLAZA); fillTiles(ix + 5, iy, 1, n, TILE.PLAZA);
+      fillTiles(ix + 8, iy, 3, n, TILE.WATER);
+      addBuilding(ix + 4, iy + 4, 2, 2, 'C', rng, { height: 24, lift: 12, kind: 'gato', roof: '#5d4037', wall: '#3e2723' });
+      for (let y = iy; y < iy + n; y++) for (let x = ix; x < ix + 8; x++) if (tileAt(x, y) === TILE.GRASS && rng() < 0.35) addTree(x, y, rng);
+      break;
+    }
+    case 'malecon': { // Gran Malecón del río Magdalena
+      fillTiles(ix, iy, n, n, TILE.PLAZA);
+      const [bi] = blockOf(ix * T, iy * T);
+      if (bi === BX - 1) fillTiles(ix + 6, iy, 5, n, TILE.WATER);
+      for (let y = iy; y < iy + n; y += 2) addTree(ix + (bi === BX - 1 ? 5 : 1 + (y % 4)), y, rng, true, 13);
+      if (rng() < 0.6) W.stalls.push({ x: (ix + 2.5) * T, y: (iy + 5) * T, c: pickR(rng, ['#e53935', '#fdd835', '#1e88e5']) });
+      break;
+    }
   }
 }
 
@@ -908,27 +1341,47 @@ function genAirport(rng) {
 
 function poiMeta(p) {
   switch (p.type) {
-    case 'home': return { name: HOMES[p.home].name, icon: '🏠', color: '#4fc3f7' };
+    case 'home': return p.home === 'hotel' ? { name: 'Hotel ' + CITY.nick, icon: '🏨', color: '#4fc3f7' } : { name: HOMES[p.home].name, icon: '🏠', color: '#4fc3f7' };
     case 'shop': return { name: SHOPS[p.shop].name, icon: SHOPS[p.shop].icon, color: SHOPS[p.shop].color };
-    case 'hospital': return { name: p.id === 'hosp1' ? 'Hospital San Juan' : 'Clínica del Norte', icon: '🏥', color: '#ef5350' };
+    case 'hospital': return { name: CITY.id !== 'bogota' ? 'Hospital Universitario' : p.id === 'hosp1' ? 'Hospital San Juan' : 'Clínica del Norte', icon: '🏥', color: '#ef5350' };
     case 'police': return { name: 'Estación de Policía', icon: '🚓', color: '#42a5f5' };
     case 'mechanic': return { name: 'Taller El Mono', icon: '🔧', color: '#ffb74d' };
     case 'carwash': return { name: 'Lavadero y Placas', icon: '🧽', color: '#4dd0e1' };
     case 'market': return { name: MARKETS[p.market].name, icon: '💰', color: '#ffd54f' };
     case 'business': return { name: BIZ[p.biz].name, icon: BIZ[p.biz].icon, color: '#81c784' };
     case 'giver': return { name: p.npc, icon: MISSION_INFO[p.mission].icon, color: MISSION_INFO[p.mission].color };
-    case 'club': return { name: 'Discoteca Galáctica', icon: '🪩', color: '#e040fb' };
+    case 'club': return { name: p.name || 'Discoteca Galáctica', icon: '🪩', color: '#e040fb' };
     case 'atm': return { name: 'Cajero automático', icon: '🏧', color: '#90a4ae' };
     case 'hide': return { name: 'Escondite', icon: '🌿', color: '#66bb6a' };
-    case 'airport': return { name: 'Terminal El Dorado', icon: '✈️', color: '#4fc3f7' };
+    case 'airport': return { name: 'Aeropuerto ' + CITY.airport + ' · Vuelos', icon: '✈️', color: '#4fc3f7' };
     case 'station': return { name: 'Estación ' + p.station, icon: '🚉', color: '#e53935' };
   }
   return { name: '?', icon: '?', color: '#fff' };
 }
 
+/** Escoge un andén libre dentro del barrio pedido (para las ciudades nuevas). */
+function autoPlace(def, rng) {
+  const blocks = [];
+  for (let bj = 0; bj < BY; bj++) for (let bi = 0; bi < BX; bi++)
+    if (DISTRICT_GRID[bj][bi] === def.d && !PARKS[bi + ',' + bj]) blocks.push([bi, bj]);
+  if (!blocks.length) for (let bj = 0; bj < BY; bj++) for (let bi = 0; bi < BX; bi++) if (DISTRICT_GRID[bj][bi] !== 'A' && !PARKS[bi + ',' + bj]) blocks.push([bi, bj]);
+  for (let k = 0; k < 400; k++) {
+    const b = pickR(rng, blocks), side = pickR(rng, ['N', 'S', 'W', 'E']), off = 2 + Math.floor(rng() * 9);
+    const [tx, ty] = sidewalkTile(b[0], b[1], side, off);
+    const x = (tx + 0.5) * T, y = (ty + 0.5) * T;
+    const minD = k < 300 ? 76 : 44;
+    if (World.pois.some(p => dist(p.x, p.y, x, y) < minD)) continue;
+    if (BOG_STATIONS.some(st => dist((st.tx + 0.5) * T, (st.ty + 0.5) * T, x, y) < 110)) continue;
+    return { b, side, off };
+  }
+  return { b: blocks[0], side: 'N', off: 6 };
+}
+
 function genPOIs() {
   const W = World;
-  for (const def of POI_DEFS) {
+  const rng = mulberry32(CITY.seed + 77);
+  for (const d0 of POI_DEFS) {
+    const def = d0.b ? d0 : Object.assign({}, d0, autoPlace(d0, rng));
     const [tx, ty] = sidewalkTile(def.b[0], def.b[1], def.side, def.off);
     const p = Object.assign({}, def, { x: (tx + 0.5) * T, y: (ty + 0.5) * T, tx, ty });
     Object.assign(p, poiMeta(p));
@@ -936,24 +1389,25 @@ function genPOIs() {
   }
   const ap = { id: 'airport', type: 'airport', x: W.airport.x, y: W.airport.y, side: 'E' };
   Object.assign(ap, poiMeta(ap)); W.pois.push(ap);
-  for (const sd of STATION_DEFS) {
+  BOG_STATIONS.forEach((sd0, i) => {
+    const sd = Object.assign({}, sd0, { name: CITY.stationNames[i] });
     const p = { id: 'st_' + sd.name, type: 'station', station: sd.name, axis: sd.axis, x: (sd.tx + 0.5) * T, y: (sd.ty + 0.5) * T, side: sd.axis === 'h' ? 'N' : (sd.tx % P === RW ? 'W' : 'E') };
     Object.assign(p, poiMeta(p));
     W.pois.push(p); W.stations.push(p);
-  }
+  });
 }
 
 function genStreetTrees(rng) {
-  const prob = { U: 0.3, S: 0.22, C: 0.2, Z: 0.16, K: 0.08, L: 0.04, D: 0.07 };
+  const prob = CITY.id === 'bogota' ? { U: 0.3, S: 0.22, C: 0.2, Z: 0.16, K: 0.08, L: 0.04, D: 0.07 } : null;
   for (let bj = 0; bj < BY; bj++) for (let bi = 0; bi < BX; bi++) {
     const d = DISTRICT_GRID[bj][bi]; if (d === 'A') continue;
     for (const side of ['N', 'S', 'W', 'E']) for (let off = 2; off <= 10; off += 2) {
-      if (rng() > prob[d]) continue;
+      if (rng() > (prob ? prob[d] : CITY.palms ? 0.2 : 0.18)) continue;
       const [tx, ty] = sidewalkTile(bi, bj, side, off);
       const x = (tx + 0.5) * T, y = (ty + 0.5) * T;
       if (World.pois.some(p => dist(p.x, p.y, x, y) < 56)) continue;
       const c = pickR(rng, ['#3f8f3a', '#4a9b3f', '#2f7a35', '#5aa64c']);
-      World.trees.push({ x, y, r: 11 + rng() * 4, c, c2: shade(c, 0.2), solid: false });
+      World.trees.push({ x, y, r: 11 + rng() * 4, c, c2: shade(c, 0.2), solid: false, palm: CITY.palms && rng() < 0.75 });
     }
   }
 }
@@ -1025,21 +1479,53 @@ function renderChunk(g, cx, cy) {
   g.restore();
 }
 
+const dStyle = d => STYLE[d] || KIT.centro;
+const isCobble = d => dStyle(d).walls === BOG_STYLE.L.walls || !!dStyle(d).balcony;
+/** Lo que se ve fuera de la ciudad: cerros, sabana, caña, mar, río o manglar. */
+function drawOutside(g, tx, ty, px, py, r) {
+  const side = tx >= MW ? 'E' : tx < 0 ? 'W' : ty < 0 ? 'N' : 'S';
+  const kind = CITY.outside[side];
+  const near = Math.max(tx - MW + 1, -tx, -ty, ty - MH + 1); // tiles de distancia al borde
+  switch (kind) {
+    case 'sea': case 'river': case 'manglar': {
+      if (kind === 'sea' && near <= 2) { g.fillStyle = '#e9d59a'; g.fillRect(px, py, T, T); g.fillStyle = '#d6bf7c'; g.fillRect(px + r * 24, py + 10, 3, 3); return; }
+      g.fillStyle = kind === 'sea' ? (near < 5 ? '#2f9fc4' : '#1f78a8') : kind === 'river' ? '#7d6b4f' : '#3d6b4f';
+      g.fillRect(px, py, T, T);
+      g.fillStyle = kind === 'river' ? 'rgba(255,240,200,.18)' : 'rgba(255,255,255,.22)';
+      g.fillRect(px + r * 18, py + 8 + r * 10, 12, 2);
+      if (kind === 'manglar' && r > 0.5) { g.fillStyle = '#2e5e34'; circ(g, px + 16, py + 16, 9 + r * 5); }
+      return;
+    }
+    case 'cana': {
+      g.fillStyle = r < 0.5 ? '#6fa84a' : '#79b24f'; g.fillRect(px, py, T, T);
+      g.fillStyle = '#5a9440'; for (let k = 0; k < 4; k++) g.fillRect(px + k * 8 + 2, py, 2, T);
+      return;
+    }
+    case 'mount': {
+      g.fillStyle = r < 0.5 ? '#2c5631' : '#305b35'; g.fillRect(px, py, T, T);
+      if (r > 0.55) { g.fillStyle = 'rgba(18,48,24,.7)'; circ(g, px + 16, py + 16, 8 + r * 8); }
+      if (CITY.id === 'medellin' && near < 8 && r < 0.3) { // casitas en las lomas
+        g.fillStyle = pick(['#e53935', '#fdd835', '#1e88e5', '#fb8c00', '#ffffff', '#b5523b']); g.fillRect(px + 6, py + 8, 12, 10);
+        g.fillStyle = '#8a8f99'; g.fillRect(px + 5, py + 6, 14, 3);
+      }
+      return;
+    }
+    default: {
+      g.fillStyle = r < 0.5 ? '#5c8442' : '#618a46'; g.fillRect(px, py, T, T);
+      if (r > 0.55) { g.fillStyle = 'rgba(70,110,50,.6)'; circ(g, px + 16, py + 16, 8 + r * 8); }
+      if (r < 0.06) { g.fillStyle = '#e8e2d0'; g.fillRect(px + 10, py + 12, 10, 8); g.fillStyle = '#b5523b'; g.fillRect(px + 8, py + 8, 14, 5); }
+    }
+  }
+}
+
 function drawTile(g, tx, ty, px, py) {
   const t = tileAt(tx, ty), r = h2(tx, ty);
-  if (t < 0) { // Fuera de la ciudad: cerros orientales y sabana
-    const east = tx >= MW;
-    g.fillStyle = east ? (r < 0.5 ? '#2c5631' : '#305b35') : (r < 0.5 ? '#5c8442' : '#618a46');
-    g.fillRect(px, py, T, T);
-    if (r > 0.55) { g.fillStyle = east ? 'rgba(18,48,24,.7)' : 'rgba(70,110,50,.6)'; circ(g, px + 16, py + 16, 8 + r * 8); }
-    if (!east && r < 0.06) { g.fillStyle = '#e8e2d0'; g.fillRect(px + 10, py + 12, 10, 8); g.fillStyle = '#b5523b'; g.fillRect(px + 8, py + 8, 14, 5); }
-    return;
-  }
+  if (t < 0) { drawOutside(g, tx, ty, px, py, r); return; }
   const d = districtAt((tx + 0.5) * T, (ty + 0.5) * T);
   switch (t) {
     case TILE.ROAD: drawRoadTile(g, tx, ty, px, py, d); break;
     case TILE.SIDEWALK: {
-      g.fillStyle = d === 'L' ? '#c4b49a' : d === 'Z' ? '#c9c6cf' : d === 'A' ? '#c2c2bc' : '#bdb6a8';
+      g.fillStyle = isCobble(d) ? '#c4b49a' : dStyle(d).kind === 'glass' ? '#c9c6cf' : d === 'A' ? '#c2c2bc' : '#bdb6a8';
       g.fillRect(px, py, T, T);
       g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(px, py + 15, T, 1); g.fillRect(px + 15, py, 1, T);
       g.fillStyle = '#8a8478';
@@ -1050,7 +1536,7 @@ function drawTile(g, tx, ty, px, py) {
       break;
     }
     case TILE.GRASS: case TILE.TREE: {
-      g.fillStyle = d === 'A' ? '#7ea65c' : '#5b9a48'; g.fillRect(px, py, T, T);
+      g.fillStyle = d === 'A' || CITY.palms ? '#7ea65c' : '#5b9a48'; g.fillRect(px, py, T, T);
       for (let k = 0; k < 5; k++) {
         g.fillStyle = k % 2 ? '#6db257' : '#4c8a3c';
         g.fillRect(px + h2(tx * 3 + k, ty) * 29, py + h2(tx, ty * 3 + k) * 29, 2, 3);
@@ -1059,7 +1545,7 @@ function drawTile(g, tx, ty, px, py) {
       break;
     }
     case TILE.PLAZA: {
-      g.fillStyle = d === 'Z' ? '#a9a4ad' : d === 'L' ? '#b9a98f' : d === 'A' ? '#a8a8a2' : '#b8845c';
+      g.fillStyle = dStyle(d).kind === 'glass' ? '#a9a4ad' : isCobble(d) ? '#b9a98f' : d === 'A' ? '#a8a8a2' : '#b8845c';
       g.fillRect(px, py, T, T);
       g.fillStyle = 'rgba(0,0,0,.13)';
       for (let row = 0; row < 4; row++) {
@@ -1070,9 +1556,14 @@ function drawTile(g, tx, ty, px, py) {
       break;
     }
     case TILE.WATER: {
-      g.fillStyle = d === 'S' ? '#3f7f86' : '#3779b0'; g.fillRect(px, py, T, T);
+      g.fillStyle = CITY.id === 'bogota' && d === 'S' ? '#3f7f86' : CITY.palms ? '#2f9fc4' : '#3779b0'; g.fillRect(px, py, T, T);
       g.fillStyle = 'rgba(255,255,255,.18)';
       g.fillRect(px + r * 16, py + 8, 10, 2); g.fillRect(px + 4 + (1 - r) * 14, py + 22, 8, 2);
+      break;
+    }
+    case TILE.SAND: {
+      g.fillStyle = '#e9d59a'; g.fillRect(px, py, T, T);
+      g.fillStyle = '#d9c27f'; for (let k = 0; k < 4; k++) g.fillRect(px + h2(tx * 5 + k, ty) * 29, py + h2(tx, ty * 5 + k) * 29, 2, 2);
       break;
     }
     case TILE.RUNWAY: {
@@ -1097,7 +1588,7 @@ function drawTile(g, tx, ty, px, py) {
 }
 
 function drawRoadTile(g, tx, ty, px, py, d) {
-  const cob = d === 'L';
+  const cob = isCobble(d);
   g.fillStyle = cob ? '#5f564c' : '#3a3d45';
   g.fillRect(px, py, T, T);
   if (cob) { // adoquines de La Candelaria
@@ -1122,7 +1613,7 @@ function drawRoadTile(g, tx, ty, px, py, d) {
   }
   if (across === 1) {
     if (troncal) { // carril exclusivo de TransMilenio
-      g.fillStyle = '#7b2d2d';
+      g.fillStyle = CITY.troncal.lane;
       horiz ? g.fillRect(px, py + 2, T, T - 4) : g.fillRect(px + 2, py, T - 4, T);
       g.fillStyle = '#e8e2c8';
       if (horiz) { g.fillRect(px, py + 2, T, 2); g.fillRect(px, py + T - 4, T, 2); }
@@ -1174,7 +1665,7 @@ function drawBuildingWall(g, b) {
   g.fillStyle = b.wallDark; g.fillRect(b.x, b.y, b.w, b.h);
   const fy = b.y + b.h - b.lift;
   g.fillStyle = b.wall; g.fillRect(b.x, fy, b.w, b.lift);
-  const colonial = b.d === 'L' || b.d === 'U';
+  const colonial = b.kind === 'tejas';
   if (b.lift >= 7) {
     const rows = Math.max(1, Math.floor((b.lift - 2) / 7));
     for (let r = 0; r < rows; r++) {
@@ -1183,6 +1674,19 @@ function drawBuildingWall(g, b) {
         g.fillStyle = colonial ? '#5d4037' : (h2(wx, wy) < 0.22 ? '#ffe9a8' : 'rgba(25,35,52,.85)');
         g.fillRect(wx, wy, 4, 4);
       }
+    }
+  }
+  if (b.graffiti && b.lift >= 5) { // murales de colores
+    const R = mulberry32(b.seed + 3);
+    for (let k = 0; k < Math.max(2, b.w / 14); k++) {
+      g.fillStyle = pickR(R, ['#ff1744', '#ffea00', '#00e5ff', '#76ff03', '#d500f9', '#ff9100', '#ffffff']);
+      g.beginPath(); g.ellipse(b.x + R() * b.w, fy + R() * b.lift, 3 + R() * 6, 2 + R() * 3, R() * 3, 0, TAU); g.fill();
+    }
+  }
+  if (b.balcony && b.lift >= 8) { // balcones de madera
+    for (let bx = b.x + 4; bx < b.x + b.w - 14; bx += 22) {
+      g.fillStyle = '#5d4037'; g.fillRect(bx, fy + 1, 14, 4);
+      g.fillStyle = '#8d6e63'; for (let k = 0; k < 14; k += 3) g.fillRect(bx + k, fy + 1, 1, 4);
     }
   }
   g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(b.x, b.y + b.h - 2, b.w, 2);
@@ -1269,7 +1773,7 @@ function drawRoof(g, b, time) {
       g.fillStyle = '#7fb3d5'; for (let yy = y + 14; yy < y + h - 8; yy += 32) g.fillRect(x + 12, yy, w - 24, 6);
       g.save(); g.translate(x + w / 2, y + h / 2); g.rotate(-Math.PI / 2);
       g.fillStyle = '#37474f'; g.font = 'bold 26px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText('EL DORADO', 0, 0); g.restore();
+      g.fillText(CITY.airport.toUpperCase(), 0, 0); g.restore();
       break;
     }
     case 'hangar': {
@@ -1287,6 +1791,45 @@ function drawRoof(g, b, time) {
       g.fillStyle = b.roofLight; for (let xx = x + 6; xx < x + w - 4; xx += 10) g.fillRect(xx, y + 4, 4, h - 8);
       break;
     }
+    case 'wall': { // piedra de las murallas con almenas
+      g.fillStyle = b.roofDark;
+      for (let yy = y + 5; yy < y + h; yy += 6) for (let xx = x + ((yy / 6) % 2) * 5; xx < x + w; xx += 10) g.fillRect(xx, yy, 1, 6);
+      for (let yy = y + 5; yy < y + h; yy += 6) g.fillRect(x, yy, w, 1);
+      g.fillStyle = b.roofLight; for (let xx = x + 2; xx < x + w - 4; xx += 10) g.fillRect(xx, y + 1, 6, 4);
+      break;
+    }
+    case 'reloj': { // Torre del Reloj
+      g.fillStyle = '#f6d365'; g.fillRect(x + 10, y + 10, w - 20, h - 20);
+      g.fillStyle = '#c62828'; g.fillRect(x + w / 2 - 8, y + 6, 16, 10);
+      g.fillStyle = '#fff'; circ(g, x + w / 2, y + h / 2 + 4, 13);
+      g.strokeStyle = '#333'; g.lineWidth = 2; g.beginPath();
+      g.moveTo(x + w / 2, y + h / 2 + 4); g.lineTo(x + w / 2, y + h / 2 - 6);
+      g.moveTo(x + w / 2, y + h / 2 + 4); g.lineTo(x + w / 2 + 7, y + h / 2 + 4); g.stroke();
+      break;
+    }
+    case 'castillo': { // Castillo San Felipe: terrazas escalonadas y bandera
+      for (let s2 = 0; s2 < 4; s2++) { const ins = 6 + s2 * 18; if (w - ins * 2 < 20) break; g.fillStyle = s2 % 2 ? b.roofDark : b.roofLight; g.fillRect(x + ins, y + ins, w - ins * 2, h - ins * 2); }
+      const fx = x + w / 2, fy = y + h / 2;
+      g.fillStyle = '#5d4037'; g.fillRect(fx - 1, fy - 20, 2, 22);
+      g.fillStyle = '#fcd116'; g.fillRect(fx + 1, fy - 20, 16, 5); g.fillStyle = '#003893'; g.fillRect(fx + 1, fy - 15, 16, 3); g.fillStyle = '#ce1126'; g.fillRect(fx + 1, fy - 12, 16, 3);
+      break;
+    }
+    case 'botero': { // escultura gordita de bronce
+      g.fillStyle = 'rgba(0,0,0,.25)'; circ(g, x + w / 2 + 3, y + h / 2 + 3, 12);
+      g.fillStyle = '#4e342e'; circ(g, x + w / 2, y + h / 2 + 2, 12);
+      g.fillStyle = '#795548'; circ(g, x + w / 2 - 3, y + h / 2 - 1, 7);
+      g.fillStyle = '#6d4c41'; circ(g, x + w / 2, y + h / 2 - 9, 5);
+      return;
+    }
+    case 'gato': { // El Gato del Río
+      const cx = x + w / 2, cy = y + h / 2;
+      g.fillStyle = '#3e2723'; circ(g, cx, cy + 6, 16); circ(g, cx, cy - 12, 11);
+      g.beginPath(); g.moveTo(cx - 10, cy - 18); g.lineTo(cx - 6, cy - 30); g.lineTo(cx - 1, cy - 20); g.fill();
+      g.beginPath(); g.moveTo(cx + 10, cy - 18); g.lineTo(cx + 6, cy - 30); g.lineTo(cx + 1, cy - 20); g.fill();
+      g.fillStyle = '#ffd54f'; circ(g, cx - 4, cy - 13, 2); circ(g, cx + 4, cy - 13, 2);
+      g.strokeStyle = '#3e2723'; g.lineWidth = 4; g.beginPath(); g.moveTo(cx + 14, cy + 12); g.quadraticCurveTo(cx + 28, cy + 10, cx + 24, cy - 6); g.stroke();
+      return;
+    }
     case 'statue': {
       g.fillStyle = '#7d7668'; circ(g, x + w / 2, y + h / 2, 9);
       g.fillStyle = '#4e5a4a'; circ(g, x + w / 2, y + h / 2 - 2, 5);
@@ -1295,9 +1838,26 @@ function drawRoof(g, b, time) {
   }
   g.strokeStyle = b.roofDark; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, w - 2, h - 2);
   g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x + 2, y + 2, w - 4, 2);
+  if (b.balcony) { // buganvilias
+    const R2 = mulberry32(b.seed + 9);
+    for (let k = 0; k < w / 9; k++) { g.fillStyle = R2() < 0.5 ? '#e91e63' : '#f06292'; circ(g, x + R2() * w, y + h - 2 - R2() * 5, 2.4); }
+  }
 }
 
 function drawTreeCanopy(g, t) {
+  if (t.palm) { // palmera: hojas en estrella
+    g.fillStyle = 'rgba(0,0,0,.22)'; circ(g, t.x + 5, t.y + 6, t.r * 0.8);
+    const R = t.r * 1.15;
+    for (let k = 0; k < 7; k++) {
+      const a = k * 0.9 + t.x * 0.01;
+      g.strokeStyle = k % 2 ? '#3f9a3a' : '#56b04a'; g.lineWidth = 5; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(t.x, t.y); g.quadraticCurveTo(t.x + Math.cos(a) * R * 0.7, t.y + Math.sin(a) * R * 0.7 - 3, t.x + Math.cos(a) * R, t.y + Math.sin(a) * R); g.stroke();
+    }
+    g.lineCap = 'butt';
+    g.fillStyle = '#8d6e63'; circ(g, t.x, t.y, 3.5);
+    g.fillStyle = '#795548'; circ(g, t.x + 2, t.y + 1, 1.8);
+    return;
+  }
   g.fillStyle = 'rgba(0,0,0,.24)'; circ(g, t.x + 4, t.y + 5, t.r);
   g.fillStyle = t.c; circ(g, t.x, t.y, t.r);
   g.fillStyle = t.c2; circ(g, t.x - t.r * 0.3, t.y - t.r * 0.3, t.r * 0.55);
@@ -1314,11 +1874,11 @@ function drawStation(g, st) {
   if (st.axis === 'v') g.rotate(Math.PI / 2);
   g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(-62, -6, 128, 18);
   g.fillStyle = '#b0bec5'; g.fillRect(-64, -10, 128, 18);
-  g.fillStyle = '#c8102e'; g.fillRect(-64, -10, 128, 7);
+  g.fillStyle = CITY.troncal.color; g.fillRect(-64, -10, 128, 7);
   g.fillStyle = '#fff'; g.fillRect(-64, -3, 128, 2);
   g.fillStyle = 'rgba(160,220,255,.5)'; for (let k = -56; k < 60; k += 16) g.fillRect(k, 0, 10, 6);
   g.fillStyle = '#fff'; g.font = 'bold 9px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-  g.fillText('TM', 0, -6);
+  g.fillText(CITY.troncal.short, 0, -6);
   g.restore();
 }
 
@@ -1566,7 +2126,7 @@ function updateTrafficCar(v, dt) {
     v.blockedT += dt;
     if (v.blockedT > v.honkT) {
       v.blockedT = 0; v.honkT = rand(3, 7);
-      if (dist(v.x, v.y, G.player.x, G.player.y) < 420) { Sound.sfx('horn'); if (Math.random() < 0.4) bubble(v, pick(HONK_LINES)); }
+      if (dist(v.x, v.y, G.player.x, G.player.y) < 420) { Sound.sfx('horn'); if (Math.random() < 0.4) bubble(v, pick(CITY.honk)); }
     }
     // Calle bloqueada por barreras: media vuelta
     if (solidAt(v.x + f[0] * (v.spec.len * 0.5 + 18), v.y + f[1] * (v.spec.len * 0.5 + 18)) && v.blockedT > 2) uTurn(v);
@@ -1623,7 +2183,7 @@ function collideVehicles() {
       if (A.mode !== 'physics' && B.mode !== 'physics') continue;
       if (Math.abs(A.x - B.x) > 110 || Math.abs(A.y - B.y) > 110) continue;
       // Las patrullas atraviesan el tráfico para no quedarse atascadas
-      if ((A.driver === 'cop' && B.mode === 'traffic') || (B.driver === 'cop' && A.mode === 'traffic')) continue;
+      if (((A.driver === 'cop' || A.driver === 'racer') && B.mode === 'traffic') || ((B.driver === 'cop' || B.driver === 'racer') && A.mode === 'traffic')) continue;
       const CA = vehCircles(A), CB = vehCircles(B);
       let pen = 0, nx = 0, ny = 0;
       for (const ca of CA) for (const cb of CB) {
@@ -1730,14 +2290,16 @@ function updatePed(p, dt) {
       if (p.fleeT <= 0) p.mode = 'gone';
       break;
     }
+    case 'gang': updateGang(p, dt); break;
     case 'down': {
       p.downT -= dt;
+      if (p.downT <= 0 && p.koGone) { p.mode = 'gone'; break; }
       if (p.downT <= 0) { p.mode = 'flee'; p.fleeT = 4; p.speed = 80; bubble(p, pick(['¡Ay, mi espalda!', '¡Lo voy a demandar!', '¡Casi me mata!'])); }
       break;
     }
     case 'gone': p.alpha -= dt * 0.8; break;
     case 'thief': updateThief(p, dt); break;
-    case 'cop': updateOfficer(p, dt); break;
+    case 'cop': updateOfficer(p, dt); copShoot(p, dt); break;
     case 'dance': p.anim += dt * 8; p.angle += Math.sin(p.t * 3) * dt * 2; break;
     case 'static': p.anim = 0; break;
   }
@@ -1834,6 +2396,7 @@ function updateCopCar(v, dt) {
   if (v.stuckT > 1.1) { v.reverseT = 0.9; v.stuckT = 0; v.wpn = null; }
   if (v.reverseT > 0) { v.reverseT -= dt; throttle = -1; steer = -steer; }
   updatePhysicsVehicle(v, dt, { throttle, steer, brake });
+  copCarShoot(v, dt);
   // Bajar un policía cuando el jugador va a pie
   if (v.chase && p.onFoot && d < 120 && Math.abs(v.speed) < 50 && !v.officerOut && !v.wrecked) {
     v.officerOut = true;
@@ -1877,17 +2440,22 @@ const G = {
   ach: {}, visited: {}, name: 'Parce', shirt: '#e53935',
   waypoint: null, lockHint: null, lockToastT: 0, saveT: 30, gps: null, gpsT: 0, districtNow: null,
   clubNight: -1, festivalDone: false,
+  city: 'bogota', cityVisited: { bogota: true }, bullets: [], grenades: [], scorch: [],
+  weapons: { punos: true }, ammo: {}, weapon: 'punos', fireCD: 0, snitchCD: 0, flash: 0,
+  coolT: 0, chatT: 6, carry: null, maicena: 0, minigame: null, bm: null, mouse: null,
 };
 function newPlayer(x, y) {
   return { x, y, vx: 0, vy: 0, angle: -Math.PI / 2, onFoot: true, vehicle: null, health: 100, energy: 100, hidden: false, hideT: 0, anim: 0, moving: false, hurtT: 0 };
 }
 function poi(id) { return World.pois.find(p => p.id === id); }
 function playerLook() {
-  const c = G.clothes;
+  const c = G.clothes, hot = CITY.climate === 'calor';
   return {
     skin: '#e0ac69', hair: '#2b1b0e',
-    shirt: c.cuero ? '#212121' : c.pinta ? '#1a237e' : c.impermeable && G.rain > 0.2 ? '#fdd835' : G.shirt,
-    pants: c.pinta ? '#1a237e' : '#263238', ruana: !!c.ruana, gafas: !!c.gafas,
+    shirt: c.pinta ? '#1a237e' : hot && c.guayabera ? '#fafafa' : CITY.id === 'cali' && c.salsero ? '#e91e63' : c.cuero && !hot ? '#212121' : c.impermeable && G.rain > 0.2 ? '#fdd835' : G.shirt,
+    pants: c.pinta ? '#1a237e' : hot ? '#5d4037' : '#263238', ruana: !!c.ruana && !hot, gafas: !!c.gafas,
+    sombrero: !!c.sombrero && (hot || CITY.id === 'medellin'), marimonda: !!c.marimonda && CITY.id === 'barranquilla',
+    silleta: G.carry === 'silleta', carriel: !!c.carriel && CITY.id === 'medellin',
   };
 }
 
@@ -1979,6 +2547,11 @@ function updateVitals(dt) {
   let drain = 0.07;
   if (p.onFoot && G.rain > 0.3 && !G.clothes.impermeable) drain += G.clothes.ruana ? 0.05 : 0.14;
   if (hour >= 23 || hour < 5) drain += 0.05;
+  G.coolT = Math.max(0, G.coolT - dt);
+  if (CITY.climate === 'calor' && hour >= 9 && hour < 17 && p.onFoot && !G.clothes.sombrero && G.coolT <= 0) {
+    drain += 0.09;
+    if (Math.random() < dt * 0.02) toast(pick(['🥵 ¡Qué calor tan berraco! Tómate algo frío', '🥵 ¡Eche, qué sol! Un raspao o un sombrero vueltiao te salvan']));
+  }
   p.energy = clamp(p.energy - drain * dt, 0, 100);
   if (p.energy <= 0) { damagePlayer(0.6 * dt); if (Math.random() < dt * 0.15) toast('😵 Sin energía: come algo o vas a desmayarte'); }
   else if (p.energy > 50 && p.health < 100) p.health = Math.min(100, p.health + 0.06 * dt);
@@ -2029,7 +2602,7 @@ function tryToggleVehicle() {
     if (d < 24 && d < bd) { bd = d; best = v; }
   }
   if (!best) return false;
-  if (best.spec.nodrive) { toast('Ni por el chiras le dejan manejar un TransMilenio 😅'); return true; }
+  if (best.spec.nodrive) { toast(`Ni por el chiras le dejan manejar un ${CITY.troncal.name} 😅`); return true; }
   if (best.wrecked) { toast('Ese vehículo está varado 💥'); return true; }
   enterVehicle(best);
   return true;
@@ -2187,7 +2760,7 @@ function updateWeather(dt) {
   G.weatherT -= dt;
   if (G.weatherT <= 0 && !G.forceStorm) {
     if (G.weather === 'lluvia' || G.weather === 'tormenta') setWeather('nublado', rand(70, 140));
-    else { const r = Math.random(); setWeather(r < 0.55 ? 'sol' : r < 0.85 ? 'nublado' : 'lluvia', rand(90, 200)); }
+    else { const r = Math.random(); setWeather(r < 1 - CITY.rain - 0.1 ? 'sol' : r < 1 - CITY.rain * 0.43 ? 'nublado' : 'lluvia', rand(90, 200)); }
   }
   const target = { sol: 0, nublado: 0, lluvia: 0.65, tormenta: 1 }[G.weather];
   G.rain = approach(G.rain, target, dt * 0.15);
@@ -2246,7 +2819,7 @@ function manageWorld(dt) {
     for (let k = 0; k < 3; k++) {
       const bi = clamp(fbi + randi(-2, 2), 0, BX - 1), bj = clamp(fbj + randi(-2, 2), 0, BY - 1);
       const d = DISTRICT_GRID[bj][bi];
-      if (d === 'A' || Math.random() * 7 > busy[d] * (night && d === 'Z' ? 1.6 : 1)) continue;
+      if (d === 'A' || Math.random() * 7 > (busy[d] != null && CITY.id === 'bogota' ? busy[d] : 5) * (night && dStyle(d).kind === 'glass' ? 1.6 : 1)) continue;
       const pd = new Ped({ bi, bj, d: Math.random() * 4 * 12 * T });
       const dd = dist(pd.x, pd.y, f.x, f.y);
       if (dd < 300 || dd > 1150 || onScreen(pd.x, pd.y, 30)) continue;
@@ -2262,8 +2835,9 @@ function updateVehicles(dt) {
     if (v.mode === 'traffic') {
       if (v.race) updateRaceBus(v, dt); else updateTrafficCar(v, dt);
     } else if (v.driver === 'cop') updateCopCar(v, dt);
-    else updatePhysicsVehicle(v, dt, NOCTL);
+    else if (v.driver !== 'racer') updatePhysicsVehicle(v, dt, NOCTL);
   }
+  for (const v of G.vehicles) updateBurning(v, dt);
   collideVehicles();
   // Patrullas que atropellan peatones
   for (const v of G.vehicles) {
@@ -2525,7 +3099,7 @@ function missionHustle(giver) {
   const unit = round500(g.base * rand(1.75, 2.1));
   const man = Math.abs(buyer.x - giver.x) + Math.abs(buyer.y - giver.y);
   const client = pick(CLIENT_NAMES), addr = addressOf(buyer.x, buyer.y);
-  const mk = poi('m_victorino');
+  const mk = World.pois.filter(q => q.type === 'market').sort((a, b) => dist(a.x, a.y, giver.x, giver.y) - dist(b.x, b.y, giver.x, giver.y))[0];
   const m = mkMission('hustle', { timer: Math.round(man / 140 + 70), data: { g, qty, unit } });
   m.timerMax = m.timer;
   m.steps = [
@@ -2614,7 +3188,7 @@ function canTakeMission(type, verbose) {
 // EVENTOS ALEATORIOS
 // ==========================================================================
 const EVENT_DEFS = [
-  { id: 'rain', w: 2, ok: () => G.weather === 'sol' || G.weather === 'nublado', run() { setWeather('lluvia', rand(140, 240)); notify('🌧️ ¡Se largó el aguacero!', 'Calles resbalosas y tráfico pesado. Los domicilios pagan +30%.', '#64b5f6'); } },
+  { id: 'rain', get w() { return CITY.rain * 6; }, ok: () => G.weather === 'sol' || G.weather === 'nublado', run() { setWeather('lluvia', rand(140, 240)); notify('🌧️ ¡Se largó el aguacero!', 'Calles resbalosas y tráfico pesado. Los domicilios pagan +30%.', '#64b5f6'); } },
   { id: 'jam', w: 2, ok: () => true, run: () => eventJam(false) },
   { id: 'phone', w: 1.2, ok: () => G.phone > 0 && G.player.onFoot && !G.mission, run: eventThief },
   { id: 'checkpoint', w: 1.4, ok: () => !G.events.checkpoint, run: eventCheckpoint },
@@ -2781,6 +3355,11 @@ function updatePickups(dt) {
   const p = G.player;
   G.pickups = G.pickups.filter(k => {
     k.t -= dt;
+    if (dist(k.x, k.y, p.x, p.y) < 24 && k.kind === 'maicena') {
+      G.maicena++; Sound.sfx('coin'); floater(k.x, k.y - 16, '🎭 ¡Maicena!', '#fff59d');
+      for (let i = 0; i < 6; i++) addFx('confetti', k.x, k.y, rand(-60, 60), rand(-60, 20), 1);
+      return false;
+    }
     if (dist(k.x, k.y, p.x, p.y) < 24) {
       addMoney(k.amount); Sound.sfx('coin');
       toast('💵 ¡Encontraste ' + fmtMoney(k.amount) + '!');
@@ -2871,6 +3450,19 @@ function buyItem(it, p) {
   if (it.e || it.h) floater(pl.x, pl.y - 26, pick(['¡Qué rico!', '¡Uff, delicioso!', '¡A lo bien!']), '#ffd54f');
   if (it.cloth) { G.clothes[it.cloth] = true; G.rep += it.rep || 0; toast(`👕 Estrenaste: ${it.n}  +${it.rep} ⭐`); }
   if (it.phone) { G.phone = Math.max(G.phone, it.phone); toast('📱 Ahora recibes domicilios con la tecla C'); }
+  if (it.cool) { G.coolT = 160; toast('🧊 ¡Qué frescura! El calor no te afecta un rato'); }
+  if (it.n === 'Bandeja paisa') unlock('bandeja');
+  if (it.weapon) {
+    G.weapons[it.weapon] = true; G.weapon = it.weapon;
+    if (WEAPONS[it.weapon].start) G.ammo[it.weapon] = (G.ammo[it.weapon] || 0) + WEAPONS[it.weapon].start;
+    toast(`${WEAPONS[it.weapon].icon} ${it.n} lista. Ataca con clic, Ctrl o J · Q cambia de arma`);
+  }
+  if (it.ammo) {
+    if (it.ammo !== 'papa' && !G.weapons[it.ammo]) { G.money += it.p; toast('Primero compra el arma, mijo'); return; }
+    G.ammo[it.ammo] = (G.ammo[it.ammo] || 0) + it.amount;
+    if (it.ammo === 'papa') G.weapon = 'papa';
+    toast(`📦 +${it.amount} · tienes ${G.ammo[it.ammo]}`);
+  }
   if (it.veh) { buyVehicle(it.veh, p); return 'close'; }
 }
 
@@ -2953,8 +3545,8 @@ function menuShop(p) {
     title: s.name, icon: s.icon, color: s.color,
     sub: `💵 ${fmtMoney(G.money)} · ⚡ ${Math.round(G.player.energy)} · ❤️ ${Math.round(G.player.health)}`,
     items: s.items.map(it => {
-      const owned = (it.cloth && G.clothes[it.cloth]) || (it.phone && G.phone >= it.phone);
-      const sub = it.desc || [it.e ? `+${it.e} ⚡ energía` : '', it.h ? `+${it.h} ❤️ salud` : ''].filter(Boolean).join(' · ');
+      const owned = (it.cloth && G.clothes[it.cloth]) || (it.phone && G.phone >= it.phone) || (it.weapon && G.weapons[it.weapon]);
+      const sub = it.desc || [it.e ? `+${it.e} ⚡ energía` : '', it.h ? `+${it.h} ❤️ salud` : '', it.cool ? '🧊 quita el calor' : '', it.ammo ? `Tienes ${G.ammo[it.ammo] || 0}` : ''].filter(Boolean).join(' · ');
       return { label: it.n, sub, right: owned ? '✔ Ya es tuyo' : fmtMoney(it.p), disabled: owned ? 'Ya lo tienes' : G.money < it.p ? 'No te alcanza la plata 💸' : false, action: () => buyItem(it, p) };
     }).concat([{ label: 'Salir', action: () => 'close' }]),
   });
@@ -3028,6 +3620,15 @@ function buildMission(p) {
     case 'hustle': return missionHustle(p);
     case 'diluvio': return missionDiluvio();
     case 'volada': return missionVolada(p);
+    case 'taxi': return missionTaxi(p);
+    case 'carrera': return missionCarrera(p);
+    case 'pandilla': return missionPandilla(p);
+    case 'silleta': return missionSilleta(p);
+    case 'grafiti': return missionGrafiti(p);
+    case 'vendedor': return missionVendedor(p);
+    case 'guia': return missionGuia(p);
+    case 'carnaval': return missionCarnaval(p);
+    case 'salsa': return missionSalsa(p);
   }
   return null;
 }
@@ -3105,7 +3706,9 @@ function menuStats() {
         <b>Huecos</b><span>${s.potholes} 🕳️</span>
         <b>Veces en la estación</b><span>${s.busted}</span>
         <b>Veces en el hospital</b><span>${s.wasted}</span>
-        <b>Barrios visitados</b><span>${Object.keys(G.visited).length}/8</span>
+        <b>Barrios visitados</b><span>${Object.keys(G.visited).length}</span>
+        <b>Ciudades</b><span>${CITY_ORDER.filter(c => G.cityVisited[c]).map(c => CITIES[c].name).join(', ')}</span>
+        <b>Armas</b><span>${ownedWeapons().map(w => WEAPONS[w].icon).join(' ')}</span>
         <b>Negocios</b><span>${Object.keys(G.biz).filter(k => G.biz[k]).map(k => BIZ[k].icon).join(' ') || '—'}</span>
         <b>Mercancía</b><span>${GOODS.filter(g => G.inv[g.id]).map(g => g.icon + G.inv[g.id]).join(' ') || '—'}</span></div>`,
       items: [{ section: `🏆 Logros (${Object.keys(G.ach).length}/${Object.keys(ACH).length})` }, ...ach, { label: 'Volver', action: () => G.state === 'play' ? openMenu(menuPause()) : 'close' }],
@@ -3155,15 +3758,15 @@ function menuBusiness(p) {
 }
 function menuStation(p) {
   return () => ({
-    title: p.name, icon: '🚉', color: '#e53935', sub: 'Pasaje: $2.950 · Hora pico todo el día 😅',
+    title: p.name, icon: '🚉', color: CITY.troncal.color, sub: `${CITY.troncal.name} · Pasaje: ${fmtMoney(CITY.troncal.fare)} · Hora pico todo el día 😅`,
     items: World.stations.filter(s => s !== p).map(s => {
       const ok = districtUnlocked(districtAt(s.x, s.y));
-      return { label: s.station, sub: DISTRICTS[districtAt(s.x, s.y)].name, right: ok ? '$2.950' : '🔒', disabled: !ok ? 'Ese barrio está bloqueado' : G.money < 2950 ? 'No te alcanza ni pal pasaje' : false, action: () => { rideTM(s); return 'close'; } };
+      return { label: s.station, sub: DISTRICTS[districtAt(s.x, s.y)].name, right: ok ? fmtMoney(CITY.troncal.fare) : '🔒', disabled: !ok ? 'Ese barrio está bloqueado' : G.money < CITY.troncal.fare ? 'No te alcanza ni pal pasaje' : false, action: () => { rideTM(s); return 'close'; } };
     }).concat([{ label: 'Salir', action: () => 'close' }]),
   });
 }
 function rideTM(s) {
-  if (!spend(2950)) return;
+  if (!spend(CITY.troncal.fare)) return;
   if (G.mission && G.mission.type === 'tmrace') { failMission('¡Hacer trampa montándote al TM no vale!'); }
   fadeTransition(() => {
     const p = G.player;
@@ -3197,7 +3800,7 @@ function interact(q) {
   if (!p.onFoot && !VEHICLE_OK.has(q.type)) { toast('Bájate del vehículo (F) para entrar'); return; }
   switch (q.type) {
     case 'shop': openMenu(menuShop(q)); break;
-    case 'home': openMenu(menuHome(q)); break;
+    case 'home': openMenu(q.home === 'hotel' ? menuHotel(q) : menuHome(q)); break;
     case 'market': openMenu(menuMarket(q)); break;
     case 'giver': openMenu(menuGiver(q)); break;
     case 'mechanic': openMenu(menuMechanic(q)); break;
@@ -3213,7 +3816,7 @@ function interact(q) {
         action() { if (!G.clothes.pinta && !spend(40000)) return; G.clubNight = G.day; G.rep += 3; G.player.energy -= 30; fadeTransition(() => advanceTime(150)); toast('🪩 ¡Qué rumba tan buena! +3 ⭐'); return 'close'; } }])); break;
     case 'hide':
       p.hidden = true; p.hideT = 0; toast('🌿 Te escondiste… quieto y sin hacer ruido'); break;
-    case 'airport': openMenu(menuSimple('Terminal El Dorado', '✈️', '#4fc3f7', 'Vuelos nacionales e internacionales. Tú por ahora solo vienes a dejar turistas.', [])); break;
+    case 'airport': openMenu(menuFlights()); break;
   }
 }
 
@@ -3279,12 +3882,14 @@ function checkUnlocks() {
   G.unlockedSeen = G.unlockedSeen || {};
   for (const k in DISTRICTS) {
     const d = DISTRICTS[k];
-    if (d.rep > 0 && G.rep >= d.rep && !G.unlockedSeen[k]) { G.unlockedSeen[k] = true; notify(`🔓 ¡Desbloqueaste ${d.name}!`, d.tagline, d.color); minimapDirty = true; }
+    if (d.rep > 0 && G.rep >= d.rep && !G.unlockedSeen[k] && CITY.id === 'bogota') { G.unlockedSeen[k] = true;
+      if (k === 'A') setTimeout(() => notify('✈️ ¡Ya puedes viajar!', 'Desde El Dorado vuelas a Medellín, Cali, Cartagena y Barranquilla.', '#4fc3f7'), 1500); notify(`🔓 ¡Desbloqueaste ${d.name}!`, d.tagline, d.color); minimapDirty = true; }
   }
   if (G.rep >= 100) unlock('legend');
 }
-function fadeTransition(fn) {
+function fadeTransition(fn, text) {
   const f = $('#fade');
+  f.textContent = text || '';
   f.classList.add('on');
   G.fading = true;
   setTimeout(() => { fn(); f.classList.remove('on'); G.fading = false; }, 520);
@@ -3584,13 +4189,24 @@ function drawPerson(g, x, y, a, look, anim, o = {}) {
     g.restore(); return;
   }
   const sw = Math.sin(anim) * 3.6;
+  if (look.silleta) { // silleta de flores a la espalda
+    g.fillStyle = '#8d6e63'; g.fillRect(-15, -9, 9, 18);
+    const fl = ['#e91e63', '#ffeb3b', '#ff5722', '#ffffff', '#9c27b0', '#f06292'];
+    for (let k = 0; k < 9; k++) { g.fillStyle = fl[k % fl.length]; circ(g, -11 + (k % 3) * 3 - 2, -7 + Math.floor(k / 3) * 6, 2.8); }
+  }
   g.fillStyle = look.pants; g.fillRect(-2 + sw, -4.2, 5, 3); g.fillRect(-2 - sw, 1.2, 5, 3);
-  g.fillStyle = look.skin; g.fillRect(-1 - sw * 0.7, -7.2, 4, 2.4); g.fillRect(-1 + sw * 0.7, 4.8, 4, 2.4);
+  const punch = o.punch ? 5 : 0;
+  g.fillStyle = look.skin; g.fillRect(-1 - sw * 0.7, -7.2, 4, 2.4); g.fillRect(-1 + sw * 0.7 + punch, 4.8, 4, 2.4);
+  if (o.gun === 'bate') { g.fillStyle = '#a1887f'; g.fillRect(2 + punch, 4.6, 13, 2.6); }
+  else if (o.gun && o.gun !== 'punos' && o.gun !== 'papa') { g.fillStyle = '#212121'; g.fillRect(3, 4.6, o.gun === 'escopeta' ? 13 : o.gun === 'uzi' ? 9 : 7, 2.6); }
   if (look.ruana) { g.fillStyle = '#795548'; g.beginPath(); g.ellipse(0, 0, 5.2, 8, 0, 0, TAU); g.fill(); g.fillStyle = '#d7ccc8'; g.fillRect(-4, -6, 1.2, 12); g.fillRect(1, -6, 1.2, 12); }
   else { g.fillStyle = look.shirt; g.beginPath(); g.ellipse(0, 0, 4.2, 6.6, 0, 0, TAU); g.fill(); }
+  if (look.carriel) { g.fillStyle = '#6d4c41'; g.fillRect(-3, 4, 5, 4); }
   g.fillStyle = look.hair; circ(g, 0, 0, 3.7);
   g.fillStyle = look.skin; circ(g, 1.7, 0, 2.2);
   if (look.gafas) { g.fillStyle = '#111'; g.fillRect(2.4, -2, 1.4, 4); }
+  if (look.marimonda) { g.fillStyle = '#e53935'; circ(g, 0.5, 0, 4.2); g.fillStyle = '#1e88e5'; circ(g, -1, -4.5, 2.6); circ(g, -1, 4.5, 2.6); g.fillStyle = '#fdd835'; g.fillRect(3, -1, 5, 2); }
+  if (look.sombrero) { g.fillStyle = '#f5ecd2'; circ(g, 0, 0, 6.8); g.strokeStyle = '#2b2b2b'; g.lineWidth = 1; g.beginPath(); g.arc(0, 0, 5.2, 0, TAU); g.stroke(); g.beginPath(); g.arc(0, 0, 3.4, 0, TAU); g.stroke(); g.fillStyle = '#efe3c2'; circ(g, 0, 0, 2.2); }
   if (o.box) { g.fillStyle = '#ff6f3c'; g.fillRect(-9, -4.5, 5, 9); g.fillStyle = '#fff'; g.fillRect(-8, -1, 3, 2); }
   g.restore();
   if (o.umbrella) {
@@ -3624,7 +4240,7 @@ function drawVehicle(g, v, time) {
   g.save(); g.translate(v.x, v.y); g.rotate(v.angle);
   g.fillStyle = 'rgba(0,0,0,.3)'; rr(g, -hl + 3, -hw + 4, L, W, 4);
   if (s.two) { drawTwoWheeler(g, v, hl, hw); g.restore(); return; }
-  const body = v.wrecked ? '#3b3b3b' : v.color, light = v.wrecked ? '#4a4a4a' : v.colorL, dark = v.wrecked ? '#262626' : v.colorD;
+  const body = v.burnt ? '#161616' : v.wrecked ? '#3b3b3b' : v.color, light = v.burnt ? '#222' : v.wrecked ? '#4a4a4a' : v.colorL, dark = v.burnt ? '#0c0c0c' : v.wrecked ? '#262626' : v.colorD;
   g.fillStyle = dark; rr(g, -hl, -hw, L, W, 4);
   g.fillStyle = body; rr(g, -hl + 1, -hw + 1, L - 2, W - 2, 3.5);
   if (v.type === 'tm' || v.type === 'bus') {
@@ -3635,7 +4251,7 @@ function drawVehicle(g, v, time) {
     g.fillStyle = '#1c2833'; g.fillRect(hl - 6, -hw + 2, 4, W - 4);
     if (v.type === 'tm') {
       g.fillStyle = '#4a4a4a'; g.fillRect(-3, -hw, 6, W);
-      g.fillStyle = '#fff'; g.font = 'bold 8px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('TM', hl - 15, 0);
+      g.fillStyle = '#fff'; g.font = 'bold 8px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(CITY.troncal.short, hl - 15, 0);
       if (v.race) { g.fillStyle = (time * 4) % 2 < 1 ? '#ffd600' : '#ff1744'; g.fillRect(-hl + 2, -hw + 2, 6, W - 4); }
     } else { g.fillStyle = '#fff'; g.fillRect(-hl + 4, -1, L - 14, 2); }
   } else {
@@ -3755,14 +4371,14 @@ function render(time, dt) {
   for (const q of World.pois) if (q.type === 'giver' && inView(q.x, q.y)) drawPerson(ctx, q.x, q.y, sideAngle(q.side), giverLook(q), 0);
   // Peatones
   const umb = G.rain > 0.25;
-  for (const pd of G.peds) if (inView(pd.x, pd.y)) drawPerson(ctx, pd.x, pd.y, pd.angle, pd.look, pd.anim, { alpha: pd.alpha, down: pd.mode === 'down', umbrella: umb && pd.umbrella && pd.mode !== 'down' ? pd.umbrella : null });
+  for (const pd of G.peds) if (inView(pd.x, pd.y)) drawPerson(ctx, pd.x, pd.y, pd.angle, pd.look, pd.anim, { alpha: pd.alpha, down: pd.mode === 'down', umbrella: umb && pd.umbrella && pd.mode !== 'down' ? pd.umbrella : null, gun: pd.gang ? pd.w : pd.officer && G.wanted >= 2 ? 'pistola' : null });
   // Vehículos
   for (const v of G.vehicles) if (inView(v.x, v.y, 60)) drawVehicle(ctx, v, time);
   // Jugador
   const p = G.player;
   if (G.state === 'play' && p.onFoot && !p.hidden) {
     if (p.hurtT > 0) ctx.globalAlpha = 0.5 + Math.sin(time * 40) * 0.5;
-    drawPerson(ctx, p.x, p.y, p.angle, playerLook(), p.moving ? p.anim : 0, { umbrella: umb && G.clothes.impermeable ? null : null, box: G.mission && G.mission.type === 'delivery' && G.mission.data.picked });
+    drawPerson(ctx, p.x, p.y, p.angle, playerLook(), p.moving ? p.anim : 0, { box: G.mission && G.mission.type === 'delivery' && G.mission.data.picked, gun: G.weapon, punch: p.punchT > 0 });
     ctx.globalAlpha = 1;
     ctx.strokeStyle = 'rgba(255,213,79,.55)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(p.x, p.y, 11, 0, TAU); ctx.stroke();
   }
@@ -3898,7 +4514,7 @@ function renderLighting(time, inView, X0, X1, Y0, Y1) {
   for (const l of World.lamps) if (inView(l.x, l.y, 80)) lctx.drawImage(LIGHT, l.x - 95, l.y - 95, 190, 190);
   lctx.globalAlpha = 0.7;
   for (const q of World.pois) if (inView(q.x, q.y, 60) && q.type !== 'hide') lctx.drawImage(LIGHT, q.x - 45, q.y - 45, 90, 90);
-  for (const b of World.buildings) if (b.d === 'Z' && b.x < X1 && b.x + b.w > X0 && b.y < Y1 && b.y + b.h > Y0) { lctx.globalAlpha = 0.35; lctx.drawImage(LIGHT, b.x - 10, b.y - b.lift - 10, b.w + 20, b.h + 20); }
+  for (const b of World.buildings) if (b.kind === 'glass' && b.x < X1 && b.x + b.w > X0 && b.y < Y1 && b.y + b.h > Y0) { lctx.globalAlpha = 0.35; lctx.drawImage(LIGHT, b.x - 10, b.y - b.lift - 10, b.w + 20, b.h + 20); }
   lctx.globalAlpha = 1;
   for (const v of G.vehicles) {
     if (!inView(v.x, v.y, 160) || v.wrecked || (!v.driver && !v.owned)) continue;
@@ -3964,6 +4580,786 @@ function updateCamera(dt) {
 }
 
 // ==========================================================================
+// 14. COMBATE: armas, balas, papas bomba y explosiones
+// ==========================================================================
+function ownedWeapons() { return WEAPON_ORDER.filter(w => w === 'punos' || (w === 'papa' ? G.ammo.papa > 0 : G.weapons[w])); }
+function cycleWeapon() {
+  const list = ownedWeapons();
+  const i = list.indexOf(G.weapon);
+  G.weapon = list[(i + 1) % list.length];
+  const w = WEAPONS[G.weapon];
+  toast(`${w.icon} ${w.n}${w.melee ? '' : ' · ' + (G.ammo[G.weapon] || 0) + ' tiros'}`);
+  Sound.sfx('click');
+}
+
+/** Ángulo de disparo: el mouse si lo estás usando; si no, autoapuntado al enemigo más cercano. */
+function aimAngle() {
+  const p = G.player;
+  if (G.mouse && performance.now() - G.mouse.t < 5000 && !isTouch()) {
+    const wx = cam.x + (G.mouse.sx - VW / 2) / cam.zoom, wy = cam.y + (G.mouse.sy - VH / 2) / cam.zoom;
+    return Math.atan2(wy - p.y, wx - p.x);
+  }
+  const w = WEAPONS[G.weapon], range = w.melee ? 60 : Math.min(w.range || 300, 360);
+  let best = null, bd = 1e9;
+  for (const o of G.peds) {
+    const hostile = o.mode === 'gang' || o.mode === 'thief' || (o.mode === 'cop' && G.wanted > 0);
+    if (!hostile) continue;
+    const d = dist(p.x, p.y, o.x, o.y);
+    if (d > range) continue;
+    const a = Math.atan2(o.y - p.y, o.x - p.x);
+    if (!isTouch() && Math.abs(angDiff(p.angle, a)) > 1.2) continue;
+    if (d < bd && losClear(p.x, p.y, o.x, o.y)) { bd = d; best = a; }
+  }
+  return best != null ? best : p.angle;
+}
+
+function fireBullet(x, y, a, owner, dmg, speed = 900, range = 500) {
+  G.bullets.push({ x, y, px: x, py: y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, owner, dmg, life: range / speed });
+}
+
+function playerAttack() {
+  const p = G.player, w = WEAPONS[G.weapon];
+  if (!w.melee && !(G.ammo[G.weapon] > 0)) {
+    toast('🔫 Sin munición: cómprala donde Los Fierros del Mono'); Sound.sfx('deny'); G.fireCD = 0.6;
+    G.weapon = 'punos'; return;
+  }
+  const a = aimAngle();
+  p.angle = a; G.fireCD = w.rate; p.punchT = 0.18;
+  const c = Math.cos(a), s = Math.sin(a);
+  if (w.melee) {
+    Sound.sfx('punch');
+    let hit = false;
+    for (const o of G.peds) {
+      if (o.mode === 'gone' || o.mode === 'down') continue;
+      const d = dist(p.x, p.y, o.x, o.y);
+      if (d < w.range + 8 && Math.abs(angDiff(a, Math.atan2(o.y - p.y, o.x - p.x))) < 1.1) {
+        damagePed(o, w.dmg, 'player');
+        const l = d || 1; moveCircle(o, (o.x - p.x) / l * 10, (o.y - p.y) / l * 10, 5);
+        hit = true; break;
+      }
+    }
+    if (!hit) for (const v of G.vehicles) {
+      if (dist(p.x + c * 16, p.y + s * 16, v.x, v.y) < v.spec.len / 2 + 6) {
+        v.hp = Math.max(0, v.hp - (G.weapon === 'bate' ? 6 : 1)); Sound.sfx('bump');
+        addFx('spark', p.x + c * 14, p.y + s * 14, rand(-40, 40), rand(-40, 40), 0.3);
+        if (v.mode === 'traffic' && Math.random() < 0.5) bubble(v, '¡Ey, mi carro! ¿Está loco?');
+        break;
+      }
+    }
+    return;
+  }
+  G.ammo[G.weapon]--;
+  if (w.thrown) {
+    G.grenades.push({ x: p.x + c * 10, y: p.y + s * 10, vx: c * 320, vy: s * 320, t: 0.85, owner: 'player' });
+    Sound.sfx('door');
+    if (!(G.ammo.papa > 0)) G.weapon = 'punos';
+  } else {
+    for (let k = 0; k < (w.pellets || 1); k++) fireBullet(p.x + c * 11, p.y + s * 11, a + rand(-w.spread, w.spread), 'player', w.dmg, w.speed, w.range);
+    addFx('flash', p.x + c * 14, p.y + s * 14, 0, 0, 0.06);
+    Sound.sfx(G.weapon === 'escopeta' ? 'shotgun' : G.weapon === 'uzi' ? 'uzi' : 'shot');
+  }
+  // Los disparos asustan y alguien llama a la policía
+  for (const o of G.peds) if (o.mode === 'walk' && dist(o.x, o.y, p.x, p.y) < 380) scarePed(o, p.x, p.y, 3);
+  const inGangFight = G.mission && G.mission.type === 'pandilla' && G.mission.idx > 0;
+  G.snitchCD -= 1;
+  if (G.wanted === 0 && !inGangFight) {
+    if (copWitness(p.x, p.y)) addWanted(1, 'Disparos en la vía pública');
+    else if (G.snitchCD <= 0 && Math.random() < 0.25) { G.snitchCD = 8; addWanted(1, pick(SNITCH_LINES)); }
+  }
+}
+
+function pedHp(p) { return p.officer ? 60 : p.gang ? 55 : 30; }
+function damagePed(p, dmg, src) {
+  if (p.mode === 'gone' || p.mode === 'down') return;
+  if (p.keep && !p.gang) return; // turistas, pasajeros, etc.
+  if (p.hp == null) p.hp = pedHp(p);
+  p.hp -= dmg;
+  addFx('hit', p.x, p.y - 4, rand(-20, 20), -30, 0.4);
+  if (p.hp <= 0) { knockOut(p, src); return; }
+  if (p.mode === 'walk' || p.mode === 'static' || p.mode === 'dance') scarePed(p, G.player.x, G.player.y, 3);
+  if (src === 'player' && p.officer && G.wanted < 2) addWanted(1, 'Le pegaste a un policía');
+}
+function knockOut(p, src) {
+  const wasCop = p.officer, wasGang = p.gang;
+  p.mode = 'down'; p.downT = wasGang || wasCop ? 7 : 6; p.ko = true; p.koGone = wasGang || wasCop; p.keep = false;
+  floater(p.x, p.y - 18, '💫 ¡Noqueado!', '#ffd54f');
+  if (src !== 'player') return;
+  if (wasCop) addWanted(1, 'Noqueaste a un policía');
+  else if (!wasGang && G.wanted === 0 && (copWitness(p.x, p.y) || Math.random() < 0.5)) addWanted(1, pick(SNITCH_LINES));
+}
+
+function updateBullets(dt) {
+  const p = G.player;
+  for (const b of G.bullets) {
+    b.px = b.x; b.py = b.y;
+    for (let sub = 0; sub < 2 && b.life > 0; sub++) {
+      b.x += b.vx * dt / 2; b.y += b.vy * dt / 2;
+      if (solidAt(b.x, b.y)) { addFx('spark', b.x, b.y, rand(-50, 50), rand(-50, 50), 0.25); b.life = 0; break; }
+      // Vehículos
+      for (const v of G.vehicles) {
+        if (Math.abs(v.x - b.x) > 50 || Math.abs(v.y - b.y) > 50) continue;
+        if (b.owner === 'player' && v === p.vehicle) continue;
+        if (b.owner === 'cop' && v.driver === 'cop') continue;
+        if (vehCircles(v).some(c => dist(c[0], c[1], b.x, b.y) < c[2])) {
+          damageVehicle(v, b.dmg * 0.6, b.owner);
+          if (v === p.vehicle && b.owner !== 'player') damagePlayer(b.dmg * 0.25);
+          addFx('spark', b.x, b.y, rand(-40, 40), rand(-40, 40), 0.25);
+          b.life = 0; break;
+        }
+      }
+      if (b.life <= 0) break;
+      // Personas
+      for (const o of G.peds) {
+        if (o.mode === 'gone' || o.mode === 'down') continue;
+        if (b.owner === 'gang' && o.gang) continue;
+        if (b.owner === 'cop' && o.officer) continue;
+        if (Math.abs(o.x - b.x) < 7 && Math.abs(o.y - b.y) < 7) { damagePed(o, b.dmg, b.owner); b.life = 0; break; }
+      }
+      if (b.life <= 0) break;
+      if (b.owner !== 'player' && p.onFoot && !p.hidden && Math.abs(p.x - b.x) < 8 && Math.abs(p.y - b.y) < 8) {
+        damagePlayer(b.dmg); shake(4); b.life = 0;
+      }
+    }
+    b.life -= dt;
+  }
+  G.bullets = G.bullets.filter(b => b.life > 0);
+  // Papas bomba
+  for (const g of G.grenades) {
+    g.t -= dt;
+    const nx = g.x + g.vx * dt, ny = g.y + g.vy * dt;
+    if (solidAt(nx, ny)) { g.vx *= -0.4; g.vy *= -0.4; } else { g.x = nx; g.y = ny; }
+    g.vx *= 0.97; g.vy *= 0.97;
+    if (Math.random() < 0.5) addFx('smoke', g.x, g.y, 0, -10, 0.4);
+    if (g.t <= 0) explode(g.x, g.y, WEAPONS.papa.radius, WEAPONS.papa.dmg, g.owner);
+  }
+  G.grenades = G.grenades.filter(g => g.t > 0);
+}
+
+function damageVehicle(v, dmg, owner) {
+  v.hp -= dmg;
+  if (v.mode === 'traffic' && v.driver === 'npc') { v.stopT = 2; if (Math.random() < 0.3) bubble(v, '¡Me están disparando! 😱'); }
+  if (v.hp <= 0 && !v.burnt && !(v.burnT > 0)) {
+    v.hp = 0; v.burnT = 2.6; v.wrecked = true; v.siren = false;
+    if (v.mode === 'traffic') { const vv = vehVel(v); v.vx = vv[0] * 0.3; v.vy = vv[1] * 0.3; v.mode = 'physics'; }
+    if (v.driver === 'npc' || v.driver === 'cop' || v.driver === 'racer') {
+      const fl = new Ped({ x: v.x + Math.cos(v.angle - 1.57) * 18, y: v.y + Math.sin(v.angle - 1.57) * 18, mode: 'flee', look: v.rider });
+      fl.fleeT = 4; fl.fx = v.x; fl.fy = v.y; fl.speed = 120; fl.umbrella = null;
+      if (circleFree(fl.x, fl.y, 5)) G.peds.push(fl);
+      v.driver = null;
+    }
+    if (v === G.player.vehicle) toast('🔥 ¡Bájate (F) que eso explota!');
+  }
+  if (owner === 'player' && v.type === 'police' && G.wanted < 2) addWanted(1, 'Atacaste una patrulla');
+}
+
+function updateBurning(v, dt) {
+  if (!(v.burnT > 0)) return;
+  if (v === G.player.vehicle && dt === 0) return;
+  v.burnT -= dt;
+  if (Math.random() < 0.8) addFx('fire', v.x + rand(-8, 8), v.y + rand(-6, 6), rand(-10, 10), rand(-30, -10), rand(0.3, 0.6));
+  if (v.burnT <= 0) {
+    v.burnt = true; v.burnT = 0;
+    if (v === G.player.vehicle) { exitVehicle(); damagePlayer(35); }
+    explode(v.x, v.y, 85, 55, 'vehicle');
+  }
+}
+
+function explode(x, y, radius, dmg, owner) {
+  Sound.sfx('boom'); shake(16);
+  G.flash = 0.5;
+  for (let k = 0; k < 26; k++) { const a = rand(0, TAU), sp = rand(30, 160); addFx('fire', x, y, Math.cos(a) * sp, Math.sin(a) * sp, rand(0.3, 0.8)); }
+  for (let k = 0; k < 14; k++) addFx('smoke', x + rand(-20, 20), y + rand(-20, 20), rand(-20, 20), rand(-40, -10), rand(1.2, 2.4));
+  G.scorch.push({ x, y, r: radius * 0.5, t: 40 });
+  for (const o of G.peds) {
+    const d = dist(o.x, o.y, x, y);
+    if (d < radius) { damagePed(o, dmg * (1 - d / radius) + 12, owner); if (o.mode !== 'gone') moveCircle(o, (o.x - x) / (d || 1) * 20, (o.y - y) / (d || 1) * 20, 5); }
+  }
+  for (const v of G.vehicles) {
+    const d = dist(v.x, v.y, x, y);
+    if (d < radius + 10 && !v.burnt) { damageVehicle(v, dmg * (1 - d / (radius + 10)) * 1.3, owner); if (v.mode === 'physics') { v.vx += (v.x - x) / (d || 1) * 120; v.vy += (v.y - y) / (d || 1) * 120; } }
+  }
+  const p = G.player, d = dist(p.x, p.y, x, y);
+  if (d < radius) damagePlayer(dmg * (1 - d / radius) * (p.onFoot ? 0.7 : 0.3));
+  if (owner === 'player' && G.wanted < 2 && (copWitness(x, y) || Math.random() < 0.7)) addWanted(G.wanted === 0 ? 2 : 1, '¡Explosión en plena calle!');
+}
+
+/** Pandilleros: se acercan, disparan o pegan con bate. */
+function updateGang(p, dt) {
+  const pl = G.player;
+  const tx = pl.x, ty = pl.y, d = dist(p.x, p.y, tx, ty);
+  p.cool = (p.cool || rand(0.5, 1.5)) - dt;
+  const sees = d < 430 && !pl.hidden && losClear(p.x, p.y, tx, ty);
+  p.anim += dt * 10;
+  if (!sees) { if (Math.random() < dt) p.angle += rand(-1, 1); return; }
+  p.angle = Math.atan2(ty - p.y, tx - p.x);
+  const c = Math.cos(p.angle), s = Math.sin(p.angle);
+  if (p.w === 'bate') {
+    if (d > 20) moveCircle(p, c * 118 * dt, s * 118 * dt, 5);
+    else if (p.cool <= 0) { p.cool = 0.9; if (pl.onFoot) { damagePlayer(11); shake(5); Sound.sfx('punch'); } else damageVehicle(pl.vehicle, 4, 'gang'); }
+  } else {
+    const want = 160, strafe = Math.sin(p.t * 1.7 + p.seed) * 60;
+    const k = d > want ? 1 : d < 90 ? -1 : 0;
+    moveCircle(p, (c * k * 95 - s * strafe * 0.6) * dt, (s * k * 95 + c * strafe * 0.6) * dt, 5);
+    if (p.cool <= 0) { p.cool = rand(0.8, 1.4); fireBullet(p.x + c * 9, p.y + s * 9, p.angle + rand(-0.15, 0.15), 'gang', 7, 700, 460); addFx('flash', p.x + c * 11, p.y + s * 11, 0, 0, 0.06); Sound.sfx('shot'); }
+  }
+  if (Math.random() < dt * 0.15) bubble(p, pick(['¡Esta es mi cuadra!', '¡Quieto, sapo!', '¡Se metió con quien no era!', '¡Fuera de aquí, ñero!']));
+}
+
+/** Policías a pie disparan cuando la búsqueda es de 2 estrellas o más. */
+function copShoot(o, dt) {
+  const pl = G.player;
+  if (G.wanted < 2 || pl.hidden) return;
+  o.cool = (o.cool == null ? 1 : o.cool) - dt;
+  const d = dist(o.x, o.y, pl.x, pl.y);
+  if (o.cool <= 0 && d < 300 && d > 30 && losClear(o.x, o.y, pl.x, pl.y)) {
+    o.cool = G.wanted >= 3 ? 0.8 : 1.3;
+    const a = Math.atan2(pl.y - o.y, pl.x - o.x);
+    fireBullet(o.x + Math.cos(a) * 9, o.y + Math.sin(a) * 9, a + rand(-0.12, 0.12), 'cop', 6, 800, 420);
+    addFx('flash', o.x + Math.cos(a) * 11, o.y + Math.sin(a) * 11, 0, 0, 0.06); Sound.sfx('shot');
+  }
+}
+/** Con 3 estrellas disparan desde las patrullas. */
+function copCarShoot(v, dt) {
+  const pl = G.player;
+  if (G.wanted < 3 || !v.chase || v.wrecked || pl.hidden) return;
+  v.shootT = (v.shootT == null ? 1.5 : v.shootT) - dt;
+  const tx = pl.onFoot ? pl.x : pl.vehicle.x, ty = pl.onFoot ? pl.y : pl.vehicle.y;
+  const d = dist(v.x, v.y, tx, ty);
+  if (v.shootT <= 0 && d < 330 && losClear(v.x, v.y, tx, ty)) {
+    v.shootT = 1.3;
+    const a = Math.atan2(ty - v.y, tx - v.x);
+    fireBullet(v.x + Math.cos(a) * 20, v.y + Math.sin(a) * 20, a + rand(-0.1, 0.1), 'cop', 6, 800, 420);
+    Sound.sfx('shot');
+  }
+}
+
+// ==========================================================================
+// 15. VIAJES ENTRE CIUDADES
+// ==========================================================================
+function flightPrice(id) { return Math.max(CITIES[id].price, CITY.price) || 300000; }
+function menuFlights() {
+  return () => ({
+    title: 'Aeropuerto ' + CITY.airport, icon: '✈️', color: '#4fc3f7', sub: `Estás en ${CITY.name} · 💵 ${fmtMoney(G.money)}`,
+    info: 'Vuela por Colombia: cada ciudad tiene su comida, sus dichos, su emisora y sus propias misiones. Tus vehículos los sacas del garaje en el hotel o en tu casa.',
+    items: CITY_ORDER.filter(id => id !== CITY.id).map(id => {
+      const c = CITIES[id], price = flightPrice(id);
+      return {
+        label: `✈️ ${c.name} · <i>${c.nick}</i>`, sub: c.welcome, right: fmtMoney(price),
+        disabled: G.mission ? 'Termina primero tu misión' : G.wanted > 0 ? 'Con la tomba encima no te dejan abordar' : G.money < price ? 'No te alcanza 💸' : false,
+        action: () => { flyTo(id, price); return 'close'; },
+      };
+    }).concat([{ label: 'Salir', action: () => 'close' }]),
+  });
+}
+function flyTo(id, price) {
+  if (!spend(price)) return;
+  fadeTransition(() => { switchCity(id); advanceTime(80); }, `✈️ Volando a ${CITIES[id].name}…`);
+}
+function switchCity(id, spawn) {
+  if (G.outVeh && G.garage[G.outVeh.ownIdx]) G.garage[G.outVeh.ownIdx].hp = G.outVeh.hp;
+  resetRun();
+  applyCity(id); genWorld(); buildMiniBase();
+  G.city = id;
+  const sp = spawn || World.airport;
+  const p = G.player;
+  p.x = sp.x; p.y = sp.y; p.onFoot = true; p.vehicle = null; p.hidden = false;
+  cam.x = p.x; cam.y = p.y;
+  G.cityVisited[id] = true;
+  if (CITY_ORDER.every(c => G.cityVisited[c])) unlock('viajero');
+  Sound.radio.station = CITY.radio; Sound.radio.on = true;
+  G.weather = 'sol'; G.weatherT = 120; G.rain = 0; G.wetness = 0;
+  if (!spawn) {
+    banner(`${CITY.name}`, CITY.welcome, '#4fc3f7', true);
+    setTimeout(() => notify(`📻 ${STATIONS[CITY.radio].name}`, 'La emisora de la ciudad. Cambia con R.', '#e040fb'), 2500);
+  }
+  saveGame();
+}
+
+function menuHotel(p) {
+  const night = HOMES.hotel.night;
+  return () => {
+    const items = [
+      { label: `😴 Dormir hasta las 7:00 a.m.`, sub: 'Recuperas casi toda la energía y +30 de salud', right: fmtMoney(night),
+        disabled: G.wanted > 0 ? 'No puedes dormir con la policía encima' : G.mission ? 'Termina primero tu misión' : G.money < night ? 'No te alcanza 💸' : false,
+        action: () => { if (spend(night)) goSleep(HOMES.hotel); return 'close'; } },
+      { label: '💾 Guardar partida', action: () => { saveGame(); toast('💾 Partida guardada'); } },
+      { section: '🚗 Tus vehículos (te los mandan en camión)' },
+    ];
+    G.garage.forEach((gv, i) => items.push({
+      label: VEH[gv.type].name, sub: gv.hp <= 0 ? 'Varado: llévalo al taller' : `Estado ${Math.round(gv.hp / VEH[gv.type].hp * 100)}%`,
+      right: G.outVeh && G.outVeh.ownIdx === i ? 'En la calle' : 'Sacar', disabled: gv.hp <= 0 ? 'Está varado' : false,
+      action: () => { spawnOwnedVehicle(i, roadSpotNear(p)); toast('🔑 Te dejaron el vehículo en la calle'); return 'close'; },
+    }));
+    if (!G.garage.length) items.push({ label: 'Todavía no tienes vehículos', disabled: true });
+    items.push({ label: 'Salir', action: () => 'close' });
+    return { title: p.name, icon: '🏨', color: '#4fc3f7', sub: `${CITY.name} · ${CITY.nick}`, items };
+  };
+}
+
+// ==========================================================================
+// 16. MISIONES NUEVAS
+// ==========================================================================
+function sidewalkCenterOfPark(key, side = 'S') {
+  const [bi, bj] = key.split(',').map(Number);
+  const [tx, ty] = sidewalkTile(bi, bj, side, 6);
+  return { x: (tx + 0.5) * T, y: (ty + 0.5) * T, name: PARKS[key].name };
+}
+
+/** Misión de recorrido por varios puntos. */
+function missionRoute(type, points, o) {
+  const m = mkMission(type, { timer: o.timer, timerMax: o.timer, data: { n: 0 } });
+  m.steps = points.map(pt => ({
+    x: pt.x, y: pt.y, r: pt.r || 40, stop: !!o.stop, stopText: o.stopText, text: pt.text,
+    check: o.check, checkHint: o.checkHint,
+    onReach() { m.data.n++; if (o.payEach) addMoney(o.payEach); if (pt.onReach) pt.onReach(); if (o.reachLine) bubble(G.player, pick(o.reachLine)); Sound.sfx('coin'); },
+  }));
+  m.extra = o.extra || (() => `${o.icon || '📍'} ${m.data.n}/${points.length}`);
+  if (o.update) m.update = dt => o.update(m, dt);
+  if (o.cleanup) m.cleanup = () => o.cleanup(m);
+  m.onDone = () => { if (o.ach) unlock(o.ach); completeMission(o.pay, o.rep, o.doneText || ''); };
+  return m;
+}
+
+function missionTaxi(giver) {
+  const moto = !CITY.palms ? false : true;
+  const m = mkMission('taxi', { timer: 170, timerMax: 170, data: { n: 0 } });
+  let prev = { x: giver.x, y: giver.y };
+  const peds = [];
+  for (let k = 0; k < 3; k++) {
+    const a = randomSidewalkPoint((d, x, y) => districtUnlocked(d) && dist(x, y, prev.x, prev.y) > 400 && dist(x, y, prev.x, prev.y) < 1200);
+    const b = a && randomSidewalkPoint((d, x, y) => districtUnlocked(d) && dist(x, y, a.x, a.y) > 900 && dist(x, y, a.x, a.y) < 2400);
+    if (!a || !b) continue;
+    const name = pick(CLIENT_NAMES);
+    const fare = round500(9000 + (Math.abs(b.x - a.x) + Math.abs(b.y - a.y)) * 9);
+    let ped = null;
+    m.steps.push({ x: a.x, y: a.y, r: 46, needSeats: true, stop: true, stopText: 'recoger al pasajero', text: `Recoge a ${name} (${addressOf(a.x, a.y)})`,
+      onEnter() { ped = new Ped({ x: a.x, y: a.y, mode: 'static' }); ped.keep = true; ped.umbrella = null; ped.icon = '🙋'; G.peds.push(ped); peds.push(ped); },
+      onReach() { if (ped) { ped.keep = false; ped.mode = 'gone'; } bubble(G.player, pick(['¡Uy, gracias, qué rapidez!', 'Lléveme rapidito, porfa', '¿Tiene cargador de celular?', 'Póngame música, pues'])); } });
+    m.steps.push({ x: b.x, y: b.y, r: 42, stop: true, stopText: 'dejar al pasajero', text: `Lleva a ${name} a ${addressOf(b.x, b.y)}`,
+      onReach() { addMoney(fare); G.rep += 1; m.data.n++; bubble(G.player, pick(CITY.sayings)); } });
+    prev = b;
+  }
+  if (!m.steps.length) return null;
+  m.extra = () => `${moto ? '🛵 Mototaxi' : '🚕'} Pasajeros: ${m.data.n}/3`;
+  m.cleanup = () => peds.forEach(p => { p.keep = false; p.mode = 'gone'; });
+  m.onDone = () => completeMission(40000, 3, '¡Pura vida de taxista!');
+  return m;
+}
+
+/** Carrera ilegal contra dos pilotos controlados por la máquina. */
+function missionCarrera(giver) {
+  let cur = nearestNode(giver.x, giver.y), back = -1;
+  const nodes = [];
+  for (let k = 0; k < 7; k++) {
+    for (let hop = 0; hop < 2; hop++) {
+      const ex = nodeExits(cur[0], cur[1]).filter(d => d !== back && (() => { const c = nodeCenter(cur[0] + DIRV[d][0], cur[1] + DIRV[d][1]); return canEnter(c[0], c[1]); })());
+      if (!ex.length) break;
+      const d = pick(ex); back = (d + 2) % 4;
+      cur = [cur[0] + DIRV[d][0], cur[1] + DIRV[d][1]];
+    }
+    nodes.push(cur.slice());
+  }
+  const pts = nodes.map(n => { const c = nodeCenter(n[0], n[1]); return { x: c[0], y: c[1], node: n }; });
+  const fields = nodes.map(n => bfsFrom(n[0], n[1]));
+  const m = mkMission('carrera', { data: { racers: [] } });
+  m.steps = pts.map((pt, i) => ({ x: pt.x, y: pt.y, r: 64, text: i === pts.length - 1 ? '🏁 ¡Última recta! Llega a la meta' : `Pasa por el punto ${i + 1}/${pts.length}`, check: () => !G.player.onFoot, checkHint: 'Tienes que ir en un vehículo' }));
+  m.onStart = () => {
+    const spot = roadSpotNear(giver);
+    const names = ['El Pecoso', 'La Mona Veloz', 'Brayan Turbo', 'El Chamo'];
+    for (let k = 0; k < 2; k++) {
+      const v = new Vehicle(k ? 'motosport' : 'sport', spot.x - Math.cos(spot.a) * (50 + k * 40), spot.y - Math.sin(spot.a) * (50 + k * 40), spot.a, { mode: 'physics', driver: 'racer', mission: true, color: k ? '#00e676' : '#ff9100' });
+      if (vehicleBlocked(v, v.x, v.y, v.angle)) { v.x = spot.x; v.y = spot.y; }
+      v.cp = 0; v.waitT = 3; v.racerName = names[(k + G.day) % names.length];
+      G.vehicles.push(v); m.data.racers.push(v);
+    }
+    floater(G.player.x, G.player.y - 30, '3… 2… 1… ¡PIQUE!', '#ff9100');
+  };
+  m.update = dt => {
+    for (const v of m.data.racers) {
+      if (v.wrecked || v.driver !== 'racer') continue;
+      if (v.waitT > 0) { v.waitT -= dt; continue; }
+      const pt = pts[v.cp];
+      const ahead = v.cp > m.idx || (v.cp === m.idx && dist(v.x, v.y, pt.x, pt.y) < dist(G.player.x, G.player.y, pt.x, pt.y));
+      aiDrive(v, dt, pt.x, pt.y, fields[v.cp], ahead ? 0.78 : 1);
+      if (dist(v.x, v.y, pt.x, pt.y) < 75) {
+        v.cp++;
+        if (v.cp >= pts.length) { failMission(`${v.racerName} ganó el pique 🏁`); return; }
+      }
+    }
+  };
+  m.extra = () => {
+    const prog = v => v.cp * 10000 - dist(v.x, v.y, pts[Math.min(v.cp, pts.length - 1)].x, pts[Math.min(v.cp, pts.length - 1)].y);
+    const me = m.idx * 10000 - dist(G.player.x, G.player.y, pts[m.idx] ? pts[m.idx].x : 0, pts[m.idx] ? pts[m.idx].y : 0);
+    const pos = 1 + m.data.racers.filter(v => !v.wrecked && prog(v) > me).length;
+    return `🏁 Vas de ${pos}° de 3`;
+  };
+  m.cleanup = () => m.data.racers.forEach(v => { v.mission = false; if (v.driver === 'racer') v.driver = null; });
+  m.onDone = () => { unlock('piloto'); completeMission(350000, 6, '¡Rey del pique! 🏆'); };
+  return m;
+}
+
+/** Conducción automática hacia un punto usando el grafo de calles. */
+function aiDrive(v, dt, tx, ty, field, maxT = 1) {
+  const W = BX + 1;
+  let ax = tx, ay = ty;
+  if (!(dist(v.x, v.y, tx, ty) < 260 && losClear(v.x, v.y, tx, ty))) {
+    if (!v.wpn) v.wpn = nearestNode(v.x, v.y);
+    let c = nodeCenter(v.wpn[0], v.wpn[1]);
+    if (dist(v.x, v.y, c[0], c[1]) < 70) {
+      const cd = field[v.wpn[1] * W + v.wpn[0]];
+      let best = null, bd = cd < 0 ? 999 : cd;
+      for (const d of nodeExits(v.wpn[0], v.wpn[1])) {
+        const ni = v.wpn[0] + DIRV[d][0], nj = v.wpn[1] + DIRV[d][1], val = field[nj * W + ni];
+        if (val >= 0 && val < bd) { bd = val; best = [ni, nj]; }
+      }
+      if (best) { v.wpn = best; c = nodeCenter(best[0], best[1]); }
+    }
+    ax = c[0]; ay = c[1];
+  }
+  let diff = angDiff(v.angle, Math.atan2(ay - v.y, ax - v.x));
+  const probe = a => solidAt(v.x + Math.cos(a) * 42, v.y + Math.sin(a) * 42);
+  if (probe(v.angle)) diff += probe(v.angle - 0.7) ? 1.1 : -1.1;
+  let steer = clamp(diff * 2.4, -1, 1), throttle = (Math.abs(diff) > 1.3 && v.speed > 110 ? 0.3 : 1) * maxT;
+  if (Math.abs(v.speed) < 15 && throttle > 0.4) v.stuckT += dt; else v.stuckT = Math.max(0, v.stuckT - dt);
+  if (v.stuckT > 1.1) { v.reverseT = 0.9; v.stuckT = 0; v.wpn = null; }
+  if (v.reverseT > 0) { v.reverseT -= dt; throttle = -1; steer = -steer; }
+  updatePhysicsVehicle(v, dt, { throttle, steer, brake: false });
+}
+
+function missionPandilla(giver) {
+  const parks = Object.keys(PARKS).map(k => { const [bi, bj] = k.split(',').map(Number); return { k, d: DISTRICT_GRID[bj][bi], x: (bi * P + RW + 6.5) * T, y: (bj * P + RW + 6.5) * T }; })
+    .filter(o => districtUnlocked(o.d) && !['beach', 'muralla', 'castillo', 'malecon'].includes(PARKS[o.k].kind) && dist(o.x, o.y, giver.x, giver.y) > 500);
+  if (!parks.length) return null;
+  const pk = parks.sort((a, b) => dist(a.x, a.y, giver.x, giver.y) - dist(b.x, b.y, giver.x, giver.y))[Math.floor(Math.random() * Math.min(3, parks.length))];
+  const name = PARKS[pk.k].name;
+  const crew = pick(['Los Chirretes', 'La Gallada del Hueco', 'Los Pelados de la Esquina', 'Los Ñeros de la Olla', 'Los Malandros del Barrio']);
+  const m = mkMission('pandilla', { timer: 260, timerMax: 260, data: { gang: [] } });
+  const n = 6;
+  m.steps = [
+    { x: pk.x, y: pk.y, r: 230, text: `Ve al ${name}: ${crew} se lo tomaron`, onReach() {
+      for (let k = 0; k < n * 4 && m.data.gang.length < n; k++) {
+        const a = rand(0, TAU), r = rand(40, 150), x = pk.x + Math.cos(a) * r, y = pk.y + Math.sin(a) * r;
+        if (!circleFree(x, y, 6)) continue;
+        const g = new Ped({ x, y, mode: 'gang', look: { skin: pick(SKINS), hair: '#111', shirt: pick(['#212121', '#b71c1c', '#311b92']), pants: '#1b1b1b' } });
+        g.gang = true; g.keep = true; g.umbrella = null; g.hp = 55; g.w = Math.random() < 0.35 ? 'bate' : 'pistola'; g.seed = Math.random() * 10; g.icon = g.w === 'bate' ? '🏏' : '🔫';
+        G.peds.push(g); m.data.gang.push(g);
+      }
+      notify(`👊 ¡${crew}!`, 'Noquéalos a todos. Q cambia de arma; clic, Ctrl o J para atacar.', '#ff5252');
+    } },
+    { x: pk.x, y: pk.y, text: `Noquea a ${crew}`, cond: () => m.data.gang.length > 0 && m.data.gang.every(g => g.ko) },
+  ];
+  m.extra = () => `👊 Noqueados: ${m.data.gang.filter(g => g.ko).length}/${m.data.gang.length || n} · ${WEAPONS[G.weapon].icon}`;
+  m.cleanup = () => m.data.gang.forEach(g => { if (!g.ko) { g.keep = false; g.mode = 'gone'; } });
+  m.onDone = () => { unlock('barrio'); completeMission(420000, 7, '¡El barrio quedó tranquilo! 🙌'); };
+  return m;
+}
+
+function missionSilleta(giver) {
+  const dest = sidewalkCenterOfPark(Object.keys(PARKS).find(k => PARKS[k].kind === 'botero') || Object.keys(PARKS)[0]);
+  const man = Math.abs(dest.x - giver.x) + Math.abs(dest.y - giver.y);
+  const m = mkMission('silleta', { timer: Math.round(man / 55 + 30), data: {} });
+  m.timerMax = m.timer;
+  m.steps = [{ x: dest.x, y: dest.y, r: 50, text: `Lleva la silleta hasta la tarima en ${dest.name} 💐` }];
+  m.onStart = () => { G.carry = 'silleta'; bubble(G.player, '¡Uff, qué peso tan berraco!'); };
+  m.update = () => {
+    if (!G.player.onFoot) failMission('Con la silleta no te podés montar en nada');
+    if (Math.random() < 0.006) bubble(G.player, pick(['¡Qué flores tan hermosas!', '¡Avemaría, qué espalda!', '¡Vamos, pues, que ya casi!']));
+  };
+  m.cleanup = () => { G.carry = null; };
+  m.extra = () => '💐 Carga pesada: no puedes correr';
+  m.onDone = () => { unlock('silletero'); completeMission(180000, 6, '¡Aplausos del desfile! 👏'); };
+  return m;
+}
+
+function missionGrafiti(giver) {
+  const pts = [];
+  for (let k = 0; k < 4; k++) {
+    const pt = randomSidewalkPoint((d, x, y) => d === 'T' && pts.every(q => dist(q.x, q.y, x, y) > 350));
+    if (pt) pts.push({ x: pt.x, y: pt.y, text: `Lleva a los turistas al mural ${pts.length + 1}/4 🎨`, onReach() { floater(pt.x, pt.y - 20, '📸 ¡Qué chimba de mural!', '#ff7043'); for (let i = 0; i < 6; i++) addFx('note', pt.x + rand(-20, 20), pt.y + rand(-20, 20), 0, -20, 1); } });
+  }
+  if (pts.length < 3) return null;
+  return missionRoute('grafiti', pts, { timer: 160, pay: 160000, rep: 5, icon: '🎨', doneText: 'Los turistas quedaron enamorados de la 13', reachLine: ['¡Wow, amazing!', '¡Qué colores tan bacanos!', 'Foto, foto, ¡una foto!'] });
+}
+
+function missionVendedor(giver) {
+  const prod = giver.product || { n: 'mercancía', icon: '🛒', pay: 10000 };
+  const pts = [];
+  for (let k = 0; k < 5; k++) {
+    const pt = randomSidewalkPoint((d, x, y) => districtUnlocked(d) && dist(x, y, giver.x, giver.y) < 1500 && pts.every(q => dist(q.x, q.y, x, y) > 260));
+    if (pt) pts.push({ x: pt.x, y: pt.y, text: `Vende ${prod.icon} ${prod.n} en el punto ${pts.length + 1}/5` });
+  }
+  if (pts.length < 3) return null;
+  return missionRoute('vendedor', pts, { timer: 170, stop: true, stopText: 'vender', payEach: prod.pay, pay: 40000, rep: 4, icon: prod.icon, doneText: `¡Vendiste todo el ${prod.n}!`, reachLine: [`¡Lleve su ${prod.n}, bien fresquito!`, '¡A la orden, mi amor!', '¡Barato, barato!'] });
+}
+
+function missionGuia() {
+  const keys = ['3,1', '8,1', '0,6'].filter(k => PARKS[k]);
+  const pts = keys.map(k => { const s = sidewalkCenterOfPark(k, k === '0,6' ? 'E' : 'S'); return { x: s.x, y: s.y, text: `Lleva a los turistas a ${s.name} 📸`, onReach() { floater(s.x, s.y - 20, '📸 ¡Click!', '#26c6da'); } }; });
+  return missionRoute('guia', pts, { timer: 210, pay: 250000, rep: 6, icon: '📸', doneText: '¡5 estrellas en la reseña!', reachLine: ['¡Qué belleza de ciudad!', 'Oh, it\'s so hot!', '¿Esto es del siglo XVI? ¡Wow!'] });
+}
+
+function missionCarnaval() {
+  const y = 6 * PT + 48;
+  const m = mkMission('carnaval', { timer: 110, timerMax: 110, data: { got: 0 } });
+  G.maicena = 0;
+  const bags = [];
+  for (let i = 1; i <= 9; i++) for (const off of [-30, 30]) {
+    const x = i * PT - 180 + rand(-60, 60), yy = y + off;
+    const k = { x, y: yy, amount: 0, t: 999, kind: 'maicena' };
+    bags.push(k); G.pickups.push(k);
+  }
+  const dancers = [];
+  m.onStart = () => {
+    for (let k = 0; k < 24; k++) {
+      const x = rand(PT, 9 * PT), yy = y + (Math.random() < 0.5 ? -64 : 64);
+      if (!circleFree(x, yy, 5)) continue;
+      const d = new Ped({ x, y: yy, mode: 'dance', look: { skin: pick(SKINS), hair: pick(HAIRS), shirt: pick(['#ffeb3b', '#e53935', '#43a047', '#1e88e5', '#ff6d00']), pants: '#fff' } });
+      d.keep = true; d.umbrella = null; d.icon = Math.random() < 0.3 ? '🎭' : null; dancers.push(d); G.peds.push(d);
+    }
+    notify('🎭 ¡Arrancó el desfile!', '¡Quien lo vive es quien lo goza! Recoge 10 bolsas de maicena.', '#ffeb3b');
+  };
+  m.steps = [{ x: bags[0].x, y: bags[0].y, cond: () => G.maicena >= 10, text: 'Recoge 10 bolsas de maicena en el desfile 🎭' }];
+  m.update = () => {
+    const rest = G.pickups.filter(k => k.kind === 'maicena');
+    if (rest.length) { const n = rest.sort((a, b) => dist(a.x, a.y, G.player.x, G.player.y) - dist(b.x, b.y, G.player.x, G.player.y))[0]; m.steps[0].x = n.x; m.steps[0].y = n.y; }
+    else if (G.maicena < 10) failMission('Se acabaron las bolsas de maicena');
+    if (Math.random() < 0.3) addFx('confetti', G.player.x + rand(-200, 200), G.player.y + rand(-150, 150), rand(-20, 20), rand(10, 40), 1.5);
+  };
+  m.extra = () => `🎭 Maicena: ${G.maicena}/10`;
+  m.cleanup = () => { G.pickups = G.pickups.filter(k => k.kind !== 'maicena'); dancers.forEach(d => { d.keep = false; d.mode = 'gone'; }); };
+  m.onDone = () => { unlock('carnaval'); completeMission(200000, 6, '¡Quien lo vive es quien lo goza! 🎭'); };
+  return m;
+}
+
+function missionSalsa() {
+  const m = mkMission('salsa', { data: { done: false, acc: 0 } });
+  m.steps = [{ cond: () => m.data.done, text: '¡A bailar salsa! Sigue las flechas' }];
+  m.onStart = () => {
+    fadeTransition(() => startSalsa(acc => { m.data.done = true; m.data.acc = acc; }), '💃 Subiendo a la pista…');
+  };
+  m.onDone = () => {
+    const pct = Math.round(m.data.acc * 100);
+    if (m.data.acc >= 0.65) { unlock('salsero'); completeMission(round500(150000 + m.data.acc * 150000), 6, `Precisión ${pct}% · ¡Sos un salsero caleño! 💃`); }
+    else failMission(`Precisión ${pct}%: el jurado dijo que bailás como un palo 😂`);
+  };
+  return m;
+}
+
+// ==========================================================================
+// 17. MINIJUEGO: CONCURSO DE SALSA
+// ==========================================================================
+const LANES = ['left', 'down', 'up', 'right'];
+const LANE_GLYPH = ['◀', '▼', '▲', '▶'];
+const LANE_COLOR = ['#ff4081', '#40c4ff', '#69f0ae', '#ffd740'];
+function startSalsa(onDone) {
+  const beat = 60 / STATIONS[2].bpm;
+  const notes = [];
+  let t = 2.2;
+  while (notes.length < 46) {
+    notes.push({ lane: randi(0, 3), t });
+    if (Math.random() < 0.12) notes.push({ lane: randi(0, 3), t });
+    t += beat * pick([1, 1, 1, 0.5, 2]);
+  }
+  G.minigame = { t: 0, notes, hits: 0, perfect: 0, combo: 0, maxCombo: 0, judge: '', judgeT: 0, end: t + 1.5, onDone, win: G.clothes.salsero ? 0.17 : 0.13 };
+  Sound.radio.forced = 2;
+}
+function updateMinigame(dt) {
+  const m = G.minigame;
+  m.t += dt; m.judgeT -= dt;
+  if (Input.hit('esc')) { m.t = m.end; }
+  for (let l = 0; l < 4; l++) {
+    if (!Input.hit(LANES[l])) continue;
+    let best = null, bd = 1e9;
+    for (const n of m.notes) if (!n.done && n.lane === l && Math.abs(n.t - m.t) < bd) { bd = Math.abs(n.t - m.t); best = n; }
+    if (best && bd < m.win) {
+      best.done = true; best.hit = true; m.hits++; m.combo++; m.maxCombo = Math.max(m.maxCombo, m.combo);
+      if (bd < m.win * 0.45) { m.perfect++; m.judge = pick(['¡AZÚCAR!', '¡PERFECTO!', '¡SABROSO!', '¡ESO ES!']); } else m.judge = pick(['¡Bien!', '¡Dale!', '¡Ahí vas!']);
+      m.judgeT = 0.5;
+      m.flash = { lane: l, t: 0.15 };
+      Sound.tone(880 + l * 120, 0.05, 'square', 0.04);
+    } else { m.combo = 0; m.judge = '¡Uy, te pisaste!'; m.judgeT = 0.5; }
+  }
+  for (const n of m.notes) if (!n.done && m.t - n.t > m.win) { n.done = true; m.combo = 0; m.judge = 'Fallaste…'; m.judgeT = 0.4; }
+  if (m.flash) m.flash.t -= dt;
+  if (m.t >= m.end) {
+    const acc = m.hits / m.notes.length;
+    G.minigame = null; Sound.radio.forced = null;
+    m.onDone(acc);
+  }
+}
+function renderMinigame(time) {
+  const m = G.minigame;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const W = Math.min(440, VW - 32), H = Math.min(VH - 40, 560), x0 = (VW - W) / 2, y0 = (VH - H) / 2;
+  const g = ctx.createLinearGradient(0, y0, 0, y0 + H);
+  g.addColorStop(0, 'rgba(60,0,40,.92)'); g.addColorStop(1, 'rgba(10,0,30,.95)');
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, VW, VH);
+  ctx.fillStyle = g; rr(ctx, x0, y0, W, H, 18);
+  // luces de la pista
+  for (let k = 0; k < 5; k++) { ctx.fillStyle = `hsla(${(time * 90 + k * 70) % 360},90%,60%,.12)`; circ(ctx, x0 + W * (0.1 + k * 0.2), y0 + 60 + Math.sin(time * 2 + k) * 20, 60); }
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ff4081'; ctx.font = '800 22px Bungee, Barlow Condensed, sans-serif';
+  ctx.fillText('💃 CONCURSO DE SALSA 🕺', VW / 2, y0 + 28);
+  const acc = m.notes.filter(n => n.done).length ? Math.round(m.hits / Math.max(1, m.notes.filter(n => n.done).length) * 100) : 100;
+  ctx.fillStyle = '#fff'; ctx.font = '700 15px Barlow Condensed, sans-serif';
+  ctx.fillText(`Combo ${m.combo} · Precisión ${acc}% · Necesitas 65%`, VW / 2, y0 + 54);
+  const laneW = (W - 40) / 4, hitY = y0 + H - 70, top = y0 + 76, speed = (hitY - top) / 1.6;
+  for (let l = 0; l < 4; l++) {
+    const lx = x0 + 20 + l * laneW;
+    ctx.fillStyle = 'rgba(255,255,255,.05)'; ctx.fillRect(lx + 4, top, laneW - 8, hitY - top + 30);
+    const fl = m.flash && m.flash.lane === l && m.flash.t > 0;
+    ctx.strokeStyle = LANE_COLOR[l]; ctx.lineWidth = fl ? 5 : 3;
+    ctx.beginPath(); ctx.arc(lx + laneW / 2, hitY, 22, 0, TAU); ctx.stroke();
+    ctx.fillStyle = LANE_COLOR[l]; ctx.font = '700 18px sans-serif'; ctx.fillText(LANE_GLYPH[l], lx + laneW / 2, hitY + 1);
+  }
+  for (const n of m.notes) {
+    if (n.done && !n.hit) continue;
+    if (n.hit) continue;
+    const y = hitY - (n.t - m.t) * speed;
+    if (y < top - 20 || y > hitY + 40) continue;
+    const lx = x0 + 20 + n.lane * laneW + laneW / 2;
+    ctx.fillStyle = LANE_COLOR[n.lane]; circ(ctx, lx, y, 19);
+    ctx.fillStyle = '#1a0020'; ctx.font = '800 17px sans-serif'; ctx.fillText(LANE_GLYPH[n.lane], lx, y + 1);
+  }
+  // Bailarines a los lados
+  const look1 = { skin: '#c68642', hair: '#111', shirt: '#e91e63', pants: '#111' }, look2 = Object.assign(playerLook(), {});
+  drawPersonScaled(x0 - 2 + 0, y0 + H / 2, time, look1);
+  drawPersonScaled(x0 + W + 2, y0 + H / 2, time + 1, look2);
+  if (m.judgeT > 0) { ctx.fillStyle = '#ffd740'; ctx.font = '800 28px Bungee, sans-serif'; ctx.fillText(m.judge, VW / 2, hitY - 140); }
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = '600 13px Barlow Condensed, sans-serif';
+  ctx.fillText(isTouch() ? 'Toca el carril cuando la nota llegue al círculo' : 'Flechas ← ↓ ↑ → (o A S W D) cuando la nota llegue al círculo', VW / 2, y0 + H - 22);
+}
+function drawPersonScaled(x, y, time, look) {
+  if (x < 20 || x > VW - 20) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(2.4, 2.4);
+  drawPerson(ctx, 0, 0, -Math.PI / 2 + Math.sin(time * 6) * 0.6, look, time * 12);
+  ctx.restore();
+}
+
+// ==========================================================================
+// 18. MAPA GRANDE CON ZOOM Y ARRASTRE
+// ==========================================================================
+function bmFit() {
+  const c = $('#bigmap-canvas');
+  return Math.min(c.clientWidth / MW, c.clientHeight / MH) * 0.94;
+}
+function bmInit() {
+  const c = $('#bigmap-canvas'), fit = bmFit();
+  const narrow = c.clientWidth < 700;
+  G.bm = { sc: narrow ? Math.max(fit, (c.clientHeight / MH) * 0.95, 3.2) : fit, cx: G.player.x / T, cy: G.player.y / T };
+  bmClamp();
+}
+function bmClamp() {
+  const c = $('#bigmap-canvas'), b = G.bm, fit = bmFit();
+  b.sc = clamp(b.sc, fit, 14);
+  const hw = c.clientWidth / 2 / b.sc, hh = c.clientHeight / 2 / b.sc;
+  b.cx = MW / 2 <= hw ? MW / 2 : clamp(b.cx, hw - 4, MW - hw + 4);
+  b.cy = MH / 2 <= hh ? MH / 2 : clamp(b.cy, hh - 4, MH - hh + 4);
+}
+function bmZoom(f, sx, sy) {
+  const c = $('#bigmap-canvas'), b = G.bm;
+  sx = sx == null ? c.clientWidth / 2 : sx; sy = sy == null ? c.clientHeight / 2 : sy;
+  const wx = b.cx + (sx - c.clientWidth / 2) / b.sc, wy = b.cy + (sy - c.clientHeight / 2) / b.sc;
+  b.sc *= f; bmClamp();
+  b.cx = wx - (sx - c.clientWidth / 2) / b.sc; b.cy = wy - (sy - c.clientHeight / 2) / b.sc;
+  bmClamp(); drawBigMap();
+}
+function setupBigMapInput() {
+  const c = $('#bigmap-canvas');
+  const ptrs = new Map();
+  let drag = null, pinch = null;
+  c.addEventListener('pointerdown', e => {
+    c.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+    if (ptrs.size === 1) drag = { x: e.offsetX, y: e.offsetY, cx: G.bm.cx, cy: G.bm.cy, moved: false };
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: dist(a.x, a.y, b.x, b.y), sc: G.bm.sc }; drag = null; }
+  });
+  c.addEventListener('pointermove', e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+    if (pinch && ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()];
+      const f = pinch.sc * dist(a.x, a.y, b.x, b.y) / pinch.d / G.bm.sc;
+      bmZoom(f, (a.x + b.x) / 2, (a.y + b.y) / 2);
+    } else if (drag) {
+      const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y;
+      if (Math.hypot(dx, dy) > 6) drag.moved = true;
+      if (drag.moved) { G.bm.cx = drag.cx - dx / G.bm.sc; G.bm.cy = drag.cy - dy / G.bm.sc; bmClamp(); drawBigMap(); }
+    }
+  });
+  const up = e => {
+    if (drag && !drag.moved && ptrs.size === 1) bigMapTap(e.offsetX, e.offsetY);
+    ptrs.delete(e.pointerId);
+    if (ptrs.size < 2) pinch = null;
+    if (!ptrs.size) drag = null;
+  };
+  c.addEventListener('pointerup', up);
+  c.addEventListener('pointercancel', e => { ptrs.delete(e.pointerId); drag = null; pinch = null; });
+  c.addEventListener('wheel', e => { e.preventDefault(); bmZoom(e.deltaY < 0 ? 1.18 : 1 / 1.18, e.offsetX, e.offsetY); }, { passive: false });
+  $('#bm-in').onclick = () => bmZoom(1.4);
+  $('#bm-out').onclick = () => bmZoom(1 / 1.4);
+  $('#bm-me').onclick = () => { G.bm.cx = G.player.x / T; G.bm.cy = G.player.y / T; G.bm.sc = Math.max(G.bm.sc, 5); bmClamp(); drawBigMap(); };
+}
+function bigMapTap(sx, sy) {
+  const { sc, ox, oy } = bigMapGeom();
+  const x = (sx - ox) / sc * T, y = (sy - oy) / sc * T;
+  if (x < 0 || y < 0 || x > WORLD_W || y > WORLD_H) return;
+  if (G.waypoint && dist(x, y, G.waypoint.x, G.waypoint.y) < 3 * T) { G.waypoint = null; toast('📍 Destino borrado'); }
+  else { G.waypoint = { x, y }; toast('📍 Destino marcado: sigue la línea del GPS'); }
+  G.gpsT = 0; updateGPS(0); drawBigMap(); Sound.sfx('click');
+}
+
+// ==========================================================================
+// 19. RADIO: reguetón, cumbia, salsa y champeta
+// ==========================================================================
+Object.assign(Sound, {
+  kick(w, v = 0.26) { this.tone(62, 0.2, 'sine', v, w, -36, this.radioBus); },
+  snare(w, v = 0.11) { this.noise(0.12, v, 1900, 'bandpass', w, this.radioBus); this.tone(200, 0.06, 'triangle', v * 0.4, w, 0, this.radioBus); },
+  hat(w, v = 0.025) { this.noise(0.03, v, 7500, 'highpass', w, this.radioBus); },
+  note(f, d, type, v, w, slide) { this.tone(f, d, type, v, w, slide || 0, this.radioBus); },
+  /** Un paso de semicorchea de la emisora activa. */
+  stationStep(t, s) {
+    const w = t - this.ctx.currentTime, st = STATIONS[this.radio.forced != null ? this.radio.forced : this.radio.station].id;
+    const s16 = s % 16, bar = Math.floor(s / 16) % 4;
+    if (st === 'mega') { // dembow
+      if (s16 % 4 === 0) this.kick(w);
+      if (s16 === 3 || s16 === 6 || s16 === 11 || s16 === 14) this.snare(w);
+      if (s16 % 2 === 0) this.hat(w, s16 % 4 === 2 ? 0.035 : 0.018);
+      const root = [55, 43.65, 65.41, 49][bar];
+      if (s16 === 0) this.note(root, 0.5, 'sine', 0.24, w, -6);
+      if (s16 === 7 || s16 === 10) this.note(root, 0.22, 'sine', 0.18, w);
+      const motif = [0, -1, 2, -1, 3, -1, 2, 4, -1, 3, -1, 2, 1, -1, 0, -1];
+      const sc = [440, 523.25, 587.33, 659.25, 783.99];
+      const idx = motif[s16];
+      if (idx >= 0 && bar !== 3) this.note(sc[idx] * (bar === 1 ? 0.8909 : 1), 0.14, 'triangle', 0.035, w);
+      if (s16 === 0) [220, 261.6, 329.6].forEach(f => this.note(f * [1, 0.8, 1.19, 0.89][bar], 0.9, 'sine', 0.018, w));
+    } else if (st === 'tropi') { // cumbia
+      if (s16 % 2 === 0) this.radioStep(t, s / 2);
+    } else if (st === 'rumba') { // salsa: clave 2-3, campana, tumbao y montuno
+      const e = s % 16, bar8 = Math.floor(s / 8) % 4;
+      if ([2, 4, 8, 11, 14].includes(e)) this.note(1900, 0.04, 'square', 0.045, w);
+      if (e % 2 === 0) this.note(e % 4 === 0 ? 820 : 560, 0.05, 'square', 0.025, w);
+      if (e % 8 === 6 || e % 8 === 7) this.note(e % 8 === 6 ? 196 : 247, 0.12, 'sine', 0.09, w, -30);
+      const roots = [65.41, 87.31, 98, 65.41], r = roots[bar8];
+      if (e % 8 === 3) this.note(r * 1.5, 0.22, 'triangle', 0.13, w);
+      if (e % 8 === 6) this.note(roots[(bar8 + 1) % 4], 0.3, 'triangle', 0.14, w);
+      const chords = [[523, 659, 784], [523, 698, 880], [494, 587, 784], [523, 659, 784]];
+      if ([1, 0, 1, 1, 0, 1, 0, 1][e % 8]) this.note(chords[bar8][(s * 7) % 3], 0.1, 'triangle', 0.03, w);
+      if (e % 4 === 0) this.kick(w, 0.1);
+    } else { // champeta
+      if (s16 === 0 || s16 === 6 || s16 === 8 || s16 === 14) this.kick(w, 0.22);
+      if (s16 === 4 || s16 === 12) this.snare(w, 0.08);
+      this.hat(w, s16 % 2 ? 0.012 : 0.022);
+      const riff = [0, 2, 4, 2, 1, 3, 4, 3, 0, 2, 4, 5, 4, 2, 1, 0], pent = [523.25, 587.33, 659.25, 783.99, 880, 1046.5];
+      this.note(pent[riff[s16]] * (bar % 2 ? 1.122 : 1), 0.08, 'square', 0.02, w);
+      const roots = [65.41, 87.31, 98, 65.41];
+      if (s16 === 0 || s16 === 8) this.note(roots[bar], 0.3, 'triangle', 0.15, w);
+      if (s16 === 10) this.note(roots[bar] * 1.5, 0.15, 'triangle', 0.1, w);
+    }
+  },
+});
+
+// ==========================================================================
 // 12. GUARDADO
 // ==========================================================================
 function saveGame() {
@@ -3987,6 +5383,7 @@ function loadSave() {
 // ==========================================================================
 function resetRun() {
   G.vehicles = []; G.peds = []; G.pickups = []; G.fx = []; G.floaters = []; G.bubbles = []; G.skids = [];
+  G.bullets = []; G.grenades = []; G.scorch = []; G.carry = null; G.minigame = null; Sound.radio.forced = null;
   G.mission = null; G.offers = null; G.wanted = 0; G.unseen = 0; G.peakWanted = 0; G.bustT = 0; G.overlay = null;
   for (const k of ['checkpoint', 'closed', 'festival', 'jam']) {
     if (k === 'closed' && G.events.closed) { for (const i of G.events.closed.tiles) World.dyn[i] = 0; World.closed.delete(G.events.closed.key); }
@@ -4067,6 +5464,7 @@ function titleUpdate(dt) {
 }
 
 function handleGlobalKeys() {
+  if (G.minigame) return true;
   if (G.menu) { menuInput(); return true; }
   if (G.bigmap) { if (Input.hit('m', 'esc')) closeBigMap(); return true; }
   if (G.overlay || G.fading) return true;
@@ -4074,7 +5472,11 @@ function handleGlobalKeys() {
   if (Input.hit('m')) { openBigMap(); return true; }
   if (Input.hit('c')) { openMenu(menuPhone()); return true; }
   if (Input.hit('n')) { Sound.setMuted(!Sound.muted); toast(Sound.muted ? '🔇 Sonido apagado' : '🔊 Sonido encendido'); }
-  if (Input.hit('r')) { Sound.radio.on = !Sound.radio.on; toast(Sound.radio.on ? '📻 Radio encendida' : '📻 Radio apagada'); }
+  if (Input.hit('r')) {
+    const R = Sound.radio;
+    if (!R.on) { R.on = true; R.station = 0; } else if (R.station < STATIONS.length - 1) R.station++; else R.on = false;
+    toast(R.on ? `📻 ${STATIONS[R.station].name}` : '📻 Radio apagada');
+  }
   if (Input.hit('f')) { if (!G.player.hidden) tryToggleVehicle(); }
   if (Input.hit('e') && !G.player.hidden) {
     const q = nearestPOI();
@@ -4087,6 +5489,7 @@ let lastSecond = 0;
 function update(dt) {
   if (G.state === 'title') { titleUpdate(dt); return; }
   if (G.state !== 'play') return;
+  if (G.minigame && !G.fading) { updateMinigame(dt); return; }
   if (handleGlobalKeys()) {
     if (G.overlay) { updateOverlay(dt); updateFx(dt); }
     return;
@@ -4095,8 +5498,23 @@ function update(dt) {
   G.stats.played += dt;
   updateTime(dt); updateWeather(dt);
   updatePlayer(dt); updateVitals(dt);
+  // Armas
+  G.fireCD -= dt; G.flash = Math.max(0, G.flash - dt * 2);
+  if (Input.hit('q')) cycleWeapon();
+  if (p.onFoot && !p.hidden && Input.down('fire') && G.fireCD <= 0) playerAttack();
+  if (p.punchT > 0) p.punchT -= dt;
   updateVehicles(dt);
   for (const pd of G.peds) updatePed(pd, dt);
+  updateBullets(dt);
+  for (const sc of G.scorch) sc.t -= dt;
+  G.scorch = G.scorch.filter(sc => sc.t > 0);
+  // La gente habla como se habla en cada ciudad
+  G.chatT -= dt;
+  if (G.chatT <= 0) {
+    G.chatT = rand(4, 8);
+    const near = G.peds.filter(o => o.mode === 'walk' && dist(o.x, o.y, p.x, p.y) < 240 && onScreen(o.x, o.y, -20));
+    if (near.length) bubble(pick(near), pick(CITY.sayings));
+  }
   updateWanted(dt); updateMission(dt); updateEvents(dt); updatePickups(dt);
   G.focus.x = p.x; G.focus.y = p.y;
   manageWorld(dt); updateFx(dt); updateCamera(dt); updateGPS(dt);
@@ -4105,7 +5523,8 @@ function update(dt) {
   const d = districtAt(p.x, p.y);
   if (d !== G.districtNow) {
     G.districtNow = d; districtBanner(d);
-    if (!G.visited[d]) { G.visited[d] = true; if (Object.keys(G.visited).length >= 8) unlock('rolo'); }
+    const vk = CITY.id + ':' + d;
+    if (!G.visited[vk]) { G.visited[vk] = true; if (Object.keys(G.visited).filter(k => k.startsWith('bogota:')).length >= 8) unlock('rolo'); }
   }
   // Aviso de barrio bloqueado
   G.lockToastT -= dt;
