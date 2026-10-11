@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neon Pong</title>
+<style>
+body{margin:0;background:#050511;color:#fff;font-family:Arial;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden}
+#g{position:relative;width:min(95vw,500px);height:min(85vh,750px);background:radial-gradient(circle,#171447,#060611 70%);border:2px solid #423d78;border-radius:25px;overflow:hidden}
+.p{position:absolute;width:110px;height:16px;border-radius:20px;left:50%;transform:translateX(-50%)}
+#pl{bottom:30px;background:#53f7ff;box-shadow:0 0 20px #53f7ff}
+#cp{top:30px;background:#ff55bc;box-shadow:0 0 20px #ff55bc}
+#b{position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 0 10px #fff,0 0 25px #8a6cff}
+#s{position:absolute;width:100%;top:46%;text-align:center;font-size:60px;font-weight:bold;opacity:.18}
+#m{position:absolute;width:100%;top:55%;text-align:center;font-size:20px;font-weight:bold}
+</style>
+</head>
+<body>
+<div id="g">
+  <div id="s">0 : 0</div>
+  <div id="cp" class="p"></div>
+  <div id="pl" class="p"></div>
+  <div id="b"></div>
+  <div id="m">Mueve el mouse o tu dedo 🏓</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const g = $("g"), pl = $("pl"), cp = $("cp"), b = $("b"), s = $("s"), m = $("m");
+const WIN = 3;
+let ps = 0, cs = 0, x, y, dx, dy, run = true;
+
+function reset(){
+  x = g.clientWidth / 2 - 11;
+  y = g.clientHeight / 2 - 11;
+  dx = (Math.random() > .5 ? 4 : -4);
+  dy = (Math.random() > .5 ? 5 : -5);
+}
+
+function mv(cx){
+  const r = g.getBoundingClientRect();
+  pl.style.transform = "none";
+  pl.style.left = Math.max(0, Math.min(cx - r.left - 55, g.clientWidth - 110)) + "px";
+}
+g.addEventListener("mousemove", e => mv(e.clientX));
+g.addEventListener("touchmove", e => { e.preventDefault(); mv(e.touches[0].clientX); }, { passive: false });
+
+const hit = (a, c) => {
+  const A = a.getBoundingClientRect(), B = c.getBoundingClientRect();
+  return A.left < B.right && A.right > B.left && A.top < B.bottom && A.bottom > B.top;
+};
+
+function point(){
+  reset();
+  s.textContent = ps + " : " + cs;
+  if (ps >= WIN) { m.textContent = "🏆 GANASTE"; run = false; }
+  else if (cs >= WIN) { m.textContent = "💀 PERDISTE"; run = false; }
+  else m.textContent = "";
+}
+
+function loop(){
+  if (!run) return;
+  x += dx; y += dy;
+  if (x <= 0 || x >= g.clientWidth - 22) dx *= -1;
+
+  // CPU sigue la pelota
+  let cx = parseFloat(cp.style.left) || g.clientWidth / 2 - 55;
+  cx += (x - 42 - cx) * .07;
+  cp.style.left = Math.max(0, Math.min(cx, g.clientWidth - 110)) + "px";
+  cp.style.transform = "none";
+
+  if (hit(b, pl) && dy > 0) { dy *= -1.05; dx *= 1.03; y = pl.offsetTop - 22; }
+  if (hit(b, cp) && dy < 0) { dy *= -1.05; dx *= 1.03; y = cp.offsetTop + 16; }
+
+  b.style.left = x + "px";
+  b.style.top = y + "px";
+
+  if (y > g.clientHeight) { cs++; point(); }
+  if (y < -30) { ps++; point(); }
+
+  requestAnimationFrame(loop);
+}
+
+reset();
+loop();
+</script>
+</body>
+</html>
