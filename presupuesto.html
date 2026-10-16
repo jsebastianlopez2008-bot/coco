@@ -1,0 +1,1168 @@
+<title>Mi Presupuesto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  /* Layout: una columna tipo libreta de cuentas. Encabezado fijo con el mes, contenido por pestañas, barra de pestañas abajo. */
+  :root {
+    --bg: #f5f7f4;
+    --card: #ffffff;
+    --ink: #17231c;
+    --muted: #66746b;
+    --line: #e2e8e3;
+    --soft: #edf2ee;
+    --accent: #1f7a4d;
+    --accent-ink: #ffffff;
+    --pos: #1f7a4d;
+    --neg: #c2412d;
+    --tip: #b7791f;
+    --goal: #3d63c9;
+    --cardc: #8a4fbf;
+    --warn-bg: #fff4e0;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101613; --card: #18201b; --ink: #e7efe9; --muted: #93a39a; --line: #29332d; --soft: #1f2923;
+      --accent: #3fb47a; --accent-ink: #08130d; --pos: #4fc58a; --neg: #ff7a63; --tip: #e3a948; --goal: #7d9bff; --cardc: #c08bef;
+      --warn-bg: #2d2414; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101613; --card: #18201b; --ink: #e7efe9; --muted: #93a39a; --line: #29332d; --soft: #1f2923;
+    --accent: #3fb47a; --accent-ink: #08130d; --pos: #4fc58a; --neg: #ff7a63; --tip: #e3a948; --goal: #7d9bff; --cardc: #c08bef;
+    --warn-bg: #2d2414; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 0 calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+  .wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .pos { color: var(--pos); } .neg { color: var(--neg); } .muted { color: var(--muted); }
+
+  header.top {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
+    display: flex; align-items: center; gap: 8px; padding-block: 12px 10px; border-bottom: 1px solid var(--line);
+  }
+  .brand { font-family: var(--display); font-weight: 800; font-size: 18px; letter-spacing: -0.01em; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 460px) { .brand { font-size: 0; } .brand::after { content: "Presupuesto"; font-size: 16px; } }
+  .monthnav { display: flex; align-items: center; gap: 2px; }
+  .monthnav .label { font-family: var(--display); font-weight: 600; font-size: 16px; min-width: 128px; text-align: center; text-transform: capitalize; }
+  .icon-btn { border: 1px solid var(--line); background: var(--card); border-radius: 10px; width: 36px; height: 36px; display: grid; place-items: center; font-size: 18px; line-height: 1; }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  h2 { font-family: var(--display); font-weight: 800; font-size: 20px; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+  h3 { font-family: var(--display); font-weight: 600; font-size: 16px; margin: 0; }
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .section { display: flex; flex-direction: column; gap: 10px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+  .pad { padding: 14px 16px; }
+
+  /* Hero del mes */
+  .hero { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .hero .big { font-family: var(--mono); font-size: clamp(30px, 9vw, 42px); font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; }
+  .flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .flow > div { background: var(--soft); border-radius: 10px; padding: 8px 10px; min-width: 0; }
+  .flow .v { font-family: var(--mono); font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+  .callout { border-radius: 12px; padding: 10px 12px; background: var(--soft); font-size: 14px; }
+  .callout b { font-family: var(--mono); }
+
+  /* Desglose */
+  .rows { display: flex; flex-direction: column; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line); min-height: 46px; }
+  .row:first-child { border-top: 0; }
+  .row .grow { flex: 1; min-width: 0; }
+  .row .t { font-weight: 600; overflow-wrap: anywhere; }
+  .row .s { font-size: 12.5px; color: var(--muted); }
+  .row .amt { font-family: var(--mono); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .row.total { background: var(--soft); border-radius: 0 0 14px 14px; }
+  .row.clickable { cursor: pointer; }
+  .row.clickable:hover { background: var(--soft); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+  /* Semanas */
+  .week { padding: 12px 16px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
+  .week:first-child { border-top: 0; }
+  .week.now { background: color-mix(in srgb, var(--accent) 9%, var(--card)); }
+  .week:first-child.now { border-radius: 14px 14px 0 0; }
+  .week:last-child.now { border-radius: 0 0 14px 14px; }
+  .week .wt { font-weight: 700; }
+  .week .wd { font-size: 12.5px; color: var(--muted); }
+  .week .wnet { font-family: var(--mono); font-weight: 700; font-size: 17px; text-align: right; }
+  .week .wbits { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--muted); }
+  .week .wbits span b { font-family: var(--mono); font-weight: 500; color: var(--ink); }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-ink); vertical-align: 2px; margin-left: 6px; }
+  .pill.ghost { background: var(--soft); color: var(--muted); }
+  .pill.bad { background: var(--neg); color: var(--card); }
+
+  /* Calendario */
+  .cal { padding: 10px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .cal-h { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding-block: 4px; }
+  .cal-d { aspect-ratio: 1 / 1.08; max-width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--card); padding: 4px; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; text-align: left; min-width: 0; }
+  .cal-d.out { visibility: hidden; }
+  .cal-d .n { font-weight: 700; font-size: 13px; }
+  .cal-d .dots { display: flex; gap: 2px; flex-wrap: wrap; }
+  .cal-d .dots i { width: 6px; height: 6px; border-radius: 50%; display: block; }
+  .cal-d .net { font-family: var(--mono); font-size: 9.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+  .cal-d.today { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  .cal-d.sel { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .cal-d.sel .net, .cal-d.sel .net.pos, .cal-d.sel .net.neg { color: var(--accent-ink); }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--muted); padding: 8px 6px 2px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+  /* Botones */
+  .btn { border: 0; background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 10px 14px; border-radius: 11px; }
+  .btn.sec { background: var(--soft); color: var(--ink); }
+  .btn.danger { background: transparent; color: var(--neg); border: 1px solid var(--line); }
+  .btn.sm { padding: 6px 10px; font-size: 13px; border-radius: 9px; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .check { width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line); background: var(--card); display: grid; place-items: center; flex: none; color: var(--accent-ink); font-size: 15px; font-weight: 800; }
+  .check.on { background: var(--accent); border-color: var(--accent); }
+  .linkish { background: none; border: 0; padding: 0; color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+  .linkish.amt.neg { color: var(--neg); } .linkish.amt.pos { color: var(--pos); } .linkish.amt { text-decoration-style: dotted; }
+
+  /* Progreso */
+  .bar { height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; border-radius: 99px; background: var(--goal); }
+  .item { padding: 14px 16px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+  .item:first-child { border-top: 0; }
+  .item .line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 6px 12px; font-size: 13px; }
+  .kv div { display: flex; flex-direction: column; min-width: 0; }
+  .kv b { font-family: var(--mono); font-size: 14px; }
+
+  /* Propinas */
+  .quick { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .field input, .field select { width: 100%; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 10px 11px; min-height: 42px; }
+  .field .help { font-size: 12px; color: var(--muted); }
+  .field.chk { flex-direction: row; align-items: center; gap: 10px; }
+  .field.chk input { width: 20px; height: 20px; min-height: 0; }
+  .err { color: var(--neg); font-size: 13px; font-weight: 600; }
+
+  .empty { padding: 18px 16px; color: var(--muted); font-size: 14px; }
+  .note { font-size: 12.5px; color: var(--muted); }
+  .banner { background: var(--warn-bg); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+
+  /* Pestañas */
+  nav.tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--card); border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: max(4px, env(safe-area-inset-left, 0px)); padding-right: max(4px, env(safe-area-inset-right, 0px));
+  }
+  nav.tabs .in { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  nav.tabs button { border: 0; background: none; padding: 8px 2px 9px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; color: var(--muted); }
+  nav.tabs button svg { width: 22px; height: 22px; }
+  nav.tabs button[aria-current="page"] { color: var(--accent); }
+
+  /* Hoja modal */
+  .overlay { position: fixed; inset: 0; z-index: 20; background: color-mix(in srgb, var(--ink) 40%, transparent); display: flex; align-items: flex-end; justify-content: center; }
+  .sheet {
+    background: var(--card); width: 100%; max-width: 560px; max-height: 88vh; overflow: auto; border-radius: 18px 18px 0 0;
+    padding: 18px max(16px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  @media (min-width: 700px) { .overlay { align-items: center; } .sheet { border-radius: 18px; } }
+  .sheet .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 30; background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 14px; }
+  @media (max-width: 380px) { .quick { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .quick .btn { grid-column: 1 / -1; } .monthnav .label { min-width: 104px; font-size: 15px; } }
+  @media (prefers-reduced-motion: no-preference) { .sheet { animation: up .18s ease-out; } @keyframes up { from { transform: translateY(16px); opacity: .6; } } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Mi Presupuesto</div>
+    <div class="monthnav">
+      <button class="icon-btn" id="prevM" aria-label="Mes anterior">‹</button>
+      <div class="label" id="mLabel"></div>
+      <button class="icon-btn" id="nextM" aria-label="Mes siguiente">›</button>
+    </div>
+    <button class="icon-btn" id="openSettings" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+  <div id="banner"></div>
+  <main id="view" class="wrap"></main>
+</div>
+
+<nav class="tabs" aria-label="Secciones">
+  <div class="in" id="tabs"></div>
+</nav>
+
+<script>
+"use strict";
+/* ============================================================
+   Utilidades de fecha. Todo se calcula con días UTC enteros
+   para que horario de verano o zona horaria no muevan nada.
+   ============================================================ */
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const MES_C = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+const DIAS_C = ["dom","lun","mar","mié","jue","vie","sáb"];
+
+const pad = n => String(n).padStart(2, "0");
+const iso = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+function parseIso(s) { const [y, m, d] = String(s).split("-").map(Number); return { y, m: m - 1, d }; }
+const dn = (y, m, d) => Math.round(Date.UTC(y, m, d) / 864e5);
+function dnIso(s) { const p = parseIso(s); return dn(p.y, p.m, p.d); }
+function isoFromDn(n) { const t = new Date(n * 864e5); return iso(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate()); }
+const dim = (y, m) => new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+const wd = (y, m, d) => new Date(Date.UTC(y, m, d)).getUTCDay();
+function todayIso() { const t = new Date(); return iso(t.getFullYear(), t.getMonth(), t.getDate()); }
+const validIso = s => typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && isoFromDn(dnIso(s)) === s;
+function fmtDate(s, withWd) { const p = parseIso(s); const w = withWd ? DIAS_C[wd(p.y, p.m, p.d)] + " " : ""; return `${w}${p.d} ${MES_C[p.m]}`; }
+
+/* ============================================================
+   Dinero: SIEMPRE en centavos enteros. Nunca se suman decimales.
+   ============================================================ */
+function toCents(v) {
+  let s = String(v == null ? "" : v).trim().replace(/[\s$€£]/g, "");
+  if (!s) return 0;
+  let neg = false;
+  if (s[0] === "-") { neg = true; s = s.slice(1); }
+  const sep = Math.max(s.lastIndexOf(","), s.lastIndexOf("."));
+  let ip = s, fp = "";
+  if (sep >= 0) {
+    const after = s.length - sep - 1;
+    if (after === 1 || after === 2) { ip = s.slice(0, sep); fp = s.slice(sep + 1); }
+    else if (after === 0) { ip = s.slice(0, sep); }
+  }
+  ip = ip.replace(/[.,]/g, "");
+  if (!/^\d*$/.test(ip) || !/^\d*$/.test(fp) || (ip === "" && fp === "")) return NaN;
+  const c = Number(ip || "0") * 100 + Number((fp + "00").slice(0, 2));
+  if (!Number.isSafeInteger(c)) return NaN;
+  return neg ? -c : c;
+}
+const NF = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+function money(c, plus) {
+  const a = Math.abs(c), whole = Math.floor(a / 100), cents = a % 100;
+  const txt = NF.format(whole) + "." + pad(cents);
+  return (c < 0 ? "−" : (plus && c > 0 ? "+" : "")) + S.settings.cur + txt;
+}
+function moneyShort(c) {
+  const a = Math.abs(c), sign = c < 0 ? "−" : "+";
+  if (a >= 100000) return sign + (Math.round(a / 10000) / 10) + "k";
+  return sign + Math.round(a / 100);
+}
+const centsToInput = c => (c ? (c / 100).toFixed(2) : "");
+const sum = (arr, f) => arr.reduce((a, x) => a + (f ? f(x) : x), 0);
+const ceilDiv = (a, b) => Math.floor((a + b - 1) / b);   // a, b enteros positivos
+
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function uid() { return Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4); }
+
+/* ============================================================
+   Estado
+   ============================================================ */
+const KEY = "mi-presupuesto-v1";
+function blank() {
+  return {
+    v: 1,
+    settings: { cur: "$", weekStart: 1, tipsInBudget: true },
+    incomes: [], fixed: [], overrides: {}, done: {}, entries: [], goals: [], cards: [], openings: {}
+  };
+}
+function normalize(o) {
+  const b = blank();
+  if (!o || typeof o !== "object") return b;
+  const out = Object.assign(b, o);
+  out.settings = Object.assign(blank().settings, o.settings || {});
+  for (const k of ["incomes", "fixed", "entries", "goals", "cards"]) if (!Array.isArray(out[k])) out[k] = [];
+  for (const k of ["overrides", "done", "openings"]) if (!out[k] || typeof out[k] !== "object") out[k] = {};
+  return out;
+}
+
+function sampleData() {
+  // Ejemplo para ver cómo funciona. Se borra con un toque.
+  const t = parseIso(todayIso()), start = iso(t.y, t.m, 1);
+  let firstFri = 1; while (wd(t.y, t.m, firstFri) !== 5) firstFri++;
+  const s = blank();
+  s.sample = true;
+  s.incomes.push({ id: uid(), name: "Sueldo semanal", amount: 65000, freq: "weekly", weekday: 5, day: 1, anchor: "", start, end: "" });
+  s.fixed.push(
+    { id: uid(), name: "Renta", amount: 120000, freq: "monthly", day: 1, weekday: 1, anchor: "", start, end: "" },
+    { id: uid(), name: "Celular", amount: 4500, freq: "monthly", day: 12, weekday: 1, anchor: "", start, end: "" },
+    { id: uid(), name: "Carro", amount: 32000, freq: "monthly", day: 20, weekday: 1, anchor: "", start, end: "" },
+    { id: uid(), name: "Gasolina", amount: 4000, freq: "weekly", day: 1, weekday: 1, anchor: "", start, end: "" }
+  );
+  const g1 = uid(), c1 = uid();
+  const dl = parseIso(isoFromDn(dn(t.y, t.m + 6, 1) - 1));
+  s.goals.push({ id: g1, name: "Fondo de emergencia", target: 300000, initial: 40000, deadline: iso(dl.y, dl.m, dl.d), monthly: 0 });
+  s.cards.push({ id: c1, name: "Visa", balance: 185000, limit: 500000, apr: 24.99, min: 4500, planned: 15000, dueDay: 25, start });
+  for (let d = 1; d <= Math.min(t.d, dim(t.y, t.m)); d++) {
+    const w = wd(t.y, t.m, d);
+    if (w === 5 || w === 6) s.entries.push({ id: uid(), type: "tip", date: iso(t.y, t.m, d), amount: w === 5 ? 6250 : 8840, note: "" });
+  }
+  s.entries.push({ id: uid(), type: "expense", date: iso(t.y, t.m, Math.min(3, t.d)), amount: 8650, note: "Supermercado" });
+  s.entries.push({ id: uid(), type: "goal", date: iso(t.y, t.m, Math.min(firstFri, t.d)), amount: 10000, note: "", ref: g1 });
+  return s;
+}
+
+let S = blank();
+let store = { mode: "local", db: null, ref: null, writing: false, pending: false, timer: 0 };
+
+function readLocal() { try { const r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+function writeLocal() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* sin almacenamiento local */ } }
+
+function save() {
+  writeLocal();
+  if (!store.ref) return;
+  clearTimeout(store.timer);
+  store.timer = setTimeout(flush, 500);
+}
+async function flush() {
+  if (!store.ref) return;
+  if (store.writing) { store.pending = true; return; }
+  store.writing = true;
+  try {
+    await store.ref.set({ json: JSON.stringify(S), savedAt: Date.now() });
+    setBanner("");
+  } catch (e) {
+    if (e && e.code === "unavailable") { setTimeout(flush, 1500 + Math.random() * 1000); }
+    else setBanner("No se pudo guardar en la nube. Tus datos siguen en este dispositivo; usa Ajustes → Copia de seguridad.");
+  } finally {
+    store.writing = false;
+    if (store.pending) { store.pending = false; flush(); }
+  }
+}
+async function connectCloud() {
+  if (!window.claude || !window.claude.use) return;
+  try {
+    const db = await window.claude.use("db");
+    const user = await window.claude.use("user");
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    const ref = db.doc("data/users/" + id + "/budget");
+    const snap = await ref.get();
+    store.ref = ref; store.mode = "cloud";
+    if (snap.exists) {
+      const d = snap.data();
+      const remote = d && typeof d.json === "string" ? normalize(JSON.parse(d.json)) : null;
+      if (remote) { S = remote; writeLocal(); render(); }
+    } else if (!S.sample) {
+      flush();  // sube lo que ya había en este dispositivo
+    }
+    render();
+  } catch (e) { store.ref = null; store.mode = "local"; }
+}
+
+/* ============================================================
+   Motor de repeticiones
+   ============================================================ */
+const FREQ = { weekly: "Cada semana", biweekly: "Cada 2 semanas", semimonthly: "Quincenal (15 y último día)", monthly: "Una vez al mes" };
+function occurs(it, y, m, d) {
+  const n = dn(y, m, d);
+  if (it.start && validIso(it.start) && n < dnIso(it.start)) return false;
+  if (it.end && validIso(it.end) && n > dnIso(it.end)) return false;
+  const last = dim(y, m);
+  switch (it.freq) {
+    case "monthly": return d === Math.min(Math.max(1, +it.day || 1), last);
+    case "weekly": return wd(y, m, d) === +it.weekday;
+    case "biweekly": { if (!validIso(it.anchor)) return false; const a = dnIso(it.anchor); return n >= a && (n - a) % 14 === 0; }
+    case "semimonthly": return d === 15 || d === last;
+  }
+  return false;
+}
+function freqText(it) {
+  if (it.freq === "monthly") return `Cada mes, el día ${it.day}` + (+it.day > 28 ? " (o el último día)" : "");
+  if (it.freq === "weekly") return `Cada ${DIAS[+it.weekday]}`;
+  if (it.freq === "biweekly") return `Cada 2 semanas desde el ${validIso(it.anchor) ? fmtDate(it.anchor) : "?"}`;
+  if (it.freq === "semimonthly") return "El 15 y el último día del mes";
+  return "";
+}
+
+/* ============================================================
+   Modelo del mes: aquí vive toda la matemática.
+   ============================================================ */
+const KIND = {
+  income:  { label: "Ingreso", sign: 1, color: "var(--pos)" },
+  extra:   { label: "Ingreso extra", sign: 1, color: "var(--pos)" },
+  tip:     { label: "Propina", sign: 1, color: "var(--tip)" },
+  fixed:   { label: "Gasto fijo", sign: -1, color: "var(--neg)" },
+  expense: { label: "Otro gasto", sign: -1, color: "var(--neg)" },
+  goal:    { label: "Para meta", sign: -1, color: "var(--goal)" },
+  card:    { label: "Pago de tarjeta", sign: -1, color: "var(--cardc)" },
+  cardplan:{ label: "Pago de tarjeta", sign: -1, color: "var(--cardc)" }
+};
+const ENTRY_KIND = { income: "extra", expense: "expense", tip: "tip", goal: "goal", card: "card" };
+const mkey = (y, m) => `${y}-${pad(m + 1)}`;
+const goalName = id => (S.goals.find(g => g.id === id) || {}).name || "Meta borrada";
+const cardName = id => (S.cards.find(c => c.id === id) || {}).name || "Tarjeta borrada";
+
+function monthModel(y, m) {
+  const last = dim(y, m), mk = mkey(y, m), tipsIn = !!S.settings.tipsInBudget;
+  const days = [];
+  for (let d = 1; d <= last; d++) days.push({ d, iso: iso(y, m, d), items: [] });
+
+  for (const [list, kind] of [[S.incomes, "income"], [S.fixed, "fixed"]]) {
+    for (const it of list) for (const day of days) {
+      if (!occurs(it, y, m, day.d)) continue;
+      const key = it.id + "|" + day.iso, ov = Object.prototype.hasOwnProperty.call(S.overrides, key);
+      day.items.push({ kind, label: it.name, amount: ov ? S.overrides[key] : it.amount, key, ref: it, done: !!S.done[key], recurring: true, overridden: ov });
+    }
+  }
+  for (const e of S.entries) {
+    if (!e.date || e.date.slice(0, 7) !== mk) continue;
+    const day = days[parseIso(e.date).d - 1]; if (!day) continue;
+    const kind = ENTRY_KIND[e.type];
+    let label = e.note || KIND[kind].label;
+    if (e.type === "goal") label = "Apartado: " + goalName(e.ref);
+    if (e.type === "card") label = "Pago " + cardName(e.ref);
+    day.items.push({ kind, label, amount: e.amount, entry: e });
+  }
+  for (const c of S.cards) {
+    const plan = c.planned || c.min || 0;
+    if (plan <= 0) continue;
+    if (c.start && validIso(c.start) && mk < c.start.slice(0, 7)) continue;
+    const paid = sum(S.entries.filter(e => e.type === "card" && e.ref === c.id && e.date.slice(0, 7) === mk), e => e.amount);
+    const day = days[Math.min(Math.max(1, +c.dueDay || 1), last) - 1];
+    // Si ya pagaste algo este mes cuenta lo pagado (como movimiento); si no, cuenta lo planeado.
+    day.items.push({ kind: "cardplan", label: "Pago " + c.name, amount: paid > 0 ? 0 : plan, plan, paid, card: c });
+  }
+
+  const T = { income: 0, extra: 0, tip: 0, fixed: 0, expense: 0, goal: 0, card: 0 };
+  for (const day of days) {
+    day.inc = 0; day.tips = 0; day.out = 0;
+    for (const it of day.items) {
+      const k = it.kind === "cardplan" ? "card" : it.kind;
+      T[k] += it.amount;
+      if (k === "tip") day.tips += it.amount;
+      else if (KIND[k].sign > 0) day.inc += it.amount;
+      else day.out += it.amount;
+    }
+    day.net = day.inc + (tipsIn ? day.tips : 0) - day.out;
+  }
+
+  // Semanas: filas del calendario, recortadas a los días de ESTE mes,
+  // así la suma de las semanas es exactamente el total del mes.
+  const ws = +S.settings.weekStart, offset = (wd(y, m, 1) - ws + 7) % 7;
+  const weeks = [];
+  for (const day of days) {
+    const wi = Math.floor((day.d - 1 + offset) / 7);
+    if (!weeks[wi]) weeks[wi] = { i: wi, from: day.d, to: day.d, inc: 0, tips: 0, out: 0, net: 0, days: [] };
+    const w = weeks[wi];
+    w.to = day.d; w.inc += day.inc; w.tips += day.tips; w.out += day.out; w.net += day.net; w.days.push(day);
+  }
+  const opening = S.openings[mk] || 0;
+  let run = opening;
+  for (const w of weeks) { run += w.net; w.running = run; w.full = w.days.length === 7; }
+
+  const inc = T.income + T.extra, out = T.fixed + T.expense + T.goal + T.card;
+  const net = inc + (tipsIn ? T.tip : 0) - out;
+  return { y, m, mk, last, days, weeks, T, inc, out, tipsIn, opening, net, end: opening + net, offset };
+}
+
+/* Metas */
+function goalSaved(g) { return (g.initial || 0) + sum(S.entries.filter(e => e.type === "goal" && e.ref === g.id), e => e.amount); }
+function goalPlan(g) {
+  const saved = goalSaved(g), rem = Math.max(0, g.target - saved);
+  const t = parseIso(todayIso()), tn = dn(t.y, t.m, t.d);
+  const mk = mkey(t.y, t.m);
+  const thisMonth = sum(S.entries.filter(e => e.type === "goal" && e.ref === g.id && e.date.slice(0, 7) === mk), e => e.amount);
+  const r = { saved, rem, pct: g.target > 0 ? Math.min(100, (saved / g.target) * 100) : 0, thisMonth };
+  if (rem === 0) { r.done = true; return r; }
+  if (validIso(g.deadline)) {
+    const dl = parseIso(g.deadline), dln = dnIso(g.deadline);
+    if (dln < tn) { r.late = true; return r; }
+    r.months = (dl.y - t.y) * 12 + (dl.m - t.m) + 1;             // contando este mes
+    r.weeks = ceilDiv(dln - tn + 1, 7);                            // contando esta semana
+    r.perMonth = ceilDiv(rem, r.months);
+    r.perWeek = ceilDiv(rem, r.weeks);
+    // Lo que falta apartar ESTE mes: el plan al inicio del mes menos lo ya apartado.
+    const remAtStart = rem + thisMonth;
+    r.monthTarget = ceilDiv(remAtStart, r.months);
+    r.leftThisMonth = Math.max(0, r.monthTarget - thisMonth);
+  } else if (g.monthly > 0) {
+    r.perMonth = g.monthly;
+    r.monthsNeeded = ceilDiv(rem, g.monthly);
+    r.monthTarget = g.monthly;
+    r.leftThisMonth = Math.max(0, g.monthly - thisMonth);
+    const f = parseIso(isoFromDn(dn(t.y, t.m + r.monthsNeeded - 1, 1)));
+    r.eta = `${MESES[f.m]} ${f.y}`;
+  }
+  return r;
+}
+
+/* Tarjetas: simulación mes a mes, interés redondeado al centavo. */
+function payoff(balance, apr, pay) {
+  if (balance <= 0) return { months: 0, interest: 0 };
+  if (!(pay > 0)) return null;
+  const r = (+apr || 0) / 1200;
+  let b = balance, interest = 0, n = 0;
+  while (b > 0 && n < 600) {
+    const i = Math.round(b * r);
+    if (pay <= i) return { never: true, firstInterest: i };
+    b += i; interest += i;
+    b -= Math.min(pay, b);
+    n++;
+  }
+  return n >= 600 ? { never: true } : { months: n, interest };
+}
+function plural(n, a, b) { return n === 1 ? `${n} ${a}` : `${n} ${b}`; }
+
+/* ============================================================
+   Vista
+   ============================================================ */
+const T0 = parseIso(todayIso());
+let V = { y: T0.y, m: T0.m, tab: "resumen", selDay: T0.d };
+try { const t = localStorage.getItem(KEY + ":tab"); if (t) V.tab = t; } catch (e) {}
+const $ = s => document.querySelector(s);
+const view = $("#view");
+
+const ICONS = {
+  resumen: '<path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/>',
+  calendario: '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/>',
+  fijos: '<path d="M4 7h16M4 12h16M4 17h10"/>',
+  propinas: '<circle cx="12" cy="12" r="9"/><path d="M15 9.2c-.6-1-1.7-1.5-3-1.5-1.7 0-3 .9-3 2.2 0 3 6 1.6 6 4.4 0 1.3-1.3 2.2-3 2.2-1.4 0-2.6-.6-3.2-1.6M12 6v1.7M12 16.5V18"/>',
+  metas: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  tarjetas: '<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6.5 15h4"/>'
+};
+const TABS = [["resumen", "Resumen"], ["calendario", "Calendario"], ["fijos", "Fijos"], ["propinas", "Propinas"], ["metas", "Metas"], ["tarjetas", "Tarjetas"]];
+function renderTabs() {
+  $("#tabs").innerHTML = TABS.map(([k, l]) => `<button data-tab="${k}" ${V.tab === k ? 'aria-current="page"' : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICONS[k]}</svg>${l}</button>`).join("");
+}
+$("#tabs").addEventListener("click", e => {
+  const b = e.target.closest("[data-tab]"); if (!b) return;
+  V.tab = b.dataset.tab; try { localStorage.setItem(KEY + ":tab", V.tab); } catch (er) {}
+  render(); window.scrollTo(0, 0);
+});
+$("#prevM").onclick = () => { V.m--; if (V.m < 0) { V.m = 11; V.y--; } V.selDay = 1; fixSel(); render(); };
+$("#nextM").onclick = () => { V.m++; if (V.m > 11) { V.m = 0; V.y++; } V.selDay = 1; fixSel(); render(); };
+function fixSel() { const t = parseIso(todayIso()); if (t.y === V.y && t.m === V.m) V.selDay = t.d; }
+$("#openSettings").onclick = openSettings;
+
+function setBanner(html) { $("#banner").innerHTML = html ? `<div class="banner">${html}</div>` : ""; }
+
+function render() {
+  $("#mLabel").textContent = `${MESES[V.m]} ${V.y}`;
+  renderTabs();
+  const M = monthModel(V.y, V.m);
+  let html = "";
+  if (S.sample) html += `<div class="banner">Estás viendo <b>datos de ejemplo</b> para que veas cómo funciona. <button class="linkish" data-act="clear-sample">Borrar ejemplo y empezar con lo mío</button></div>`;
+  html += ({ resumen: viewResumen, calendario: viewCalendario, fijos: viewFijos, propinas: viewPropinas, metas: viewMetas, tarjetas: viewTarjetas }[V.tab] || viewResumen)(M);
+  view.innerHTML = html;
+}
+
+/* ---------- Resumen ---------- */
+function currentWeekIndex(M) {
+  const t = parseIso(todayIso());
+  if (t.y !== M.y || t.m !== M.m) return -1;
+  return Math.floor((t.d - 1 + M.offset) / 7);
+}
+function viewResumen(M) {
+  const cw = currentWeekIndex(M);
+  const parts = [];
+  const tipsLine = M.tipsIn ? "" : `<div class="note">Las propinas (${money(M.T.tip)}) no están sumadas. Cámbialo en Ajustes.</div>`;
+  parts.push(`
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Te queda en ${MESES[M.m]}</div>
+      <div class="big ${M.end < 0 ? "neg" : ""}">${money(M.end)}</div>
+      ${M.opening ? `<div class="note">Incluye ${money(M.opening)} con los que empezaste el mes.</div>` : ""}
+    </div>
+    <div class="flow">
+      <div><div class="eyebrow">Entra</div><div class="v pos">${money(M.inc + (M.tipsIn ? M.T.tip : 0))}</div></div>
+      <div><div class="eyebrow">Sale</div><div class="v neg">${money(M.out)}</div></div>
+      <div><div class="eyebrow">Propinas</div><div class="v" style="color:var(--tip)">${money(M.T.tip)}</div></div>
+    </div>
+    ${tipsLine}
+    ${cw >= 0 ? freeToSpend(M, cw) : ""}
+    ${goalsHint(M)}
+  </section>`);
+
+  parts.push(`
+  <section class="section">
+    <div class="sec-head"><h2>Semana por semana</h2><span class="note">Semana empieza en ${DIAS[+S.settings.weekStart]}</span></div>
+    <div class="panel">
+      ${M.weeks.map(w => `
+        <div class="week ${w.i === cw ? "now" : ""}">
+          <div><div class="wt">Semana ${w.i + 1}${w.i === cw ? '<span class="pill">Esta semana</span>' : ""}${!w.full ? '<span class="pill ghost">' + w.days.length + " días</span>" : ""}</div>
+          <div class="wd">${w.from === w.to ? w.from : w.from + "–" + w.to} de ${MESES[M.m]}</div></div>
+          <div><div class="wnet ${w.net < 0 ? "neg" : "pos"}">${money(w.net, true)}</div><div class="wd" style="text-align:right">te queda</div></div>
+          <div class="wbits">
+            <span>Entra <b>${money(w.inc)}</b></span>
+            <span>Propinas <b>${money(w.tips)}</b></span>
+            <span>Sale <b>${money(w.out)}</b></span>
+            <span>Acumulado <b class="${w.running < 0 ? "neg" : ""}">${money(w.running)}</b></span>
+          </div>
+        </div>`).join("")}
+    </div>
+  </section>`);
+
+  const rows = [
+    ["Ingresos fijos", M.T.income, "var(--pos)", 1, "fijos"],
+    ["Ingresos extra", M.T.extra, "var(--pos)", 1, "fijos"],
+    ["Propinas" + (M.tipsIn ? "" : " (no sumadas)"), M.T.tip, "var(--tip)", M.tipsIn ? 1 : 0, "propinas"],
+    ["Gastos fijos", M.T.fixed, "var(--neg)", -1, "fijos"],
+    ["Otros gastos", M.T.expense, "var(--neg)", -1, "fijos"],
+    ["Apartado para metas", M.T.goal, "var(--goal)", -1, "metas"],
+    ["Pagos de tarjetas", M.T.card, "var(--cardc)", -1, "tarjetas"]
+  ];
+  parts.push(`
+  <section class="section">
+    <div class="sec-head"><h2>Las cuentas del mes</h2><button class="linkish" data-act="opening">Saldo inicial</button></div>
+    <div class="panel rows">
+      ${M.opening ? `<div class="row"><span class="dot" style="background:var(--muted)"></span><div class="grow t">Empezaste el mes con</div><div class="amt">${money(M.opening)}</div></div>` : ""}
+      ${rows.map(r => `<div class="row clickable" data-go="${r[4]}"><span class="dot" style="background:${r[2]}"></span><div class="grow t">${r[0]}</div><div class="amt ${r[3] > 0 ? "pos" : r[3] < 0 ? "neg" : "muted"}">${r[3] < 0 ? "−" : r[3] > 0 ? "+" : ""}${money(r[1])}</div></div>`).join("")}
+      <div class="row total"><div class="grow t">Te queda</div><div class="amt ${M.end < 0 ? "neg" : ""}">${money(M.end)}</div></div>
+    </div>
+    <p class="note">Gastos fijos y pagos de tarjeta planeados ya cuentan aunque no los hayas marcado como pagados, para que nunca te tomen por sorpresa.</p>
+  </section>`);
+  return parts.join("");
+}
+function freeToSpend(M, cw) {
+  const left = M.weeks.length - cw;
+  const per = M.end > 0 ? Math.floor(M.end / left) : 0;
+  return `<div class="callout">Si no gastas nada fuera de lo planeado, terminas el mes con <b>${money(M.end)}</b>. Repartido en ${plural(left, "semana que queda", "semanas que quedan")} (con esta), puedes gastar hasta <b>${money(per)}</b> por semana.</div>`;
+}
+function goalsHint(M) {
+  const t = parseIso(todayIso());
+  if (t.y !== M.y || t.m !== M.m || !S.goals.length) return "";
+  const need = sum(S.goals.map(goalPlan), p => p.leftThisMonth || 0);
+  if (!need) return `<div class="callout">Ya apartaste lo de tus metas este mes. 👏</div>`;
+  const after = M.end - need;
+  return `<div class="callout">Para ir al día con tus metas te falta apartar <b>${money(need)}</b> este mes. Después de eso te quedarían <b class="${after < 0 ? "neg" : ""}">${money(after)}</b>.</div>`;
+}
+
+/* ---------- Calendario ---------- */
+function viewCalendario(M) {
+  const ws = +S.settings.weekStart, today = todayIso();
+  const heads = [0, 1, 2, 3, 4, 5, 6].map(i => `<div class="cal-h">${DIAS_C[(i + ws) % 7]}</div>`).join("");
+  let cells = "";
+  for (let i = 0; i < M.offset; i++) cells += `<div class="cal-d out" aria-hidden="true"></div>`;
+  for (const day of M.days) {
+    const kinds = [...new Set(day.items.filter(i => i.amount > 0 || i.kind === "cardplan").map(i => i.kind === "cardplan" ? "card" : i.kind))];
+    const dots = kinds.slice(0, 5).map(k => `<i style="background:${KIND[k].color}"></i>`).join("");
+    const shown = day.inc + day.tips - day.out;
+    cells += `<button class="cal-d ${day.iso === today ? "today" : ""} ${day.d === V.selDay ? "sel" : ""}" data-day="${day.d}" aria-label="${day.d} de ${MESES[M.m]}">
+      <span class="n">${day.d}</span><span class="dots">${dots}</span>
+      <span class="net ${shown < 0 ? "neg" : shown > 0 ? "pos" : "muted"}">${day.items.length && shown ? moneyShort(shown) : ""}</span></button>`;
+  }
+  const sel = M.days[Math.min(V.selDay, M.last) - 1];
+  return `
+  <section class="panel cal">
+    <div class="cal-grid">${heads}${cells}</div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--pos)"></span>Ingreso</span>
+      <span><span class="dot" style="background:var(--tip)"></span>Propina</span>
+      <span><span class="dot" style="background:var(--neg)"></span>Gasto</span>
+      <span><span class="dot" style="background:var(--goal)"></span>Meta</span>
+      <span><span class="dot" style="background:var(--cardc)"></span>Tarjeta</span>
+    </div>
+  </section>
+  ${dayDetail(M, sel)}`;
+}
+function dayDetail(M, day) {
+  const wi = Math.floor((day.d - 1 + M.offset) / 7), w = M.weeks[wi];
+  const rows = day.items.map(it => itemRow(it)).join("");
+  return `
+  <section class="section">
+    <div class="sec-head"><h2>${DIAS[wd(M.y, M.m, day.d)]} ${day.d} de ${MESES[M.m]}</h2>
+      <span class="note">Semana ${wi + 1}: <b class="num ${w.net < 0 ? "neg" : "pos"}">${money(w.net, true)}</b></span></div>
+    <div class="panel rows">${rows || `<div class="empty">Nada para este día. Agrega algo abajo.</div>`}</div>
+    <div class="btns">
+      <button class="btn sm" data-add="income" data-date="${day.iso}">+ Ingreso extra</button>
+      <button class="btn sm sec" data-add="expense" data-date="${day.iso}">+ Gasto</button>
+      <button class="btn sm sec" data-add="tip" data-date="${day.iso}">+ Propina</button>
+    </div>
+  </section>`;
+}
+function itemRow(it) {
+  const k = KIND[it.kind];
+  const neg = k.sign < 0;
+  if (it.recurring) {
+    return `<div class="row">
+      <button class="check ${it.done ? "on" : ""}" data-done="${esc(it.key)}" aria-label="${neg ? "Marcar pagado" : "Marcar recibido"}">${it.done ? "✓" : ""}</button>
+      <div class="grow"><div class="t">${esc(it.label)}</div><div class="s">${k.label} · ${it.done ? (neg ? "Pagado" : "Recibido") : (neg ? "Pendiente" : "Por recibir")}${it.overridden ? " · monto cambiado" : ""}</div></div>
+      <button class="linkish amt ${neg ? "neg" : "pos"}" data-ov="${esc(it.key)}" title="Cambiar el monto solo este día">${neg ? "−" : "+"}${money(it.amount)}</button></div>`;
+  }
+  if (it.kind === "cardplan") {
+    const st = it.paid > 0 ? `Pagaste ${money(it.paid)} este mes (planeado ${money(it.plan)})` : `Planeado · se cuenta ${money(it.plan)}`;
+    return `<div class="row clickable" data-pay="${it.card.id}"><span class="dot" style="background:${k.color}"></span>
+      <div class="grow"><div class="t">${esc(it.label)}</div><div class="s">${st} · toca para registrar pago</div></div>
+      <div class="amt neg">${it.amount ? "−" + money(it.amount) : "✓"}</div></div>`;
+  }
+  return `<div class="row clickable" data-entry="${it.entry.id}"><span class="dot" style="background:${k.color}"></span>
+    <div class="grow"><div class="t">${esc(it.label)}</div><div class="s">${k.label}</div></div>
+    <div class="amt ${neg ? "neg" : "pos"}">${neg ? "−" : "+"}${money(it.amount)}</div></div>`;
+}
+
+/* ---------- Fijos ---------- */
+function recurringList(list, kind, M) {
+  if (!list.length) return `<div class="empty">${kind === "income" ? "Agrega tu sueldo o lo que te entra seguido." : "Agrega renta, luz, celular, carro, seguros…"}</div>`;
+  return list.map(it => {
+    const n = M.days.filter(d => occurs(it, M.y, M.m, d.d)).length;
+    const total = sum(M.days, d => sum(d.items.filter(x => x.ref === it), x => x.amount));
+    return `<div class="row clickable" data-edit-rec="${kind}:${it.id}">
+      <div class="grow"><div class="t">${esc(it.name)}</div><div class="s">${money(it.amount)} · ${freqText(it)}${it.end ? " · hasta " + fmtDate(it.end) : ""}</div></div>
+      <div style="text-align:right"><div class="amt ${kind === "income" ? "pos" : "neg"}">${money(total)}</div><div class="s">${n}× en ${MES_C[M.m]}</div></div></div>`;
+  }).join("") + `<div class="row total"><div class="grow t">Total en ${MESES[M.m]}</div><div class="amt">${money(kind === "income" ? M.T.income : M.T.fixed)}</div></div>`;
+}
+function viewFijos(M) {
+  const loose = S.entries.filter(e => (e.type === "income" || e.type === "expense") && e.date.slice(0, 7) === M.mk).sort((a, b) => a.date < b.date ? -1 : 1);
+  return `
+  <section class="section">
+    <div class="sec-head"><h2>Lo que te entra</h2><button class="btn sm" data-new-rec="income">+ Agregar</button></div>
+    <div class="panel rows">${recurringList(S.incomes, "income", M)}</div>
+  </section>
+  <section class="section">
+    <div class="sec-head"><h2>Gastos fijos</h2><button class="btn sm" data-new-rec="fixed">+ Agregar</button></div>
+    <div class="panel rows">${recurringList(S.fixed, "fixed", M)}</div>
+    <p class="note">Si un mes el día no existe (por ejemplo el 31 en abril), se cobra el último día del mes. En el Calendario puedes cambiar el monto de un solo día sin tocar los demás.</p>
+  </section>
+  <section class="section">
+    <div class="sec-head"><h2>Movimientos sueltos de ${MESES[M.m]}</h2>
+      <div class="btns"><button class="btn sm" data-add="income">+ Ingreso</button><button class="btn sm sec" data-add="expense">+ Gasto</button></div></div>
+    <div class="panel rows">${loose.length ? loose.map(e => `<div class="row clickable" data-entry="${e.id}">
+      <div class="grow"><div class="t">${esc(e.note || (e.type === "income" ? "Ingreso extra" : "Gasto"))}</div><div class="s">${fmtDate(e.date, true)}</div></div>
+      <div class="amt ${e.type === "income" ? "pos" : "neg"}">${e.type === "income" ? "+" : "−"}${money(e.amount)}</div></div>`).join("") : `<div class="empty">Gastos del día a día (súper, comida, salidas) o dinero extra que no se repite.</div>`}</div>
+  </section>`;
+}
+
+/* ---------- Propinas ---------- */
+function viewPropinas(M) {
+  const t = parseIso(todayIso());
+  const defDate = (t.y === M.y && t.m === M.m) ? todayIso() : iso(M.y, M.m, 1);
+  const tips = S.entries.filter(e => e.type === "tip" && e.date.slice(0, 7) === M.mk).sort((a, b) => a.date < b.date ? 1 : -1);
+  const withTips = M.weeks.filter(w => w.tips > 0).length;
+  const best = M.weeks.reduce((b, w) => w.tips > (b ? b.tips : 0) ? w : b, null);
+  const daysWith = new Set(tips.map(e => e.date)).size;
+  return `
+  <section class="panel pad section">
+    <h2>Anotar propina</h2>
+    <form class="quick" id="tipForm">
+      <div class="field"><label for="tipAmt">Monto</label><input id="tipAmt" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>
+      <div class="field"><label for="tipDate">Día</label><input id="tipDate" type="date" value="${defDate}"></div>
+      <button class="btn" type="submit">Guardar</button>
+    </form>
+    <div id="tipErr" class="err" hidden></div>
+  </section>
+  <section class="hero">
+    <div><div class="eyebrow">Propinas de ${MESES[M.m]}</div><div class="big" style="color:var(--tip)">${money(M.T.tip)}</div></div>
+    <div class="flow">
+      <div><div class="eyebrow">Promedio semana</div><div class="v">${withTips ? money(Math.round(M.T.tip / withTips)) : money(0)}</div></div>
+      <div><div class="eyebrow">Promedio día</div><div class="v">${daysWith ? money(Math.round(M.T.tip / daysWith)) : money(0)}</div></div>
+      <div><div class="eyebrow">Mejor semana</div><div class="v">${best ? "Sem " + (best.i + 1) : "—"}</div></div>
+    </div>
+    <div class="note">Promedios sobre las ${plural(withTips, "semana", "semanas")} y ${plural(daysWith, "día", "días")} en que anotaste propinas.</div>
+  </section>
+  <section class="section">
+    <h2>Por semana</h2>
+    <div class="panel rows">
+      ${M.weeks.map(w => `<div class="row"><div class="grow"><div class="t">Semana ${w.i + 1}</div><div class="s">${w.from === w.to ? w.from : w.from + "–" + w.to} de ${MESES[M.m]}</div></div><div class="amt" style="color:var(--tip)">${money(w.tips)}</div></div>`).join("")}
+      <div class="row total"><div class="grow t">Total del mes</div><div class="amt">${money(M.T.tip)}</div></div>
+    </div>
+  </section>
+  <section class="section">
+    <h2>Anotadas</h2>
+    <div class="panel rows">${tips.length ? tips.map(e => `<div class="row clickable" data-entry="${e.id}"><div class="grow"><div class="t">${fmtDate(e.date, true)}</div>${e.note ? `<div class="s">${esc(e.note)}</div>` : ""}</div><div class="amt" style="color:var(--tip)">+${money(e.amount)}</div></div>`).join("") : `<div class="empty">Todavía no hay propinas este mes.</div>`}</div>
+  </section>`;
+}
+
+/* ---------- Metas ---------- */
+function viewMetas(M) {
+  const list = S.goals.map(g => {
+    const p = goalPlan(g);
+    let plan;
+    if (p.done) plan = `<div class="callout"><b>¡Meta cumplida!</b></div>`;
+    else if (p.late) plan = `<div class="callout">La fecha ya pasó y faltan <b>${money(p.rem)}</b>. Cambia la fecha para recalcular.</div>`;
+    else if (p.perWeek != null) plan = `<div class="kv">
+        <div><span class="muted">Al mes</span><b>${money(p.perMonth)}</b></div>
+        <div><span class="muted">A la semana</span><b>${money(p.perWeek)}</b></div>
+        <div><span class="muted">Falta este mes</span><b>${money(p.leftThisMonth)}</b></div>
+      </div><div class="note">Quedan ${plural(p.months, "mes", "meses")} y ${plural(p.weeks, "semana", "semanas")} (contando las actuales) hasta el ${fmtDate(g.deadline)} ${parseIso(g.deadline).y}.</div>`;
+    else if (p.perMonth) plan = `<div class="kv"><div><span class="muted">Al mes</span><b>${money(p.perMonth)}</b></div><div><span class="muted">Falta este mes</span><b>${money(p.leftThisMonth)}</b></div><div><span class="muted">La terminas en</span><b>${p.eta}</b></div></div>`;
+    else plan = `<div class="note">Ponle una fecha o un monto al mes para calcular cuánto apartar.</div>`;
+    return `<div class="item">
+      <div class="line"><h3>${esc(g.name)}</h3><span class="num"><b>${money(p.saved)}</b> <span class="muted">de ${money(g.target)}</span></span></div>
+      <div class="bar"><i style="width:${p.pct.toFixed(1)}%"></i></div>
+      <div class="line note"><span>${p.pct.toFixed(0)}% · faltan ${money(p.rem)}</span><span>Este mes: ${money(p.thisMonth)}</span></div>
+      ${plan}
+      <div class="btns"><button class="btn sm" data-add="goal" data-ref="${g.id}" data-amt="${p.perWeek || p.leftThisMonth || ""}">Apartar dinero</button><button class="btn sm sec" data-edit-goal="${g.id}">Editar</button></div>
+    </div>`;
+  }).join("");
+  const totalM = sum(S.goals.map(goalPlan), p => p.done || p.late ? 0 : (p.perMonth || 0));
+  const totalW = sum(S.goals.map(goalPlan), p => p.done || p.late ? 0 : (p.perWeek || 0));
+  const contribs = S.entries.filter(e => e.type === "goal" && e.date.slice(0, 7) === M.mk).sort((a, b) => a.date < b.date ? 1 : -1);
+  return `
+  <section class="section">
+    <div class="sec-head"><h2>Metas de ahorro</h2><button class="btn sm" data-new-goal>+ Nueva meta</button></div>
+    ${S.goals.length ? `<div class="callout">Para cumplir todas a tiempo: <b>${money(totalM)}</b> al mes${totalW ? ` o <b>${money(totalW)}</b> a la semana` : ""}.</div>` : ""}
+    <div class="panel">${list || `<div class="empty">Ejemplo: "Viaje" $1,500 para diciembre. Te digo cuánto apartar cada semana y cada mes.</div>`}</div>
+    <p class="note">Lo que apartas cuenta como salida en tu semana y tu mes, así sabes lo que de verdad te queda para gastar.</p>
+  </section>
+  <section class="section">
+    <h2>Apartado en ${MESES[M.m]}</h2>
+    <div class="panel rows">${contribs.length ? contribs.map(e => `<div class="row clickable" data-entry="${e.id}"><div class="grow"><div class="t">${esc(goalName(e.ref))}</div><div class="s">${fmtDate(e.date, true)}</div></div><div class="amt" style="color:var(--goal)">${money(e.amount)}</div></div>`).join("") + `<div class="row total"><div class="grow t">Total</div><div class="amt">${money(M.T.goal)}</div></div>` : `<div class="empty">Nada apartado este mes todavía.</div>`}</div>
+  </section>`;
+}
+
+/* ---------- Tarjetas ---------- */
+function viewTarjetas(M) {
+  const debt = sum(S.cards, c => c.balance), lim = sum(S.cards, c => c.limit || 0);
+  const util = lim > 0 ? (debt / lim) * 100 : 0;
+  const list = S.cards.map(c => {
+    const u = c.limit > 0 ? (c.balance / c.limit) * 100 : 0;
+    const pay = c.planned || c.min;
+    const po = payoff(c.balance, c.apr, pay);
+    const monthInt = Math.round(c.balance * (+c.apr || 0) / 1200);
+    let poTxt = "";
+    if (c.balance <= 0) poTxt = `<div class="callout"><b>Sin deuda.</b></div>`;
+    else if (!po) poTxt = `<div class="note">Pon un pago mensual para calcular cuándo la terminas.</div>`;
+    else if (po.never) poTxt = `<div class="callout neg">Con ${money(pay)} al mes no bajas la deuda: el interés del mes es ${money(monthInt)}. Paga más que eso.</div>`;
+    else {
+      const f = parseIso(isoFromDn(dn(T0.y, T0.m + po.months - 1, 1)));
+      poTxt = `<div class="callout">Pagando <b>${money(pay)}</b> al mes la terminas en <b>${plural(po.months, "mes", "meses")}</b> (${MESES[f.m]} ${f.y}) y pagas <b>${money(po.interest)}</b> de intereses.</div>`;
+    }
+    const paidM = sum(S.entries.filter(e => e.type === "card" && e.ref === c.id && e.date.slice(0, 7) === M.mk), e => e.amount);
+    return `<div class="item">
+      <div class="line"><h3>${esc(c.name)}</h3><span class="num"><b>${money(c.balance)}</b>${c.limit ? ` <span class="muted">de ${money(c.limit)}</span>` : ""}</span></div>
+      ${c.limit ? `<div class="bar"><i style="width:${Math.min(100, u).toFixed(1)}%;background:${u > 30 ? "var(--neg)" : "var(--pos)"}"></i></div>
+      <div class="note">Usas ${u.toFixed(0)}% del límite${u > 30 ? " · lo ideal es menos de 30%" : ""}</div>` : ""}
+      <div class="kv">
+        <div><span class="muted">Vence</span><b>Día ${c.dueDay}</b></div>
+        <div><span class="muted">Mínimo</span><b>${money(c.min || 0)}</b></div>
+        <div><span class="muted">Tasa anual</span><b>${(+c.apr || 0).toFixed(2)}%</b></div>
+        <div><span class="muted">Interés al mes</span><b>${money(monthInt)}</b></div>
+        <div><span class="muted">Pagado en ${MES_C[M.m]}</span><b>${money(paidM)}</b></div>
+      </div>
+      ${poTxt}
+      <div class="btns"><button class="btn sm" data-pay="${c.id}">Registrar pago</button><button class="btn sm sec" data-edit-card="${c.id}">Editar</button></div>
+    </div>`;
+  }).join("");
+  const pays = S.entries.filter(e => e.type === "card" && e.date.slice(0, 7) === M.mk).sort((a, b) => a.date < b.date ? 1 : -1);
+  return `
+  <section class="section">
+    <div class="sec-head"><h2>Tarjetas de crédito</h2><button class="btn sm" data-new-card>+ Agregar</button></div>
+    ${S.cards.length ? `<div class="flow">
+      <div><div class="eyebrow">Deuda total</div><div class="v neg">${money(debt)}</div></div>
+      <div><div class="eyebrow">Límite total</div><div class="v">${money(lim)}</div></div>
+      <div><div class="eyebrow">Uso</div><div class="v ${util > 30 ? "neg" : "pos"}">${util.toFixed(0)}%</div></div></div>` : ""}
+    <div class="panel">${list || `<div class="empty">Agrega tus tarjetas con su saldo, límite, tasa y día de pago. El pago planeado sale en tu calendario.</div>`}</div>
+    <p class="note">Al registrar un pago se resta del saldo y cuenta como salida ese día. Si lo borras, el saldo vuelve a como estaba.</p>
+  </section>
+  <section class="section">
+    <h2>Pagos en ${MESES[M.m]}</h2>
+    <div class="panel rows">${pays.length ? pays.map(e => `<div class="row clickable" data-entry="${e.id}"><div class="grow"><div class="t">${esc(cardName(e.ref))}</div><div class="s">${fmtDate(e.date, true)}</div></div><div class="amt" style="color:var(--cardc)">${money(e.amount)}</div></div>`).join("") : `<div class="empty">Sin pagos registrados este mes.</div>`}</div>
+  </section>`;
+}
+
+/* ============================================================
+   Hoja (formularios)
+   ============================================================ */
+let toastT = 0;
+function toast(msg) {
+  let el = document.querySelector(".toast"); if (!el) { el = document.createElement("div"); el.className = "toast"; document.body.appendChild(el); }
+  el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 1800);
+}
+function closeSheet() { const o = document.querySelector(".overlay"); if (o) o.remove(); }
+function sheet({ title, fields, values = {}, onSave, onDelete, deleteLabel = "Borrar", saveLabel = "Guardar", extra = "" }) {
+  closeSheet();
+  const ov = document.createElement("div"); ov.className = "overlay";
+  const field = f => {
+    const v = values[f.k];
+    const id = "f_" + f.k;
+    if (f.type === "select") return `<div class="field" data-k="${f.k}"><label for="${id}">${f.label}</label><select id="${id}">${f.options.map(([ov2, ol]) => `<option value="${esc(ov2)}" ${String(v) === String(ov2) ? "selected" : ""}>${esc(ol)}</option>`).join("")}</select>${f.help ? `<div class="help">${f.help}</div>` : ""}</div>`;
+    if (f.type === "check") return `<div class="field chk" data-k="${f.k}"><input type="checkbox" id="${id}" ${v ? "checked" : ""}><label for="${id}">${f.label}</label></div>`;
+    const val = f.type === "money" ? centsToInput(v) : (v == null ? "" : v);
+    const attrs = f.type === "money" ? 'inputmode="decimal" placeholder="0.00"' : f.type === "number" ? 'inputmode="decimal"' : f.type === "date" ? 'type="date"' : 'type="text"';
+    return `<div class="field" data-k="${f.k}"><label for="${id}">${f.label}</label><input id="${id}" ${attrs} value="${esc(val)}" ${f.placeholder ? `placeholder="${esc(f.placeholder)}"` : ""} autocomplete="off">${f.help ? `<div class="help">${f.help}</div>` : ""}</div>`;
+  };
+  ov.innerHTML = `<form class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <h2>${esc(title)}</h2>
+    ${fields.map(field).join("")}
+    ${extra}
+    <div class="err" id="sheetErr" hidden></div>
+    <div class="btns"><button class="btn" type="submit">${saveLabel}</button><button class="btn sec" type="button" data-x>Cancelar</button>
+    ${onDelete ? `<button class="btn danger" type="button" data-del style="margin-left:auto">${deleteLabel}</button>` : ""}</div></form>`;
+  document.body.appendChild(ov);
+  const form = ov.querySelector("form");
+  const read = () => {
+    const o = {};
+    for (const f of fields) {
+      const el = form.querySelector("#f_" + f.k);
+      if (f.type === "check") o[f.k] = el.checked;
+      else if (f.type === "money") o[f.k] = toCents(el.value);
+      else if (f.type === "number") o[f.k] = el.value.trim() === "" ? 0 : Number(el.value.replace(",", "."));
+      else o[f.k] = el.value.trim();
+    }
+    return o;
+  };
+  const vis = () => { const o = read(); for (const f of fields) if (f.showIf) form.querySelector(`[data-k="${f.k}"]`).hidden = !f.showIf(o); };
+  vis(); form.addEventListener("change", vis);
+  ov.addEventListener("click", e => { if (e.target === ov || e.target.closest("[data-x]")) closeSheet(); });
+  if (onDelete) {
+    const del = form.querySelector("[data-del]");
+    del.addEventListener("click", () => {
+      if (del.dataset.armed) { onDelete(); closeSheet(); save(); render(); return; }
+      del.dataset.armed = "1"; del.textContent = "¿Seguro? Toca otra vez";
+    });
+  }
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const o = read();
+    for (const f of fields) if (f.showIf && !f.showIf(o)) delete o[f.k];
+    const err = onSave(o);
+    const box = form.querySelector("#sheetErr");
+    if (err) { box.textContent = err; box.hidden = false; return; }
+    closeSheet(); save(); render();
+  });
+  const first = form.querySelector("input:not([type=checkbox]),select"); if (first && !values.__nofocus) setTimeout(() => first.focus(), 30);
+}
+function moneyErr(c, label, allowZero) { if (Number.isNaN(c)) return `${label}: escribe solo números, por ejemplo 125.50`; if (c < 0) return `${label} no puede ser negativo`; if (!allowZero && c === 0) return `${label} tiene que ser mayor que 0`; return ""; }
+
+const WD_OPTS = DIAS.map((d, i) => [i, d[0].toUpperCase() + d.slice(1)]);
+function editRecurring(kind, id) {
+  const list = kind === "income" ? S.incomes : S.fixed;
+  const it = list.find(x => x.id === id);
+  const t = parseIso(todayIso());
+  const vals = it ? { ...it } : { freq: kind === "income" ? "weekly" : "monthly", day: 1, weekday: 5, start: iso(V.y, V.m, 1), anchor: "", end: "" };
+  sheet({
+    title: it ? "Editar" : (kind === "income" ? "Nuevo ingreso que se repite" : "Nuevo gasto fijo"),
+    values: vals,
+    fields: [
+      { k: "name", label: "Nombre", placeholder: kind === "income" ? "Sueldo" : "Renta" },
+      { k: "amount", label: "Monto", type: "money" },
+      { k: "freq", label: "¿Cada cuánto?", type: "select", options: Object.entries(FREQ) },
+      { k: "day", label: "Día del mes (1 a 31)", type: "number", showIf: o => o.freq === "monthly" },
+      { k: "weekday", label: "Día de la semana", type: "select", options: WD_OPTS, showIf: o => o.freq === "weekly" },
+      { k: "anchor", label: "Una fecha en que te toca", type: "date", help: "De ahí se cuenta cada 14 días.", showIf: o => o.freq === "biweekly" },
+      { k: "start", label: "Empieza desde", type: "date" },
+      { k: "end", label: "Hasta (opcional)", type: "date", help: "Déjalo vacío si sigue siempre." }
+    ],
+    onSave: o => {
+      if (!o.name) return "Ponle un nombre";
+      const me = moneyErr(o.amount, "El monto"); if (me) return me;
+      if (o.freq === "monthly" && !(Number.isInteger(o.day) && o.day >= 1 && o.day <= 31)) return "El día del mes va de 1 a 31";
+      if (o.freq === "biweekly" && !validIso(o.anchor)) return "Elige una fecha en que te toca";
+      if (o.start && !validIso(o.start)) return "La fecha de inicio no es válida";
+      if (o.end && !validIso(o.end)) return "La fecha final no es válida";
+      if (o.start && o.end && o.end < o.start) return "La fecha final es antes del inicio";
+      const rec = { id: it ? it.id : uid(), name: o.name, amount: o.amount, freq: o.freq, day: o.day || (it && it.day) || 1, weekday: o.weekday != null ? +o.weekday : ((it && it.weekday) || 1), anchor: o.anchor || "", start: o.start || "", end: o.end || "" };
+      if (o.freq === "biweekly" && !rec.start) rec.start = rec.anchor;
+      if (it) Object.assign(it, rec); else list.push(rec);
+      toast("Guardado");
+    },
+    onDelete: it ? () => { list.splice(list.indexOf(it), 1); for (const k of Object.keys(S.overrides)) if (k.startsWith(it.id + "|")) delete S.overrides[k]; for (const k of Object.keys(S.done)) if (k.startsWith(it.id + "|")) delete S.done[k]; } : null,
+    extra: it ? `<p class="note">Si ya no lo pagas, mejor pon una fecha en "Hasta" para que los meses pasados sigan correctos. Borrar lo quita de todos los meses.</p>` : ""
+  });
+}
+
+function addEntry(type, opts = {}) {
+  const t = parseIso(todayIso());
+  const defDate = opts.date || ((t.y === V.y && t.m === V.m) ? todayIso() : iso(V.y, V.m, 1));
+  const titles = { income: "Ingreso extra", expense: "Gasto", tip: "Propina", goal: "Apartar para meta", card: "Pago de tarjeta" };
+  const fields = [];
+  if (type === "goal") { if (!S.goals.length) { toast("Primero crea una meta"); return; } fields.push({ k: "ref", label: "Meta", type: "select", options: S.goals.map(g => [g.id, g.name]) }); }
+  if (type === "card") { if (!S.cards.length) { toast("Primero agrega una tarjeta"); return; } fields.push({ k: "ref", label: "Tarjeta", type: "select", options: S.cards.map(c => [c.id, c.name]) }); }
+  fields.push({ k: "amount", label: "Monto", type: "money" }, { k: "date", label: "Fecha", type: "date" });
+  if (type === "income" || type === "expense" || type === "tip") fields.push({ k: "note", label: type === "tip" ? "Nota (opcional)" : "¿Qué fue?", placeholder: type === "expense" ? "Supermercado" : "" });
+  sheet({
+    title: titles[type], fields,
+    values: { date: defDate, amount: opts.amount || 0, ref: opts.ref || "" },
+    onSave: o => {
+      const me = moneyErr(o.amount, "El monto"); if (me) return me;
+      if (!validIso(o.date)) return "Elige una fecha";
+      const e = { id: uid(), type, date: o.date, amount: o.amount, note: o.note || "" };
+      if (o.ref) e.ref = o.ref;
+      if (type === "card") { const c = S.cards.find(x => x.id === o.ref); if (c) c.balance -= o.amount; }
+      S.entries.push(e);
+      V.selDay = parseIso(o.date).d;
+      toast("Guardado");
+    }
+  });
+}
+function editEntry(id) {
+  const e = S.entries.find(x => x.id === id); if (!e) return;
+  const fields = [{ k: "amount", label: "Monto", type: "money" }, { k: "date", label: "Fecha", type: "date" }];
+  if (e.type !== "goal" && e.type !== "card") fields.push({ k: "note", label: "Nota" });
+  const card = () => S.cards.find(x => x.id === e.ref);
+  sheet({
+    title: "Editar " + KIND[ENTRY_KIND[e.type]].label.toLowerCase(), fields, values: { ...e, __nofocus: true },
+    onSave: o => {
+      const me = moneyErr(o.amount, "El monto"); if (me) return me;
+      if (!validIso(o.date)) return "Elige una fecha";
+      if (e.type === "card" && card()) card().balance += e.amount - o.amount;
+      e.amount = o.amount; e.date = o.date; if (o.note != null) e.note = o.note;
+    },
+    onDelete: () => { if (e.type === "card" && card()) card().balance += e.amount; S.entries.splice(S.entries.indexOf(e), 1); }
+  });
+}
+function editOverride(key) {
+  const [id, date] = key.split("|");
+  const it = S.incomes.find(x => x.id === id) || S.fixed.find(x => x.id === id); if (!it) return;
+  const has = Object.prototype.hasOwnProperty.call(S.overrides, key);
+  sheet({
+    title: `${it.name} · ${fmtDate(date, true)}`,
+    fields: [{ k: "amount", label: "Monto solo para este día", type: "money", help: `Normalmente es ${money(it.amount)}. Los demás días no cambian. Pon 0 si este día no hubo.` }],
+    values: { amount: has ? S.overrides[key] : it.amount },
+    onSave: o => {
+      const me = moneyErr(o.amount, "El monto", true); if (me) return me;
+      if (o.amount === it.amount) delete S.overrides[key]; else S.overrides[key] = o.amount;
+    },
+    onDelete: has ? () => { delete S.overrides[key]; } : null, deleteLabel: "Volver al normal"
+  });
+}
+function editGoal(id) {
+  const g = S.goals.find(x => x.id === id);
+  sheet({
+    title: g ? "Editar meta" : "Nueva meta", values: g ? { ...g } : {},
+    fields: [
+      { k: "name", label: "¿Para qué?", placeholder: "Viaje, carro, emergencia…" },
+      { k: "target", label: "¿Cuánto necesitas?", type: "money" },
+      { k: "initial", label: "¿Cuánto tienes ya?", type: "money", help: "Lo que ya tenías guardado antes de usar la app." },
+      { k: "deadline", label: "¿Para cuándo?", type: "date", help: "Con fecha te digo cuánto apartar por semana y por mes." },
+      { k: "monthly", label: "O, sin fecha: ¿cuánto puedes apartar al mes?", type: "money" }
+    ],
+    onSave: o => {
+      if (!o.name) return "Ponle un nombre";
+      let me = moneyErr(o.target, "La meta"); if (me) return me;
+      me = moneyErr(o.initial, "Lo que tienes", true); if (me) return me;
+      me = moneyErr(o.monthly, "El monto al mes", true); if (me) return me;
+      if (o.deadline && !validIso(o.deadline)) return "La fecha no es válida";
+      const rec = { id: g ? g.id : uid(), name: o.name, target: o.target, initial: o.initial, deadline: o.deadline || "", monthly: o.monthly };
+      if (g) Object.assign(g, rec); else S.goals.push(rec);
+      toast("Guardado");
+    },
+    onDelete: g ? () => { S.goals.splice(S.goals.indexOf(g), 1); S.entries = S.entries.filter(e => !(e.type === "goal" && e.ref === g.id)); } : null,
+    extra: g ? `<p class="note">Borrar la meta también borra lo que apartaste para ella.</p>` : ""
+  });
+}
+function editCard(id) {
+  const c = S.cards.find(x => x.id === id);
+  sheet({
+    title: c ? "Editar tarjeta" : "Nueva tarjeta", values: c ? { ...c } : { dueDay: 1, start: iso(V.y, V.m, 1) },
+    fields: [
+      { k: "name", label: "Nombre", placeholder: "Visa, Discover…" },
+      { k: "balance", label: "Lo que debes hoy", type: "money" },
+      { k: "limit", label: "Límite de crédito", type: "money" },
+      { k: "apr", label: "Tasa de interés anual (APR %)", type: "number", placeholder: "24.99" },
+      { k: "min", label: "Pago mínimo", type: "money" },
+      { k: "planned", label: "Lo que piensas pagar al mes", type: "money", help: "Esto es lo que sale en tu presupuesto y calendario." },
+      { k: "dueDay", label: "Día de pago (1 a 31)", type: "number" },
+      { k: "start", label: "Contar en el presupuesto desde", type: "date" }
+    ],
+    onSave: o => {
+      if (!o.name) return "Ponle un nombre";
+      for (const [k, l] of [["balance", "Lo que debes"], ["limit", "El límite"], ["min", "El mínimo"], ["planned", "El pago al mes"]]) { const me = moneyErr(o[k], l, true); if (me) return me; }
+      if (!(o.apr >= 0 && o.apr <= 100)) return "La tasa va de 0 a 100";
+      if (!(Number.isInteger(o.dueDay) && o.dueDay >= 1 && o.dueDay <= 31)) return "El día de pago va de 1 a 31";
+      if (o.start && !validIso(o.start)) return "La fecha no es válida";
+      const rec = { id: c ? c.id : uid(), name: o.name, balance: o.balance, limit: o.limit, apr: o.apr, min: o.min, planned: o.planned, dueDay: o.dueDay, start: o.start || "" };
+      if (c) Object.assign(c, rec); else S.cards.push(rec);
+      toast("Guardado");
+    },
+    onDelete: c ? () => { S.cards.splice(S.cards.indexOf(c), 1); } : null,
+    extra: c ? `<p class="note">Si borras la tarjeta, los pagos que ya hiciste se quedan en tus meses.</p>` : ""
+  });
+}
+function editOpening() {
+  const mk = mkey(V.y, V.m);
+  sheet({
+    title: `Saldo inicial de ${MESES[V.m]}`,
+    fields: [{ k: "amount", label: "¿Con cuánto empezaste el mes?", type: "money", help: "Lo que tenías en la cuenta el día 1. Se suma a lo que te queda." }],
+    values: { amount: S.openings[mk] || 0 },
+    onSave: o => { const me = moneyErr(o.amount, "El saldo", true); if (me) return me; if (o.amount) S.openings[mk] = o.amount; else delete S.openings[mk]; }
+  });
+}
+function openSettings() {
+  sheet({
+    title: "Ajustes", saveLabel: "Guardar",
+    values: { ...S.settings, __nofocus: true },
+    fields: [
+      { k: "cur", label: "Símbolo de moneda", placeholder: "$" },
+      { k: "weekStart", label: "La semana empieza el", type: "select", options: [[1, "Lunes"], [0, "Domingo"], [6, "Sábado"], [5, "Viernes"]] },
+      { k: "tipsInBudget", label: "Sumar propinas a lo que me queda", type: "check" }
+    ],
+    extra: `<div class="section"><h3>Copia de seguridad</h3>
+      <p class="note">${store.mode === "cloud" ? "Tus datos se guardan en tu cuenta y en este dispositivo." : "Tus datos se guardan en este dispositivo."} Copia este texto y guárdalo en tus notas para tener respaldo, o pega uno para recuperarlo.</p>
+      <div class="btns"><button type="button" class="btn sm sec" id="bkCopy">Copiar respaldo</button><button type="button" class="btn sm sec" id="bkPaste">Pegar respaldo</button></div>
+      <textarea id="bkText" rows="3" hidden style="width:100%;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--card);font-family:var(--mono);font-size:12px"></textarea>
+      <button type="button" class="btn sm" id="bkLoad" hidden>Cargar este respaldo</button>
+      <button type="button" class="btn sm danger" id="wipe">Borrar todo</button></div>`,
+    onSave: o => {
+      const cur = (o.cur || "$").slice(0, 4);
+      S.settings = { cur, weekStart: +o.weekStart, tipsInBudget: !!o.tipsInBudget };
+      toast("Guardado");
+    }
+  });
+  const ta = $("#bkText");
+  $("#bkCopy").onclick = () => {
+    const txt = JSON.stringify(S); ta.hidden = false; ta.value = txt;
+    const p = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(txt) : Promise.reject();
+    p.then(() => toast("Copiado"), () => { ta.focus(); ta.select(); toast("Selecciónalo y cópialo"); });
+  };
+  $("#bkPaste").onclick = () => { ta.hidden = false; ta.value = ""; ta.focus(); $("#bkLoad").hidden = false; };
+  $("#bkLoad").onclick = () => {
+    try { const o = JSON.parse(ta.value); if (!o || typeof o !== "object" || !o.settings) throw 0; S = normalize(o); delete S.sample; save(); closeSheet(); render(); toast("Respaldo cargado"); }
+    catch (e) { const b = $("#sheetErr"); b.textContent = "Ese texto no es un respaldo válido."; b.hidden = false; }
+  };
+  const w = $("#wipe");
+  w.onclick = () => { if (!w.dataset.armed) { w.dataset.armed = 1; w.textContent = "¿Seguro? Se borra todo. Toca otra vez"; return; } S = blank(); save(); closeSheet(); render(); toast("Todo borrado"); };
+}
+
+/* ============================================================
+   Eventos
+   ============================================================ */
+view.addEventListener("click", e => {
+  const t = e.target.closest("[data-day],[data-done],[data-ov],[data-add],[data-entry],[data-pay],[data-edit-rec],[data-new-rec],[data-edit-goal],[data-new-goal],[data-edit-card],[data-new-card],[data-go],[data-act]");
+  if (!t) return;
+  const d = t.dataset;
+  if (d.day) { V.selDay = +d.day; render(); }
+  else if (d.done) { if (S.done[d.done]) delete S.done[d.done]; else S.done[d.done] = true; save(); render(); }
+  else if (d.ov) editOverride(d.ov);
+  else if (d.add) addEntry(d.add, { date: d.date, ref: d.ref, amount: d.amt ? +d.amt : 0 });
+  else if (d.entry) editEntry(d.entry);
+  else if (d.pay) { const c = S.cards.find(x => x.id === d.pay); addEntry("card", { ref: d.pay, amount: c ? Math.min(c.planned || c.min || 0, Math.max(0, c.balance)) : 0, date: c && !d.date ? cardDueIso(c) : undefined }); }
+  else if (d.editRec) { const [k, id] = d.editRec.split(":"); editRecurring(k, id); }
+  else if (d.newRec) editRecurring(d.newRec);
+  else if (d.editGoal) editGoal(d.editGoal);
+  else if ("newGoal" in d) editGoal();
+  else if (d.editCard) editCard(d.editCard);
+  else if ("newCard" in d) editCard();
+  else if (d.go) { V.tab = d.go; render(); window.scrollTo(0, 0); }
+  else if (d.act === "opening") editOpening();
+  else if (d.act === "clear-sample") { S = blank(); save(); render(); toast("Listo, empieza con lo tuyo"); }
+});
+function cardDueIso(c) {
+  const t = parseIso(todayIso());
+  if (t.y === V.y && t.m === V.m) return todayIso();
+  return iso(V.y, V.m, Math.min(c.dueDay || 1, dim(V.y, V.m)));
+}
+view.addEventListener("submit", e => {
+  if (e.target.id !== "tipForm") return;
+  e.preventDefault();
+  const amt = toCents($("#tipAmt").value), date = $("#tipDate").value, err = $("#tipErr");
+  const me = moneyErr(amt, "La propina");
+  if (me) { err.textContent = me; err.hidden = false; return; }
+  if (!validIso(date)) { err.textContent = "Elige el día"; err.hidden = false; return; }
+  S.entries.push({ id: uid(), type: "tip", date, amount: amt, note: "" });
+  const p = parseIso(date); V.y = p.y; V.m = p.m;
+  save(); render(); toast("Propina guardada: " + money(amt));
+  setTimeout(() => { const i = $("#tipAmt"); if (i) i.focus(); }, 30);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+
+/* ============================================================
+   Arranque
+   ============================================================ */
+(function boot() {
+  const local = readLocal();
+  S = local ? normalize(local) : sampleData();
+  render();
+  connectCloud();
+})();
+</script>
