@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Mi Segundo Cerebro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap">
+<style>
+  /* Todo vive en el celular (localStorage). Cada sección es su propio cajón: nada se mezcla. */
+  :root {
+    --bg: #f5f4fb;
+    --card: #ffffff;
+    --ink: #1f2140;
+    --soft: #6b6f8e;
+    --line: #e4e3f0;
+    --brand: #4f46e5;
+    --brand-soft: #eceafd;
+    --ok: #16a34a;
+    --warn: #d97706;
+    --danger: #dc2626;
+    --shadow: 0 2px 10px rgba(31,33,64,.07);
+    --font: "Nunito", ui-rounded, system-ui, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12131f; --card: #1c1e2e; --ink: #ecebf7; --soft: #9a9cb8; --line: #2c2f45;
+      --brand: #8b85ff; --brand-soft: #2a2950; --shadow: 0 2px 10px rgba(0,0,0,.3);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12131f; --card: #1c1e2e; --ink: #ecebf7; --soft: #9a9cb8; --line: #2c2f45;
+    --brand: #8b85ff; --brand-soft: #2a2950; --shadow: 0 2px 10px rgba(0,0,0,.3);
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--ink); font-family: var(--font);
+    font-size: 16px; line-height: 1.45; min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+
+  header {
+    position: sticky; top: 0; z-index: 5; background: var(--bg);
+    padding: calc(12px + env(safe-area-inset-top)) 16px 10px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  header h1 { font-size: 22px; margin: 0; flex: 1; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn {
+    border: 0; background: var(--card); width: 40px; height: 40px; border-radius: 12px;
+    box-shadow: var(--shadow); font-size: 18px; display: grid; place-items: center; flex: none;
+  }
+  main { padding: 0 16px 110px; max-width: 720px; margin: 0 auto; }
+
+  .search {
+    width: 100%; border: 1px solid var(--line); background: var(--card); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 16px; outline: none;
+  }
+  .search:focus, .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--brand); }
+
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .6px; color: var(--soft); margin: 22px 2px 10px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (min-width: 560px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  .tile {
+    border: 0; text-align: left; background: var(--card); border-radius: 18px; padding: 14px;
+    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px; min-height: 96px;
+    border-top: 4px solid var(--c);
+  }
+  .tile .em { font-size: 26px; }
+  .tile b { font-size: 16px; }
+  .tile small { color: var(--soft); }
+
+  .card {
+    background: var(--card); border-radius: 16px; padding: 14px; box-shadow: var(--shadow);
+    margin-bottom: 10px; border-left: 4px solid var(--c, var(--brand));
+  }
+  .card.tap { cursor: pointer; }
+  .card h3 { margin: 0 0 2px; font-size: 17px; }
+  .meta { color: var(--soft); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .body { margin-top: 6px; white-space: pre-wrap; word-wrap: break-word; }
+  .clip { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .badge { background: var(--brand-soft); color: var(--brand); border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 700; }
+  .badge.ok { background: rgba(22,163,74,.13); color: var(--ok); }
+  .badge.warn { background: rgba(217,119,6,.14); color: var(--warn); }
+  .badge.late { background: rgba(220,38,38,.12); color: var(--danger); }
+
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; }
+  .chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 14px; white-space: nowrap; font-weight: 700; font-size: 14px; }
+  .chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+  .empty { text-align: center; color: var(--soft); padding: 40px 20px; }
+  .empty .em { font-size: 44px; display: block; margin-bottom: 6px; }
+
+  .bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 10px 0 6px; }
+  .bar > i { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .3s; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .btn { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; background: var(--brand-soft); color: var(--brand); }
+  .btn.main { background: var(--brand); color: #fff; }
+  .btn.danger { background: rgba(220,38,38,.1); color: var(--danger); }
+  .btn.full { width: 100%; padding: 14px; font-size: 17px; }
+  .plan { background: var(--bg); border-radius: 12px; padding: 10px 12px; font-size: 14px; margin-top: 8px; }
+
+  .steps { list-style: none; padding: 0; margin: 10px 0 0; }
+  .steps li, .shop li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
+  .steps li:first-child { border-top: 0; }
+  .done span { text-decoration: line-through; color: var(--soft); }
+  input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--ok); flex: none; }
+
+  .shop { list-style: none; padding: 0; margin: 0; background: var(--card); border-radius: 16px; box-shadow: var(--shadow); padding: 4px 14px; }
+  .shop li:first-child { border-top: 0; }
+  .shop li span { flex: 1; }
+  .shop li small { color: var(--soft); }
+  .x { border: 0; background: none; color: var(--soft); font-size: 18px; padding: 2px 6px; }
+  .quick { display: flex; gap: 8px; margin-bottom: 12px; }
+  .quick input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 12px 14px; outline: none; }
+  .quick input.qty { flex: 0 0 74px; }
+
+  .fab {
+    position: fixed; right: 18px; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 6;
+    width: 62px; height: 62px; border-radius: 20px; border: 0; background: var(--brand); color: #fff;
+    font-size: 32px; box-shadow: 0 8px 22px rgba(79,70,229,.4);
+  }
+
+  .sheet-bg { position: fixed; inset: 0; background: rgba(10,10,25,.45); z-index: 20; display: none; align-items: flex-end; justify-content: center; }
+  .sheet-bg.open { display: flex; }
+  .sheet {
+    background: var(--card); width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
+    border-radius: 22px 22px 0 0; padding: 18px 16px calc(20px + env(safe-area-inset-bottom));
+    animation: up .2s ease-out;
+  }
+  @keyframes up { from { transform: translateY(40px); opacity: .5; } }
+  .sheet h2 { margin-top: 0; color: var(--ink); font-size: 19px; text-transform: none; letter-spacing: 0; }
+  .field { display: block; margin-bottom: 12px; }
+  .field span { display: block; font-size: 13px; font-weight: 700; color: var(--soft); margin-bottom: 4px; }
+  .field input, .field textarea, .field select {
+    width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 11px 12px; outline: none;
+  }
+  .field textarea { min-height: 120px; resize: vertical; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; z-index: 30;
+    font-weight: 700; max-width: calc(100% - 32px); display: none;
+  }
+  .toast.show { display: block; }
+  a.link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <button class="icon-btn" id="back" aria-label="Volver" hidden>←</button>
+  <h1 id="title">🧠 Mi Segundo Cerebro</h1>
+  <button class="icon-btn" id="menuBtn" aria-label="Opciones">⚙️</button>
+</header>
+<main id="view"></main>
+<button class="fab" id="fab" aria-label="Agregar" hidden>+</button>
+<div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="importFile" accept="application/json" hidden>
+
+<script>
+// ---------- Secciones ----------
+// Cada sección de notas define sus propios campos; "metas" y "mercado" tienen pantallas especiales.
+const SECTIONS = {
+  metas:      { name: 'Metas y ahorros', em: '🎯', c: '#16a34a', special: true },
+  mercado:    { name: 'Mercado',         em: '🛒', c: '#ea580c', special: true },
+  biblia:     { name: 'Biblia',          em: '📖', c: '#7c3aed', add: 'Nuevo estudio bíblico',
+                fields: [
+                  { k: 'ref', label: 'Cita (ej. Salmo 23:1-4)', title: true },
+                  { k: 'verse', label: 'El versículo', type: 'area', small: true },
+                  { k: 'body', label: 'Lo que Dios me enseñó / reflexión', type: 'area' },
+                ] },
+  profecias:  { name: 'Profecías',       em: '🕊️', c: '#0891b2', add: 'Nueva profecía',
+                fields: [
+                  { k: 'title', label: 'Título', title: true },
+                  { k: 'who', label: '¿Quién la dio? / ¿Dónde?' },
+                  { k: 'when', label: 'Fecha en que la recibí', type: 'date' },
+                  { k: 'status', label: 'Estado', type: 'select', options: ['Esperando', 'En proceso', 'Cumplida'], filter: true },
+                  { k: 'body', label: 'La profecía', type: 'area' },
+                ] },
+  suenos:     { name: 'Sueños',          em: '🌙', c: '#4f46e5', add: 'Nuevo sueño',
+                fields: [
+                  { k: 'title', label: 'Título del sueño', title: true },
+                  { k: 'body', label: '¿Qué soñé?', type: 'area' },
+                  { k: 'meaning', label: 'Interpretación / enseñanza', type: 'area', small: true },
+                ] },
+  ensenanzas: { name: 'Enseñanzas',      em: '💡', c: '#ca8a04', add: 'Nueva enseñanza',
+                fields: [
+                  { k: 'title', label: 'La enseñanza en una frase', title: true },
+                  { k: 'source', label: '¿De quién o de dónde la aprendí?' },
+                  { k: 'body', label: 'Detalles', type: 'area' },
+                ] },
+  estudios:   { name: 'Estudios',        em: '🎓', c: '#db2777', add: 'Nuevo apunte',
+                fields: [
+                  { k: 'subject', label: 'Materia', type: 'list', filter: true },
+                  { k: 'title', label: 'Tema', title: true },
+                  { k: 'body', label: 'Apuntes', type: 'area' },
+                ] },
+  diario:     { name: 'Diario',          em: '📔', c: '#0d9488', add: 'Escribir en el diario',
+                fields: [
+                  { k: 'mood', label: '¿Cómo me siento?', type: 'select', options: ['😀 Feliz', '🙏 Agradecido', '😌 En paz', '😐 Normal', '😔 Triste', '😤 Estresado'], filter: true },
+                  { k: 'title', label: 'Título (opcional)', title: true },
+                  { k: 'body', label: '¿Qué pasó hoy?', type: 'area' },
+                ] },
+};
+
+// ---------- Datos ----------
+const KEY = 'segundoCerebro.v1';
+let db;
+try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+db = Object.assign({ notes: [], goals: [], shop: [], shopRemind: '', theme: '' }, db || {});
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(db)); }
+  catch (e) { toast('⚠️ No se pudo guardar. Haz una copia de seguridad.'); }
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+// ---------- Utilidades ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = n => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n || 0);
+const num = v => Number(String(v).replace(/[^\d]/g, '')) || 0;
+function fmtDate(d, withTime) {
+  if (!d) return '';
+  const dt = new Date(d.length === 10 ? d + 'T00:00' : d);
+  const opt = { day: 'numeric', month: 'short', year: 'numeric' };
+  if (withTime) Object.assign(opt, { hour: 'numeric', minute: '2-digit' });
+  return dt.toLocaleString('es-CO', opt);
+}
+function daysUntil(d) {
+  const t = new Date(d.length === 10 ? d + 'T23:59' : d) - new Date();
+  return Math.ceil(t / 86400000);
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2600);
+}
+// Link para pasar el recordatorio a Google Calendar (así suena aunque la app esté cerrada).
+function calLink(text, when, details) {
+  const s = new Date(when.length === 10 ? when + 'T08:00' : when);
+  const e = new Date(s.getTime() + 30 * 60000);
+  const f = d => d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + 'T' +
+    String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0') + '00';
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(text) +
+    '&dates=' + f(s) + '/' + f(e) + '&details=' + encodeURIComponent(details || 'Desde Mi Segundo Cerebro');
+}
+function remindBadge(when) {
+  if (!when) return '';
+  const d = daysUntil(when);
+  const cls = d < 0 ? 'late' : d <= 2 ? 'warn' : '';
+  return `<span class="badge ${cls}">⏰ ${fmtDate(when, when.length > 10)}</span>`;
+}
+function noteTitle(n) {
+  const sec = SECTIONS[n.sec];
+  const tf = sec.fields.find(f => f.title);
+  return n[tf.k] || (n.body || '').split('\n')[0].slice(0, 60) || 'Sin título';
+}
+
+// ---------- Navegación ----------
+let route = { name: 'home' };
+let filter = '';
+function go(r) { route = r; filter = ''; render(); window.scrollTo(0, 0); }
+$('#back').onclick = () => go({ name: 'home' });
+window.addEventListener('popstate', () => { if (route.name !== 'home') go({ name: 'home' }); });
+
+function render() {
+  const home = route.name === 'home';
+  $('#back').hidden = home;
+  if (!home) history.replaceState(null, '', '#' + route.name);
+  const sec = SECTIONS[route.name];
+  $('#title').textContent = home ? '🧠 Mi Segundo Cerebro' : sec.em + ' ' + sec.name;
+  $('#fab').hidden = home || route.name === 'mercado';
+  const v = $('#view');
+  if (home) v.innerHTML = homeView();
+  else if (route.name === 'metas') v.innerHTML = goalsView();
+  else if (route.name === 'mercado') v.innerHTML = shopView();
+  else v.innerHTML = notesView(route.name);
+  bindView();
+}
+
+// ---------- Inicio ----------
+function upcoming() {
+  const list = [];
+  db.notes.forEach(n => n.remind && list.push({ when: n.remind, text: noteTitle(n), sec: n.sec, id: n.id }));
+  db.goals.forEach(g => {
+    if (g.remind) list.push({ when: g.remind, text: g.title, sec: 'metas', id: g.id });
+    if (g.deadline && !goalDone(g)) list.push({ when: g.deadline, text: 'Fecha límite: ' + g.title, sec: 'metas', id: g.id });
+  });
+  if (db.shopRemind) list.push({ when: db.shopRemind, text: 'Ir a mercar', sec: 'mercado' });
+  return list.filter(x => daysUntil(x.when) >= -1).sort((a, b) => new Date(a.when) - new Date(b.when)).slice(0, 6);
+}
+function homeView() {
+  const counts = k => k === 'metas' ? db.goals.length : k === 'mercado' ? db.shop.filter(i => !i.done).length : db.notes.filter(n => n.sec === k).length;
+  const label = (k, c) => k === 'mercado' ? (c ? `${c} por comprar` : 'Lista vacía') : `${c} ${k === 'metas' ? (c === 1 ? 'meta' : 'metas') : (c === 1 ? 'nota' : 'notas')}`;
+  let h = `<input class="search" id="q" type="search" placeholder="🔎 Buscar en todo mi cerebro…" autocomplete="off">
+    <div id="results"></div><div id="homeBody">
+    <div class="grid">` +
+    Object.entries(SECTIONS).map(([k, s]) => `<button class="tile" style="--c:${s.c}" data-go="${k}">
+      <span class="em">${s.em}</span><b>${s.name}</b><small>${label(k, counts(k))}</small></button>`).join('') + `</div>`;
+
+  const up = upcoming();
+  h += `<h2>⏰ Próximos recordatorios</h2>`;
+  h += up.length ? up.map(x => `<div class="card tap" style="--c:${SECTIONS[x.sec].c}" data-go="${x.sec}">
+      <div class="meta">${SECTIONS[x.sec].em} ${SECTIONS[x.sec].name} ${remindBadge(x.when)}</div><h3>${esc(x.text)}</h3></div>`).join('')
+    : `<div class="card"><div class="meta">Nada pendiente. Cuando le pongas fecha a algo, aparece aquí.</div></div>`;
+
+  const active = db.goals.filter(g => g.target && !goalDone(g));
+  if (active.length) {
+    h += `<h2>🎯 Cómo voy con mis ahorros</h2>` + active.slice(0, 3).map(g => {
+      const p = pct(g);
+      return `<div class="card tap" style="--c:${SECTIONS.metas.c}" data-go="metas"><h3>${esc(g.title)}</h3>
+        <div class="bar"><i style="width:${p}%"></i></div>
+        <div class="meta">${money(saved(g))} de ${money(g.target)} · ${p}%</div></div>`;
+    }).join('');
+  }
+  return h + `</div>`;
+}
+function searchResults(q) {
+  q = q.trim().toLowerCase();
+  if (!q) return '';
+  const hits = [];
+  db.notes.forEach(n => {
+    const text = SECTIONS[n.sec].fields.map(f => n[f.k] || '').join(' ').toLowerCase();
+    if (text.includes(q)) hits.push(noteCard(n, true));
+  });
+  db.goals.forEach(g => { if ((g.title + ' ' + (g.why || '')).toLowerCase().includes(q)) hits.push(`<div class="card tap" style="--c:${SECTIONS.metas.c}" data-go="metas"><div class="meta">🎯 Meta</div><h3>${esc(g.title)}</h3></div>`); });
+  db.shop.forEach(i => { if (i.name.toLowerCase().includes(q)) hits.push(`<div class="card tap" style="--c:${SECTIONS.mercado.c}" data-go="mercado"><div class="meta">🛒 Mercado</div><h3>${esc(i.name)}</h3></div>`); });
+  return `<h2>${hits.length} resultado${hits.length === 1 ? '' : 's'}</h2>` + (hits.join('') || `<div class="empty">No encontré nada con “${esc(q)}”.</div>`);
+}
+
+// ---------- Notas (Biblia, Profecías, Sueños, Enseñanzas, Estudios, Diario) ----------
+function noteCard(n, showSec) {
+  const sec = SECTIONS[n.sec];
+  const extra = sec.fields.filter(f => !f.title && f.k !== 'body' && n[f.k] && f.type !== 'area')
+    .map(f => f.type === 'date' ? `<span>📅 ${fmtDate(n[f.k])}</span>` : `<span class="badge ${n[f.k] === 'Cumplida' ? 'ok' : ''}">${esc(n[f.k])}</span>`).join('');
+  const preview = [n.verse ? '“' + n.verse + '”' : '', n.body, n.meaning ? '💭 ' + n.meaning : ''].filter(Boolean).join('\n\n');
+  return `<div class="card tap" style="--c:${sec.c}" data-edit="${n.id}">
+    <div class="meta">${showSec ? sec.em + ' ' + sec.name + ' ·' : ''} <span>${fmtDate(n.created)}</span> ${extra} ${remindBadge(n.remind)}</div>
+    <h3>${esc(noteTitle(n))}</h3>
+    ${preview ? `<div class="body clip">${esc(preview)}</div>` : ''}</div>`;
+}
+function notesView(k) {
+  const sec = SECTIONS[k];
+  let notes = db.notes.filter(n => n.sec === k).sort((a, b) => b.created.localeCompare(a.created));
+  const ff = sec.fields.find(f => f.filter);
+  let h = '';
+  if (ff) {
+    const vals = [...new Set(notes.map(n => n[ff.k]).filter(Boolean))];
+    if (vals.length) h += `<div class="chips"><button class="chip ${!filter ? 'on' : ''}" data-filter="">Todas</button>` +
+      vals.map(v => `<button class="chip ${filter === v ? 'on' : ''}" data-filter="${esc(v)}">${esc(v)}</button>`).join('') + `</div>`;
+    if (filter) notes = notes.filter(n => n[ff.k] === filter);
+  }
+  return h + (notes.map(n => noteCard(n)).join('') ||
+    `<div class="empty"><span class="em">${sec.em}</span>Aún no hay nada aquí.<br>Toca <b>+</b> para empezar.</div>`);
+}
+function noteForm(k, n) {
+  const sec = SECTIONS[k];
+  n = n || {};
+  const fieldHtml = f => {
+    const v = esc(n[f.k] || '');
+    let input;
+    if (f.type === 'area') input = `<textarea name="${f.k}" ${f.small ? 'style="min-height:80px"' : ''}>${v}</textarea>`;
+    else if (f.type === 'select') input = `<select name="${f.k}"><option value=""></option>${f.options.map(o => `<option ${n[f.k] === o ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+    else if (f.type === 'date') input = `<input type="date" name="${f.k}" value="${v}">`;
+    else if (f.type === 'list') {
+      const opts = [...new Set(db.notes.filter(x => x.sec === k).map(x => x[f.k]).filter(Boolean))];
+      input = `<input name="${f.k}" value="${v}" list="dl-${f.k}" autocomplete="off"><datalist id="dl-${f.k}">${opts.map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
+    } else input = `<input name="${f.k}" value="${v}" autocomplete="off">`;
+    return `<label class="field"><span>${f.label}</span>${input}</label>`;
+  };
+  openSheet(`<h2>${n.id ? sec.em + ' Editar' : sec.em + ' ' + sec.add}</h2>
+    <form id="f">${sec.fields.map(fieldHtml).join('')}
+      <label class="field"><span>⏰ Recordármelo (opcional)</span><input type="datetime-local" name="remind" value="${esc(n.remind || '')}"></label>
+      ${n.remind ? `<p><a class="link" target="_blank" rel="noopener" href="${calLink(noteTitle(n), n.remind)}">📅 Pasar recordatorio a Google Calendar</a></p>` : ''}
+      <button class="btn main full">Guardar</button>
+      ${n.id ? `<div class="row"><button type="button" class="btn danger" id="del">🗑️ Borrar</button></div>` : ''}
+    </form>`);
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    if (!Object.entries(data).some(([key, val]) => key !== 'remind' && val.trim())) return toast('Escribe algo primero 🙂');
+    if (n.id) { if (data.remind !== n.remind) n.notified = false; Object.assign(n, data); }
+    else db.notes.push({ id: uid(), sec: k, created: new Date().toISOString(), ...data });
+    save(); closeSheet(); render(); toast('Guardado ✅');
+  };
+  if (n.id) $('#del').onclick = () => {
+    if (!confirm('¿Borrar esta nota?')) return;
+    db.notes = db.notes.filter(x => x.id !== n.id); save(); closeSheet(); render(); toast('Borrada');
+  };
+}
+
+// ---------- Metas y ahorros ----------
+const saved = g => (g.deposits || []).reduce((s, d) => s + d.amt, 0);
+const pct = g => g.target ? Math.min(100, Math.round(saved(g) / g.target * 100)) : stepsPct(g);
+const stepsPct = g => (g.steps || []).length ? Math.round(g.steps.filter(s => s.done).length / g.steps.length * 100) : 0;
+const goalDone = g => g.target ? saved(g) >= g.target : (g.steps || []).length > 0 && g.steps.every(s => s.done);
+
+// Cuánto hay que guardar por semana/mes para llegar a tiempo.
+function savingPlan(g) {
+  const left = g.target - saved(g);
+  if (left <= 0) return '🎉 ¡Meta cumplida! Gloria a Dios.';
+  if (!g.deadline) return `Te faltan <b>${money(left)}</b>. Ponle una fecha límite y te digo cuánto guardar.`;
+  const days = daysUntil(g.deadline);
+  if (days <= 0) return `⚠️ Se pasó la fecha y faltan <b>${money(left)}</b>. Cambia la fecha y sigue con toda.`;
+  const weeks = Math.max(1, days / 7), months = Math.max(1, days / 30.4);
+  return `Faltan <b>${money(left)}</b> en ${days} día${days === 1 ? '' : 's'}.<br>
+    Guarda <b>${money(Math.ceil(left / weeks))}</b> por semana` + (days > 45 ? ` o <b>${money(Math.ceil(left / months))}</b> al mes.` : '.');
+}
+function goalsView() {
+  if (!db.goals.length) return `<div class="empty"><span class="em">🎯</span>¿Qué quieres lograr?<br>Toca <b>+</b> y crea tu primera meta.<br><small>Puede ser de ahorro (con plata) o de pasos.</small></div>`;
+  const sorted = [...db.goals].sort((a, b) => goalDone(a) - goalDone(b));
+  return sorted.map(g => {
+    const p = pct(g), done = goalDone(g);
+    return `<div class="card" style="--c:${SECTIONS.metas.c}">
+      <div class="meta">${done ? '<span class="badge ok">✅ Cumplida</span>' : ''}
+        ${g.deadline ? `<span>🏁 ${fmtDate(g.deadline)}</span>` : ''} ${remindBadge(g.remind)}</div>
+      <h3>${esc(g.title)}</h3>
+      ${g.why ? `<div class="body" style="color:var(--soft)">${esc(g.why)}</div>` : ''}
+      ${g.target || (g.steps || []).length ? `<div class="bar"><i style="width:${p}%"></i></div>` : ''}
+      ${g.target ? `<div class="meta">${money(saved(g))} de ${money(g.target)} · ${p}%</div><div class="plan">${savingPlan(g)}</div>` : ''}
+      ${(g.steps || []).length ? `<ul class="steps">${g.steps.map((s, i) => `<li class="${s.done ? 'done' : ''}">
+        <input type="checkbox" data-step="${g.id}:${i}" ${s.done ? 'checked' : ''}><span>${esc(s.text)}</span></li>`).join('')}</ul>` : ''}
+      <div class="row">
+        ${g.target ? `<button class="btn main" data-deposit="${g.id}">💰 Abonar</button>` : ''}
+        <button class="btn" data-goal="${g.id}">✏️ Editar</button>
+        ${(g.deposits || []).length ? `<button class="btn" data-history="${g.id}">📜 Abonos</button>` : ''}
+      </div></div>`;
+  }).join('');
+}
+function goalForm(g) {
+  g = g || {};
+  openSheet(`<h2>🎯 ${g.id ? 'Editar meta' : 'Nueva meta'}</h2>
+    <form id="f">
+      <label class="field"><span>¿Qué quiero lograr?</span><input name="title" value="${esc(g.title || '')}" required placeholder="Ej. Comprar una moto"></label>
+      <label class="field"><span>¿Por qué es importante para mí?</span><textarea name="why" style="min-height:70px">${esc(g.why || '')}</textarea></label>
+      <div class="two">
+        <label class="field"><span>💰 Plata que necesito</span><input name="target" inputmode="numeric" value="${g.target || ''}" placeholder="0 si no es de plata"></label>
+        <label class="field"><span>🏁 Fecha límite</span><input type="date" name="deadline" value="${esc(g.deadline || '')}"></label>
+      </div>
+      <label class="field"><span>✅ Pasos (uno por línea)</span><textarea name="steps" style="min-height:90px" placeholder="Abrir cuenta de ahorros&#10;Dejar de gastar en…">${esc((g.steps || []).map(s => s.text).join('\n'))}</textarea></label>
+      <label class="field"><span>⏰ Recordármelo (ej. el día de pago)</span><input type="datetime-local" name="remind" value="${esc(g.remind || '')}"></label>
+      ${g.remind ? `<p><a class="link" target="_blank" rel="noopener" href="${calLink('Meta: ' + g.title, g.remind, 'Abonar a mi meta')}">📅 Pasar recordatorio a Google Calendar</a></p>` : ''}
+      <button class="btn main full">Guardar</button>
+      ${g.id ? `<div class="row"><button type="button" class="btn danger" id="del">🗑️ Borrar meta</button></div>` : ''}
+    </form>`);
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    const old = g.steps || [];
+    const steps = d.steps.split('\n').map(s => s.trim()).filter(Boolean)
+      .map(text => ({ text, done: !!(old.find(o => o.text === text) || {}).done }));
+    if (g.id && d.remind !== g.remind) g.notified = false;
+    const item = Object.assign(g.id ? g : { id: uid(), created: new Date().toISOString(), deposits: [] },
+      { title: d.title.trim(), why: d.why, target: num(d.target), deadline: d.deadline, remind: d.remind, steps });
+    if (!g.id) db.goals.push(item);
+    save(); closeSheet(); render(); toast('Meta guardada 🎯');
+  };
+  if (g.id) $('#del').onclick = () => {
+    if (!confirm('¿Borrar esta meta y sus abonos?')) return;
+    db.goals = db.goals.filter(x => x.id !== g.id); save(); closeSheet(); render();
+  };
+}
+function depositForm(g) {
+  openSheet(`<h2>💰 Abonar a “${esc(g.title)}”</h2>
+    <form id="f">
+      <label class="field"><span>¿Cuánto guardaste?</span><input name="amt" inputmode="numeric" required autofocus placeholder="Ej. 50000"></label>
+      <label class="field"><span>Nota (opcional)</span><input name="note" placeholder="Ej. de la quincena"></label>
+      <p class="meta">Si te tocó sacar plata, escribe el valor con un menos adelante (ej. -20000).</p>
+      <button class="btn main full">Guardar abono</button>
+    </form>`);
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    const amt = num(d.amt) * (d.amt.trim().startsWith('-') ? -1 : 1);
+    if (!amt) return toast('Escribe un valor');
+    (g.deposits = g.deposits || []).push({ amt, note: d.note, date: new Date().toISOString() });
+    save(); closeSheet(); render();
+    toast(goalDone(g) ? '🎉 ¡Cumpliste la meta!' : 'Abono guardado 💪');
+  };
+}
+function historySheet(g) {
+  openSheet(`<h2>📜 Abonos de “${esc(g.title)}”</h2>
+    <ul class="steps">${[...g.deposits].reverse().map(d => `<li><span style="flex:1"><b>${money(d.amt)}</b> ${d.note ? '· ' + esc(d.note) : ''}<br><small class="meta">${fmtDate(d.date, true)}</small></span>
+      <button class="x" data-deldep="${d.date}">✕</button></li>`).join('')}</ul>
+    <div class="row"><button class="btn full" id="close">Cerrar</button></div>`);
+  $('#close').onclick = closeSheet;
+  $('#sheet').querySelectorAll('[data-deldep]').forEach(b => b.onclick = () => {
+    if (!confirm('¿Borrar este abono?')) return;
+    g.deposits = g.deposits.filter(d => d.date !== b.dataset.deldep); save(); render(); g.deposits.length ? historySheet(g) : closeSheet();
+  });
+}
+
+// ---------- Mercado ----------
+function shopView() {
+  const pend = db.shop.filter(i => !i.done), got = db.shop.filter(i => i.done);
+  const li = i => `<li class="${i.done ? 'done' : ''}"><input type="checkbox" data-shop="${i.id}" ${i.done ? 'checked' : ''}>
+    <span>${esc(i.name)}</span>${i.qty ? `<small>${esc(i.qty)}</small>` : ''}<button class="x" data-delshop="${i.id}" aria-label="Quitar">✕</button></li>`;
+  return `<form class="quick" id="shopForm">
+      <input name="name" placeholder="¿Qué hay que comprar?" autocomplete="off" required>
+      <input name="qty" class="qty" placeholder="Cant.">
+      <button class="btn main">＋</button></form>
+    <label class="field"><span>⏰ ¿Cuándo voy a mercar?</span><input type="datetime-local" id="shopRemind" value="${esc(db.shopRemind)}"></label>
+    ${db.shopRemind ? `<p style="margin-top:-6px"><a class="link" target="_blank" rel="noopener" href="${calLink('Ir a mercar', db.shopRemind, pend.map(i => '• ' + i.name + (i.qty ? ' (' + i.qty + ')' : '')).join('\n'))}">📅 Pasar a Google Calendar con la lista</a></p>` : ''}
+    <h2>Por comprar (${pend.length})</h2>
+    ${pend.length ? `<ul class="shop">${pend.map(li).join('')}</ul>` : `<div class="empty"><span class="em">🛒</span>Todo comprado. ¡Bien ahí!</div>`}
+    ${got.length ? `<h2>Ya en el carrito (${got.length})</h2><ul class="shop">${got.map(li).join('')}</ul>
+      <div class="row"><button class="btn" id="clearShop">🧹 Borrar lo comprado</button></div>` : ''}`;
+}
+
+// ---------- Eventos de la vista ----------
+function bindView() {
+  const v = $('#view');
+  v.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go({ name: b.dataset.go }));
+  v.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { const n = db.notes.find(x => x.id === b.dataset.edit); noteForm(n.sec, n); });
+  v.querySelectorAll('[data-filter]').forEach(b => b.onclick = () => { filter = b.dataset.filter; render(); });
+  v.querySelectorAll('[data-goal]').forEach(b => b.onclick = () => goalForm(db.goals.find(g => g.id === b.dataset.goal)));
+  v.querySelectorAll('[data-deposit]').forEach(b => b.onclick = () => depositForm(db.goals.find(g => g.id === b.dataset.deposit)));
+  v.querySelectorAll('[data-history]').forEach(b => b.onclick = () => historySheet(db.goals.find(g => g.id === b.dataset.history)));
+  v.querySelectorAll('[data-step]').forEach(c => c.onchange = () => {
+    const [id, i] = c.dataset.step.split(':'); const g = db.goals.find(x => x.id === id);
+    g.steps[i].done = c.checked; save(); render(); if (goalDone(g)) toast('🎉 ¡Cumpliste la meta!');
+  });
+  v.querySelectorAll('[data-shop]').forEach(c => c.onchange = () => { db.shop.find(i => i.id === c.dataset.shop).done = c.checked; save(); render(); });
+  v.querySelectorAll('[data-delshop]').forEach(b => b.onclick = () => { db.shop = db.shop.filter(i => i.id !== b.dataset.delshop); save(); render(); });
+  const sf = $('#shopForm');
+  if (sf) {
+    sf.onsubmit = e => {
+      e.preventDefault(); const d = Object.fromEntries(new FormData(sf));
+      db.shop.push({ id: uid(), name: d.name.trim(), qty: d.qty.trim(), done: false }); save(); render(); $('#shopForm input').focus();
+    };
+    $('#shopRemind').onchange = e => { db.shopRemind = e.target.value; db.shopNotified = false; save(); render(); };
+    const cl = $('#clearShop'); if (cl) cl.onclick = () => { db.shop = db.shop.filter(i => !i.done); save(); render(); };
+  }
+  const q = $('#q');
+  if (q) q.oninput = () => {
+    $('#results').innerHTML = searchResults(q.value);
+    $('#homeBody').hidden = !!q.value.trim();
+    $('#results').querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { const n = db.notes.find(x => x.id === b.dataset.edit); noteForm(n.sec, n); });
+    $('#results').querySelectorAll('[data-go]').forEach(b => b.onclick = () => go({ name: b.dataset.go }));
+  };
+}
+$('#fab').onclick = () => route.name === 'metas' ? goalForm() : noteForm(route.name);
+
+// ---------- Hoja (formularios) ----------
+function openSheet(html) { $('#sheet').innerHTML = html; $('#sheetBg').classList.add('open'); }
+function closeSheet() { $('#sheetBg').classList.remove('open'); }
+$('#sheetBg').onclick = e => { if (e.target.id === 'sheetBg') closeSheet(); };
+
+// ---------- Opciones: copia de seguridad, tema, notificaciones ----------
+$('#menuBtn').onclick = () => {
+  const notif = 'Notification' in window;
+  openSheet(`<h2>⚙️ Opciones</h2>
+    <p class="meta">Todo se guarda en este celular. Haz una copia de seguridad de vez en cuando para no perder nada (guárdala en Drive o mándatela por WhatsApp).</p>
+    <div class="row"><button class="btn main" id="exp">⬇️ Descargar copia</button><button class="btn" id="imp">⬆️ Restaurar copia</button></div>
+    <h2 style="margin-top:20px">Recordatorios</h2>
+    <p class="meta">Con la app abierta te aviso cuando llegue la hora. Para que suene aunque esté cerrada, usa el botón “Pasar a Google Calendar” de cada recordatorio.</p>
+    ${notif ? `<div class="row"><button class="btn" id="perm">🔔 ${Notification.permission === 'granted' ? 'Avisos activados' : 'Activar avisos'}</button></div>` : ''}
+    <h2 style="margin-top:20px">Apariencia</h2>
+    <div class="chips">${[['', 'Automático'], ['light', '☀️ Claro'], ['dark', '🌙 Oscuro']].map(([v, l]) => `<button class="chip ${db.theme === v ? 'on' : ''}" data-theme="${v}">${l}</button>`).join('')}</div>
+    <div class="row"><button class="btn full" id="close">Listo</button></div>`);
+  $('#close').onclick = closeSheet;
+  $('#exp').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 1)], { type: 'application/json' }));
+    a.download = 'segundo-cerebro-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
+  };
+  $('#imp').onclick = () => $('#importFile').click();
+  if (notif) $('#perm').onclick = () => Notification.requestPermission().then(p => { toast(p === 'granted' ? 'Avisos activados 🔔' : 'No se dio permiso'); closeSheet(); });
+  $('#sheet').querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { db.theme = b.dataset.theme; save(); applyTheme(); $('#menuBtn').onclick(); });
+};
+$('#importFile').onchange = e => {
+  const file = e.target.files[0]; if (!file) return;
+  file.text().then(t => {
+    const data = JSON.parse(t);
+    if (!Array.isArray(data.notes) || !confirm('Esto reemplaza lo que tienes ahora con la copia. ¿Seguir?')) return;
+    db = Object.assign({ notes: [], goals: [], shop: [], shopRemind: '', theme: '' }, data);
+    save(); applyTheme(); closeSheet(); go({ name: 'home' }); toast('Copia restaurada ✅');
+  }).catch(() => toast('Ese archivo no es una copia válida'));
+  e.target.value = '';
+};
+function applyTheme() {
+  if (db.theme) document.documentElement.dataset.theme = db.theme;
+  else delete document.documentElement.dataset.theme;
+}
+
+// ---------- Avisos con la app abierta ----------
+function checkReminders() {
+  const now = new Date();
+  const due = [];
+  const isDue = w => w && new Date(w.length === 10 ? w + 'T08:00' : w) <= now;
+  db.notes.forEach(n => { if (isDue(n.remind) && !n.notified) { n.notified = true; due.push(SECTIONS[n.sec].em + ' ' + noteTitle(n)); } });
+  db.goals.forEach(g => { if (isDue(g.remind) && !g.notified) { g.notified = true; due.push('🎯 ' + g.title); } });
+  if (isDue(db.shopRemind) && !db.shopNotified) { db.shopNotified = true; due.push('🛒 Ir a mercar'); }
+  if (!due.length) return;
+  save();
+  due.forEach(text => {
+    toast('⏰ ' + text);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try { new Notification('Mi Segundo Cerebro', { body: text }); } catch (e) {}
+    }
+  });
+}
+
+// ---------- Arranque ----------
+applyTheme();
+const start = location.hash.slice(1);
+if (SECTIONS[start]) route = { name: start };
+history.pushState(null, '', location.href);
+render();
+checkReminders();
+setInterval(checkReminders, 30000);
+</script>
+</body>
+</html>
