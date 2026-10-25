@@ -399,8 +399,7 @@ function noteForm(k, n) {
     save(); closeSheet(); render(); toast('Guardado ✅');
   };
   if (n.id) $('#del').onclick = () => {
-    if (!confirm('¿Borrar esta nota?')) return;
-    db.notes = db.notes.filter(x => x.id !== n.id); save(); closeSheet(); render(); toast('Borrada');
+    askConfirm('¿Borrar esta nota?', () => { db.notes = db.notes.filter(x => x.id !== n.id); save(); closeSheet(); render(); toast('Borrada'); }, () => noteForm(k, n));
   };
 }
 
@@ -471,8 +470,7 @@ function goalForm(g) {
     save(); closeSheet(); render(); toast('Meta guardada 🎯');
   };
   if (g.id) $('#del').onclick = () => {
-    if (!confirm('¿Borrar esta meta y sus abonos?')) return;
-    db.goals = db.goals.filter(x => x.id !== g.id); save(); closeSheet(); render();
+    askConfirm('¿Borrar esta meta y sus abonos?', () => { db.goals = db.goals.filter(x => x.id !== g.id); save(); closeSheet(); render(); }, () => goalForm(g));
   };
 }
 function depositForm(g) {
@@ -500,8 +498,9 @@ function historySheet(g) {
     <div class="row"><button class="btn full" id="close">Cerrar</button></div>`);
   $('#close').onclick = closeSheet;
   $('#sheet').querySelectorAll('[data-deldep]').forEach(b => b.onclick = () => {
-    if (!confirm('¿Borrar este abono?')) return;
-    g.deposits = g.deposits.filter(d => d.date !== b.dataset.deldep); save(); render(); g.deposits.length ? historySheet(g) : closeSheet();
+    askConfirm('¿Borrar este abono?', () => {
+      g.deposits = g.deposits.filter(d => d.date !== b.dataset.deldep); save(); render(); g.deposits.length ? historySheet(g) : closeSheet();
+    }, () => historySheet(g));
   });
 }
 
@@ -559,6 +558,12 @@ $('#fab').onclick = () => route.name === 'metas' ? goalForm() : noteForm(route.n
 // ---------- Hoja (formularios) ----------
 function openSheet(html) { $('#sheet').innerHTML = html; $('#sheetBg').classList.add('open'); }
 function closeSheet() { $('#sheetBg').classList.remove('open'); }
+function askConfirm(msg, onYes, onNo) {
+  openSheet(`<h2>${esc(msg)}</h2><div class="row"><button class="btn danger" id="yes">Sí, borrar</button><button class="btn" id="no">Cancelar</button></div>`);
+  if (msg.startsWith('Esto reemplaza')) $('#yes').textContent = 'Sí, restaurar';
+  $('#yes').onclick = onYes;
+  $('#no').onclick = () => onNo ? onNo() : closeSheet();
+}
 $('#sheetBg').onclick = e => { if (e.target.id === 'sheetBg') closeSheet(); };
 
 // ---------- Opciones: copia de seguridad, tema, notificaciones ----------
@@ -566,7 +571,7 @@ $('#menuBtn').onclick = () => {
   const notif = 'Notification' in window;
   openSheet(`<h2>⚙️ Opciones</h2>
     <p class="meta">Todo se guarda en este celular. Haz una copia de seguridad de vez en cuando para no perder nada (guárdala en Drive o mándatela por WhatsApp).</p>
-    <div class="row"><button class="btn main" id="exp">⬇️ Descargar copia</button><button class="btn" id="imp">⬆️ Restaurar copia</button></div>
+    <div class="row"><button class="btn main" id="exp">⬇️ Descargar copia</button><button class="btn" id="imp">⬆️ Restaurar copia</button><button class="btn" id="copy">📋 Copiar copia</button><button class="btn" id="paste">📥 Pegar copia</button></div>
     <h2 style="margin-top:20px">Recordatorios</h2>
     <p class="meta">Con la app abierta te aviso cuando llegue la hora. Para que suene aunque esté cerrada, usa el botón “Pasar a Google Calendar” de cada recordatorio.</p>
     ${notif ? `<div class="row"><button class="btn" id="perm">🔔 ${Notification.permission === 'granted' ? 'Avisos activados' : 'Activar avisos'}</button></div>` : ''}
@@ -580,17 +585,32 @@ $('#menuBtn').onclick = () => {
     a.download = 'segundo-cerebro-' + new Date().toISOString().slice(0, 10) + '.json'; a.click();
   };
   $('#imp').onclick = () => $('#importFile').click();
+  $('#paste').onclick = () => {
+    openSheet(`<h2>📥 Pegar copia</h2><label class="field"><span>Pega aquí el texto de tu copia</span><textarea id="pasted"></textarea></label>
+      <button class="btn main full" id="doPaste">Restaurar</button>`);
+    $('#doPaste').onclick = () => restore($('#pasted').value);
+  };
+  $('#copy').onclick = () => {
+    try {
+      navigator.clipboard.writeText(JSON.stringify(db)).then(() => toast('Copia copiada 📋 Pégala en una nota o en WhatsApp'), () => toast('No se pudo copiar'));
+    } catch (e) { toast('No se pudo copiar'); }
+  };
   if (notif) $('#perm').onclick = () => Notification.requestPermission().then(p => { toast(p === 'granted' ? 'Avisos activados 🔔' : 'No se dio permiso'); closeSheet(); });
   $('#sheet').querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { db.theme = b.dataset.theme; save(); applyTheme(); $('#menuBtn').onclick(); });
 };
+function restore(text) {
+  return Promise.resolve(text).then(t => {
+    const data = JSON.parse(t);
+    if (!Array.isArray(data.notes)) throw new Error();
+    askConfirm('Esto reemplaza lo que tienes ahora con la copia. ¿Seguir?', () => {
+      db = Object.assign({ notes: [], goals: [], shop: [], shopRemind: '', theme: '' }, data);
+      save(); applyTheme(); closeSheet(); go({ name: 'home' }); toast('Copia restaurada ✅');
+    });
+  }).catch(() => toast('Eso no es una copia válida'));
+}
 $('#importFile').onchange = e => {
   const file = e.target.files[0]; if (!file) return;
-  file.text().then(t => {
-    const data = JSON.parse(t);
-    if (!Array.isArray(data.notes) || !confirm('Esto reemplaza lo que tienes ahora con la copia. ¿Seguir?')) return;
-    db = Object.assign({ notes: [], goals: [], shop: [], shopRemind: '', theme: '' }, data);
-    save(); applyTheme(); closeSheet(); go({ name: 'home' }); toast('Copia restaurada ✅');
-  }).catch(() => toast('Ese archivo no es una copia válida'));
+  restore(file.text());
   e.target.value = '';
 };
 function applyTheme() {

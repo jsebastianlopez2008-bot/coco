@@ -1,6 +1,6 @@
 // Guarda la app en el celular para que abra sin internet.
 // Sube VERSION cuando cambies index.html para que el celular baje la nueva.
-const VERSION = 'cerebro-v1';
+const VERSION = 'cerebro-v2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
