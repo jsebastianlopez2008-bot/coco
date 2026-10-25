@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f2ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111614" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Mi Cerebro">
@@ -15,35 +15,37 @@
 <title>Mi Segundo Cerebro</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Onest:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Onest:wght@400;500;600&display=swap">
 <style>
   /* Una columna tipo app: encabezado grande, superficies blancas planas, cada sección con su color solo en el ícono. */
   :root {
-    --bg: #f4f5f7;
-    --surface: #ffffff;
-    --ink: #15171c;
-    --muted: #6c7180;
-    --line: #e7e9ee;
-    --field: #f1f2f5;
-    --on-ink: #ffffff;
-    --good: #138a5a;
-    --warn: #b86e00;
-    --bad: #cf3b3b;
-    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --bg: #f2f2ee;
+    --surface: #fbfbf9;
+    --ink: #1b2622;
+    --muted: #6e7671;
+    --line: #e2e3dd;
+    --field: #ecede8;
+    --brand: #1f3d34;
+    --on-brand: #f5f1e6;
+    --gold: #a8874a;
+    --good: #2f7a57;
+    --warn: #a86a12;
+    --bad: #b5463e;
+    --display: "Fraunces", Georgia, "Times New Roman", serif;
     --text: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
     --r: 18px;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0f1115; --surface: #181b21; --ink: #eef0f4; --muted: #8f95a3; --line: #262a33;
-      --field: #20242c; --on-ink: #0f1115; --good: #3fc68b; --warn: #f0a63a; --bad: #f06a6a;
+      --bg: #111614; --surface: #19201d; --ink: #ecebe4; --muted: #949b95; --line: #29322e;
+      --field: #212a26; --brand: #d9c9a0; --on-brand: #15201b; --gold: #c9ad72; --good: #6cc196; --warn: #e2a64e; --bad: #e57b70;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0f1115; --surface: #181b21; --ink: #eef0f4; --muted: #8f95a3; --line: #262a33;
-    --field: #20242c; --on-ink: #0f1115; --good: #3fc68b; --warn: #f0a63a; --bad: #f06a6a;
+    --bg: #111614; --surface: #19201d; --ink: #ecebe4; --muted: #949b95; --line: #29322e;
+    --field: #212a26; --brand: #d9c9a0; --on-brand: #15201b; --gold: #c9ad72; --good: #6cc196; --warn: #e2a64e; --bad: #e57b70;
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
@@ -57,7 +59,7 @@
   body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
   button, input, textarea, select { font: inherit; color: inherit; }
   button { cursor: pointer; }
-  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
   .wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -66,7 +68,7 @@
   header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); }
   header .wrap { display: flex; align-items: center; gap: 10px; padding-block: 14px 10px; }
   .htitle { flex: 1; min-width: 0; }
-  .htitle h1 { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -.02em; margin: 0; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .htitle h1 { font-family: var(--display); font-weight: 500; font-size: 24px; letter-spacing: -.01em; margin: 0; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .htitle p { margin: 0; color: var(--muted); font-size: 13px; }
   .icon-btn {
     width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
@@ -75,7 +77,7 @@
   .hero { padding-block: 6px 18px; }
   .hero p { margin: 0; color: var(--muted); font-size: 14px; }
   .hero p::first-letter, .month::first-letter { text-transform: uppercase; }
-  .hero h1 { font-family: var(--display); font-weight: 700; font-size: 34px; letter-spacing: -.03em; line-height: 1.1; margin: 2px 0 0; text-wrap: balance; }
+  .hero h1 { font-family: var(--display); font-weight: 400; font-size: 38px; letter-spacing: -.02em; line-height: 1.1; margin: 2px 0 0; text-wrap: balance; }
 
   main { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
 
@@ -85,16 +87,16 @@
     width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 14px;
     padding: 13px 14px 13px 44px; outline: none; font-size: 16px;
   }
-  .search input:focus { border-color: var(--ink); }
+  .search input:focus { border-color: var(--gold); }
 
   .label { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 2px 10px; }
-  .label h2 { margin: 0; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .label h2 { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .14em; color: var(--gold); }
   .label span { font-size: 13px; color: var(--muted); }
 
   /* Ícono de sección: el único lugar donde aparece el color de cada sección */
   .chip-i {
     width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none;
-    color: var(--c); background: color-mix(in srgb, var(--c) 13%, var(--surface));
+    color: color-mix(in srgb, var(--c) 78%, var(--ink)); background: color-mix(in srgb, var(--c) 13%, var(--surface));
   }
   .chip-i.sm { width: 32px; height: 32px; border-radius: 10px; }
   .chip-i.sm svg { width: 17px; height: 17px; }
@@ -143,7 +145,7 @@
 
   .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 6px; scrollbar-width: none; }
   .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; white-space: nowrap; font-size: 14px; font-weight: 500; }
-  .chip.on { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+  .chip.on { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
 
   .empty { text-align: center; color: var(--muted); padding: 48px 24px; }
   .empty .chip-i { width: 56px; height: 56px; border-radius: 18px; margin: 0 auto 14px; }
@@ -152,11 +154,11 @@
 
   /* Metas */
   .amount { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-  .amount strong { font-family: var(--display); font-size: 28px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .amount strong { font-family: var(--display); font-size: 30px; font-weight: 500; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
   .amount span { color: var(--muted); font-size: 14px; }
   .amount em { margin-left: auto; font-style: normal; font-weight: 600; font-variant-numeric: tabular-nums; }
   .bar { height: 8px; background: var(--field); border-radius: 99px; overflow: hidden; margin: 10px 0 2px; }
-  .bar > i { display: block; height: 100%; background: var(--c, var(--good)); border-radius: 99px; transition: width .4s; }
+  .bar > i { display: block; height: 100%; background: var(--gold); border-radius: 99px; transition: width .4s; }
   .plan { background: var(--field); border-radius: 12px; padding: 11px 13px; font-size: 14px; margin-top: 12px; line-height: 1.55; }
   .plan b { font-variant-numeric: tabular-nums; }
   .why { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
@@ -181,14 +183,14 @@
     font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 7px;
   }
   .btn svg { width: 17px; height: 17px; }
-  .btn.main { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+  .btn.main { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
   .btn.danger { color: var(--bad); }
   .btn.full { width: 100%; justify-content: center; padding: 15px; font-size: 16px; border-radius: 14px; }
   .btn.text { border: 0; background: none; padding: 10px 4px; }
 
   /* Mercado */
   .adder { display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px; margin-bottom: 10px; }
-  .adder:focus-within { border-color: var(--ink); }
+  .adder:focus-within { border-color: var(--gold); }
   .adder input { flex: 1; min-width: 0; border: 0; background: none; padding: 8px 10px; outline: none; font-size: 16px; }
   .adder input.qty { flex: 0 0 72px; border-left: 1px solid var(--line); }
   .adder .btn { padding: 8px 12px; }
@@ -204,9 +206,9 @@
 
   .fab {
     position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 6;
-    height: 56px; padding: 0 22px 0 18px; border-radius: 18px; border: 0; background: var(--ink); color: var(--on-ink);
+    height: 56px; padding: 0 22px 0 18px; border-radius: 18px; border: 0; background: var(--brand); color: var(--on-brand);
     display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 16px;
-    box-shadow: 0 10px 28px rgba(15,17,21,.22);
+    box-shadow: 0 10px 28px rgba(20,40,33,.25);
   }
   .fab svg { width: 22px; height: 22px; }
 
@@ -222,13 +224,13 @@
   @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .tile, .bar > i { transition: none; } }
   .grab { width: 38px; height: 5px; border-radius: 9px; background: var(--line); margin: 0 auto 14px; }
   .shead { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .shead h2 { flex: 1; margin: 0; font-family: var(--display); font-weight: 700; font-size: 21px; letter-spacing: -.02em; line-height: 1.25; text-wrap: balance; }
+  .shead h2 { flex: 1; margin: 0; font-family: var(--display); font-weight: 500; font-size: 23px; letter-spacing: -.01em; line-height: 1.25; text-wrap: balance; }
   .field { display: block; margin-bottom: 14px; }
   .field > span { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
   .field input, .field textarea, .field select {
     width: 100%; border: 1px solid transparent; background: var(--field); border-radius: 12px; padding: 12px 13px; outline: none; font-size: 16px;
   }
-  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--ink); background: var(--surface); }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--gold); background: var(--surface); }
   .field textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
   .field textarea.short { min-height: 84px; }
   .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -243,7 +245,7 @@
 
   .toast {
     position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
-    background: var(--ink); color: var(--on-ink); padding: 11px 18px; border-radius: 14px; z-index: 30;
+    background: var(--brand); color: var(--on-brand); padding: 11px 18px; border-radius: 14px; z-index: 30;
     font-weight: 500; font-size: 15px; max-width: calc(100% - 32px); display: none; box-shadow: 0 8px 24px rgba(0,0,0,.18);
   }
   .toast.show { display: block; }
@@ -286,15 +288,15 @@ const ic = (name, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hi
 // ---------- Secciones ----------
 // Cada sección de notas define sus propios campos; "metas" y "mercado" tienen pantallas especiales.
 const SECTIONS = {
-  metas:      { name: 'Metas y ahorros', icon: 'target', c: '#16935f', special: true },
-  mercado:    { name: 'Mercado',         icon: 'cart',   c: '#df6c1f', special: true },
-  biblia:     { name: 'Biblia',          icon: 'book',   c: '#7656d6', add: 'Nuevo estudio bíblico',
+  metas:      { name: 'Metas y ahorros', icon: 'target', c: '#3d7a5e', special: true },
+  mercado:    { name: 'Mercado',         icon: 'cart',   c: '#b0673f', special: true },
+  biblia:     { name: 'Biblia',          icon: 'book',   c: '#6f5a9a', add: 'Nuevo estudio bíblico',
                 fields: [
                   { k: 'ref', label: 'Cita (ej. Salmo 23:1-4)', title: true },
                   { k: 'verse', label: 'El versículo', type: 'area', small: true },
                   { k: 'body', label: 'Lo que Dios me enseñó', type: 'area' },
                 ] },
-  profecias:  { name: 'Profecías',       icon: 'spark',  c: '#1f86c2', add: 'Nueva profecía',
+  profecias:  { name: 'Profecías',       icon: 'spark',  c: '#3f7391', add: 'Nueva profecía',
                 fields: [
                   { k: 'title', label: 'Título', title: true },
                   { k: 'who', label: '¿Quién la dio? ¿Dónde?' },
@@ -302,25 +304,25 @@ const SECTIONS = {
                   { k: 'status', label: 'Estado', type: 'select', options: ['Esperando', 'En proceso', 'Cumplida'], filter: true },
                   { k: 'body', label: 'La profecía', type: 'area' },
                 ] },
-  suenos:     { name: 'Sueños',          icon: 'moon',   c: '#4d5ad8', add: 'Nuevo sueño',
+  suenos:     { name: 'Sueños',          icon: 'moon',   c: '#4f5b8c', add: 'Nuevo sueño',
                 fields: [
                   { k: 'title', label: 'Título del sueño', title: true },
                   { k: 'body', label: '¿Qué soñé?', type: 'area' },
                   { k: 'meaning', label: 'Interpretación o enseñanza', type: 'area', small: true },
                 ] },
-  ensenanzas: { name: 'Enseñanzas',      icon: 'bulb',   c: '#c48a0a', add: 'Nueva enseñanza',
+  ensenanzas: { name: 'Enseñanzas',      icon: 'bulb',   c: '#a8874a', add: 'Nueva enseñanza',
                 fields: [
                   { k: 'title', label: 'La enseñanza en una frase', title: true },
                   { k: 'source', label: '¿De quién o de dónde la aprendí?' },
                   { k: 'body', label: 'Detalles', type: 'area' },
                 ] },
-  estudios:   { name: 'Estudios',        icon: 'cap',    c: '#cf3f74', add: 'Nuevo apunte',
+  estudios:   { name: 'Estudios',        icon: 'cap',    c: '#a4566a', add: 'Nuevo apunte',
                 fields: [
                   { k: 'subject', label: 'Materia', type: 'list', filter: true },
                   { k: 'title', label: 'Tema', title: true },
                   { k: 'body', label: 'Apuntes', type: 'area' },
                 ] },
-  diario:     { name: 'Diario',          icon: 'pen',    c: '#12968a', add: 'Escribir en el diario',
+  diario:     { name: 'Diario',          icon: 'pen',    c: '#3e7f7a', add: 'Escribir en el diario',
                 fields: [
                   { k: 'mood', label: '¿Cómo me siento?', type: 'select', options: ['😀 Feliz', '🙏 Agradecido', '😌 En paz', '😐 Normal', '😔 Triste', '😤 Estresado'], filter: true },
                   { k: 'title', label: 'Título (opcional)', title: true },
