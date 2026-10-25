@@ -3,221 +3,331 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#4f46e5">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Mi Cerebro">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Mi Segundo Cerebro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Onest:wght@400;500;600&display=swap">
 <style>
-  /* Todo vive en el celular (localStorage). Cada sección es su propio cajón: nada se mezcla. */
+  /* Una columna tipo app: encabezado grande, superficies blancas planas, cada sección con su color solo en el ícono. */
   :root {
-    --bg: #f5f4fb;
-    --card: #ffffff;
-    --ink: #1f2140;
-    --soft: #6b6f8e;
-    --line: #e4e3f0;
-    --brand: #4f46e5;
-    --brand-soft: #eceafd;
-    --ok: #16a34a;
-    --warn: #d97706;
-    --danger: #dc2626;
-    --shadow: 0 2px 10px rgba(31,33,64,.07);
-    --font: "Nunito", ui-rounded, system-ui, sans-serif;
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --ink: #15171c;
+    --muted: #6c7180;
+    --line: #e7e9ee;
+    --field: #f1f2f5;
+    --on-ink: #ffffff;
+    --good: #138a5a;
+    --warn: #b86e00;
+    --bad: #cf3b3b;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --text: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --r: 18px;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #12131f; --card: #1c1e2e; --ink: #ecebf7; --soft: #9a9cb8; --line: #2c2f45;
-      --brand: #8b85ff; --brand-soft: #2a2950; --shadow: 0 2px 10px rgba(0,0,0,.3);
+      --bg: #0f1115; --surface: #181b21; --ink: #eef0f4; --muted: #8f95a3; --line: #262a33;
+      --field: #20242c; --on-ink: #0f1115; --good: #3fc68b; --warn: #f0a63a; --bad: #f06a6a;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #12131f; --card: #1c1e2e; --ink: #ecebf7; --soft: #9a9cb8; --line: #2c2f45;
-    --brand: #8b85ff; --brand-soft: #2a2950; --shadow: 0 2px 10px rgba(0,0,0,.3);
+    --bg: #0f1115; --surface: #181b21; --ink: #eef0f4; --muted: #8f95a3; --line: #262a33;
+    --field: #20242c; --on-ink: #0f1115; --good: #3fc68b; --warn: #f0a63a; --bad: #f06a6a;
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   html, body { margin: 0; }
   body {
-    background: var(--bg); color: var(--ink); font-family: var(--font);
-    font-size: 16px; line-height: 1.45; min-height: 100vh;
-    -webkit-tap-highlight-color: transparent;
+    background: var(--bg); color: var(--ink); font-family: var(--text);
+    font-size: 16px; line-height: 1.5; min-height: 100vh;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
   }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
   button, input, textarea, select { font: inherit; color: inherit; }
   button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-  header {
-    position: sticky; top: 0; z-index: 5; background: var(--bg);
-    padding: calc(12px + env(safe-area-inset-top)) 16px 10px;
-    display: flex; align-items: center; gap: 10px;
-  }
-  header h1 { font-size: 22px; margin: 0; flex: 1; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+  /* Encabezado */
+  header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); }
+  header .wrap { display: flex; align-items: center; gap: 10px; padding-block: 14px 10px; }
+  .htitle { flex: 1; min-width: 0; }
+  .htitle h1 { font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: -.02em; margin: 0; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .htitle p { margin: 0; color: var(--muted); font-size: 13px; }
   .icon-btn {
-    border: 0; background: var(--card); width: 40px; height: 40px; border-radius: 12px;
-    box-shadow: var(--shadow); font-size: 18px; display: grid; place-items: center; flex: none;
+    width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
+    display: grid; place-items: center; color: var(--ink); flex: none;
   }
-  main { padding: 0 16px 110px; max-width: 720px; margin: 0 auto; }
+  .hero { padding-block: 6px 18px; }
+  .hero p { margin: 0; color: var(--muted); font-size: 14px; }
+  .hero p::first-letter, .month::first-letter { text-transform: uppercase; }
+  .hero h1 { font-family: var(--display); font-weight: 700; font-size: 34px; letter-spacing: -.03em; line-height: 1.1; margin: 2px 0 0; text-wrap: balance; }
 
-  .search {
-    width: 100%; border: 1px solid var(--line); background: var(--card); border-radius: 14px;
-    padding: 12px 14px; margin-bottom: 16px; outline: none;
+  main { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+
+  .search { position: relative; margin-bottom: 22px; }
+  .search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .search input {
+    width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 14px;
+    padding: 13px 14px 13px 44px; outline: none; font-size: 16px;
   }
-  .search:focus, .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--brand); }
+  .search input:focus { border-color: var(--ink); }
 
-  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .6px; color: var(--soft); margin: 22px 2px 10px; }
+  .label { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 2px 10px; }
+  .label h2 { margin: 0; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .label span { font-size: 13px; color: var(--muted); }
 
-  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  @media (min-width: 560px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+  /* Ícono de sección: el único lugar donde aparece el color de cada sección */
+  .chip-i {
+    width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none;
+    color: var(--c); background: color-mix(in srgb, var(--c) 13%, var(--surface));
+  }
+  .chip-i.sm { width: 32px; height: 32px; border-radius: 10px; }
+  .chip-i.sm svg { width: 17px; height: 17px; }
+
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .tile {
-    border: 0; text-align: left; background: var(--card); border-radius: 18px; padding: 14px;
-    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px; min-height: 96px;
-    border-top: 4px solid var(--c);
+    border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 14px;
+    text-align: left; display: flex; flex-direction: column; gap: 14px; transition: transform .12s;
   }
-  .tile .em { font-size: 26px; }
-  .tile b { font-size: 16px; }
-  .tile small { color: var(--soft); }
+  .tile:active { transform: scale(.98); }
+  .tile b { display: block; font-weight: 600; font-size: 16px; line-height: 1.25; }
+  .tile small { color: var(--muted); font-size: 13px; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .rowlink { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; background: none; width: 100%; text-align: left; }
+  .rowlink + .rowlink { border-top: 1px solid var(--line); }
+  .rowlink .txt { flex: 1; min-width: 0; }
+  .rowlink .txt b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rowlink .txt small { color: var(--muted); font-size: 13px; }
+  .rowlink .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
 
   .card {
-    background: var(--card); border-radius: 16px; padding: 14px; box-shadow: var(--shadow);
-    margin-bottom: 10px; border-left: 4px solid var(--c, var(--brand));
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px;
+    display: block; width: 100%; text-align: left; margin-bottom: 10px;
   }
-  .card.tap { cursor: pointer; }
-  .card h3 { margin: 0 0 2px; font-size: 17px; }
-  .meta { color: var(--soft); font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
-  .body { margin-top: 6px; white-space: pre-wrap; word-wrap: break-word; }
-  .clip { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
-  .badge { background: var(--brand-soft); color: var(--brand); border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 700; }
-  .badge.ok { background: rgba(22,163,74,.13); color: var(--ok); }
-  .badge.warn { background: rgba(217,119,6,.14); color: var(--warn); }
-  .badge.late { background: rgba(220,38,38,.12); color: var(--danger); }
+  button.card:active { transform: scale(.99); }
+  .card h3 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+  .card .prev { margin: 6px 0 0; color: var(--muted); font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .verse { font-style: italic; }
+  .foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--muted); }
+  .eyebrow { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .eyebrow i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
 
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px; }
-  .chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 6px 14px; white-space: nowrap; font-weight: 700; font-size: 14px; }
-  .chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 3px 10px;
+    font-size: 12.5px; font-weight: 500; background: var(--field); color: var(--ink); white-space: nowrap;
+  }
+  .pill svg { width: 13px; height: 13px; }
+  .pill.ok { background: color-mix(in srgb, var(--good) 14%, var(--surface)); color: var(--good); }
+  .pill.warn { background: color-mix(in srgb, var(--warn) 14%, var(--surface)); color: var(--warn); }
+  .pill.late { background: color-mix(in srgb, var(--bad) 13%, var(--surface)); color: var(--bad); }
 
-  .empty { text-align: center; color: var(--soft); padding: 40px 20px; }
-  .empty .em { font-size: 44px; display: block; margin-bottom: 6px; }
+  .month { font-size: 13px; font-weight: 600; color: var(--muted); margin: 22px 2px 8px; }
+  .month:first-child { margin-top: 4px; }
 
-  .bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 10px 0 6px; }
-  .bar > i { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .3s; }
-  .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  .btn { border: 0; border-radius: 12px; padding: 10px 14px; font-weight: 800; background: var(--brand-soft); color: var(--brand); }
-  .btn.main { background: var(--brand); color: #fff; }
-  .btn.danger { background: rgba(220,38,38,.1); color: var(--danger); }
-  .btn.full { width: 100%; padding: 14px; font-size: 17px; }
-  .plan { background: var(--bg); border-radius: 12px; padding: 10px 12px; font-size: 14px; margin-top: 8px; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 6px; scrollbar-width: none; }
+  .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; white-space: nowrap; font-size: 14px; font-weight: 500; }
+  .chip.on { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
 
-  .steps { list-style: none; padding: 0; margin: 10px 0 0; }
-  .steps li, .shop li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--line); }
-  .steps li:first-child { border-top: 0; }
-  .done span { text-decoration: line-through; color: var(--soft); }
-  input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--ok); flex: none; }
+  .empty { text-align: center; color: var(--muted); padding: 48px 24px; }
+  .empty .chip-i { width: 56px; height: 56px; border-radius: 18px; margin: 0 auto 14px; }
+  .empty .chip-i svg { width: 26px; height: 26px; }
+  .empty b { display: block; color: var(--ink); font-size: 17px; font-weight: 600; margin-bottom: 4px; }
 
-  .shop { list-style: none; padding: 0; margin: 0; background: var(--card); border-radius: 16px; box-shadow: var(--shadow); padding: 4px 14px; }
-  .shop li:first-child { border-top: 0; }
-  .shop li span { flex: 1; }
-  .shop li small { color: var(--soft); }
-  .x { border: 0; background: none; color: var(--soft); font-size: 18px; padding: 2px 6px; }
-  .quick { display: flex; gap: 8px; margin-bottom: 12px; }
-  .quick input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 12px 14px; outline: none; }
-  .quick input.qty { flex: 0 0 74px; }
+  /* Metas */
+  .amount { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .amount strong { font-family: var(--display); font-size: 28px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .amount span { color: var(--muted); font-size: 14px; }
+  .amount em { margin-left: auto; font-style: normal; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .bar { height: 8px; background: var(--field); border-radius: 99px; overflow: hidden; margin: 10px 0 2px; }
+  .bar > i { display: block; height: 100%; background: var(--c, var(--good)); border-radius: 99px; transition: width .4s; }
+  .plan { background: var(--field); border-radius: 12px; padding: 11px 13px; font-size: 14px; margin-top: 12px; line-height: 1.55; }
+  .plan b { font-variant-numeric: tabular-nums; }
+  .why { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+
+  .checks { list-style: none; padding: 0; margin: 12px 0 0; }
+  .checks li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .checks li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .checks li small { color: var(--muted); font-size: 13px; }
+  .checks .done span { text-decoration: line-through; color: var(--muted); }
+  input[type="checkbox"] {
+    appearance: none; -webkit-appearance: none; width: 24px; height: 24px; margin: 0; border-radius: 50%;
+    border: 2px solid var(--line); background: var(--surface); flex: none; display: grid; place-items: center; transition: background .15s;
+  }
+  input[type="checkbox"]:checked { background: var(--c, var(--good)); border-color: var(--c, var(--good)); }
+  input[type="checkbox"]:checked::after {
+    content: ""; width: 6px; height: 11px; border: solid #fff; border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg);
+  }
+
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .btn {
+    border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 14px;
+    font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn svg { width: 17px; height: 17px; }
+  .btn.main { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+  .btn.danger { color: var(--bad); }
+  .btn.full { width: 100%; justify-content: center; padding: 15px; font-size: 16px; border-radius: 14px; }
+  .btn.text { border: 0; background: none; padding: 10px 4px; }
+
+  /* Mercado */
+  .adder { display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px; margin-bottom: 10px; }
+  .adder:focus-within { border-color: var(--ink); }
+  .adder input { flex: 1; min-width: 0; border: 0; background: none; padding: 8px 10px; outline: none; font-size: 16px; }
+  .adder input.qty { flex: 0 0 72px; border-left: 1px solid var(--line); }
+  .adder .btn { padding: 8px 12px; }
+  .when { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .when .txt { flex: 1; min-width: 0; }
+  .when .txt b { display: block; font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .when input { border: 0; background: var(--field); border-radius: 10px; padding: 8px 10px; max-width: 100%; font-size: 14px; }
+  .list { padding: 0 14px; }
+  .list .checks { margin: 0; }
+  .list .checks li:first-child { border-top: 0; }
+  .x { border: 0; background: none; color: var(--muted); padding: 4px; display: grid; place-items: center; }
+  .x svg { width: 17px; height: 17px; }
 
   .fab {
-    position: fixed; right: 18px; bottom: calc(22px + env(safe-area-inset-bottom)); z-index: 6;
-    width: 62px; height: 62px; border-radius: 20px; border: 0; background: var(--brand); color: #fff;
-    font-size: 32px; box-shadow: 0 8px 22px rgba(79,70,229,.4);
+    position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 6;
+    height: 56px; padding: 0 22px 0 18px; border-radius: 18px; border: 0; background: var(--ink); color: var(--on-ink);
+    display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 16px;
+    box-shadow: 0 10px 28px rgba(15,17,21,.22);
   }
+  .fab svg { width: 22px; height: 22px; }
 
-  .sheet-bg { position: fixed; inset: 0; background: rgba(10,10,25,.45); z-index: 20; display: none; align-items: flex-end; justify-content: center; }
+  /* Hoja inferior para formularios */
+  .sheet-bg { position: fixed; inset: 0; background: rgba(8,9,12,.42); z-index: 20; display: none; align-items: flex-end; justify-content: center; }
   .sheet-bg.open { display: flex; }
   .sheet {
-    background: var(--card); width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
-    border-radius: 22px 22px 0 0; padding: 18px 16px calc(20px + env(safe-area-inset-bottom));
-    animation: up .2s ease-out;
+    background: var(--surface); width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
+    border-radius: 24px 24px 0 0; padding: 10px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+    animation: up .22s cubic-bezier(.2,.8,.2,1);
   }
-  @keyframes up { from { transform: translateY(40px); opacity: .5; } }
-  .sheet h2 { margin-top: 0; color: var(--ink); font-size: 19px; text-transform: none; letter-spacing: 0; }
-  .field { display: block; margin-bottom: 12px; }
-  .field span { display: block; font-size: 13px; font-weight: 700; color: var(--soft); margin-bottom: 4px; }
+  @keyframes up { from { transform: translateY(30px); opacity: .4; } }
+  @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .tile, .bar > i { transition: none; } }
+  .grab { width: 38px; height: 5px; border-radius: 9px; background: var(--line); margin: 0 auto 14px; }
+  .shead { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .shead h2 { flex: 1; margin: 0; font-family: var(--display); font-weight: 700; font-size: 21px; letter-spacing: -.02em; line-height: 1.25; text-wrap: balance; }
+  .field { display: block; margin-bottom: 14px; }
+  .field > span { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
   .field input, .field textarea, .field select {
-    width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 11px 12px; outline: none;
+    width: 100%; border: 1px solid transparent; background: var(--field); border-radius: 12px; padding: 12px 13px; outline: none; font-size: 16px;
   }
-  .field textarea { min-height: 120px; resize: vertical; }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--ink); background: var(--surface); }
+  .field textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
+  .field textarea.short { min-height: 84px; }
+  .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .hint { color: var(--muted); font-size: 13px; margin: -4px 0 14px; }
+  .cal { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; margin: -2px 0 16px; }
+  .cal svg { width: 16px; height: 16px; }
+  .sheet .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .sheet .center { justify-content: center; margin-top: 6px; }
+  .setting { padding: 14px 0; border-top: 1px solid var(--line); }
+  .setting h3 { margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .setting p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
 
   .toast {
-    position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%);
-    background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; z-index: 30;
-    font-weight: 700; max-width: calc(100% - 32px); display: none;
+    position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    background: var(--ink); color: var(--on-ink); padding: 11px 18px; border-radius: 14px; z-index: 30;
+    font-weight: 500; font-size: 15px; max-width: calc(100% - 32px); display: none; box-shadow: 0 8px 24px rgba(0,0,0,.18);
   }
   .toast.show { display: block; }
-  a.link { color: var(--brand); font-weight: 700; text-decoration: none; font-size: 13px; }
 </style>
 </head>
 <body>
-<header>
-  <button class="icon-btn" id="back" aria-label="Volver" hidden>←</button>
-  <h1 id="title">🧠 Mi Segundo Cerebro</h1>
-  <button class="icon-btn" id="menuBtn" aria-label="Opciones">⚙️</button>
-</header>
-<main id="view"></main>
-<button class="fab" id="fab" aria-label="Agregar" hidden>+</button>
+<header><div class="wrap" id="head"></div></header>
+<main class="wrap" id="view"></main>
+<button class="fab" id="fab" hidden></button>
 <div class="sheet-bg" id="sheetBg"><div class="sheet" id="sheet"></div></div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status"></div>
 <input type="file" id="importFile" accept="application/json" hidden>
 
 <script>
+// ---------- Íconos (trazos sencillos) ----------
+const ICONS = {
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  cart: '<circle cx="9" cy="20" r="1.3"/><circle cx="18" cy="20" r="1.3"/><path d="M2.5 3h2.6l2.4 11.4a2 2 0 0 0 2 1.6h8.2a2 2 0 0 0 2-1.5L21.5 7H6"/>',
+  book: '<path d="M2.5 4h6a3.5 3.5 0 0 1 3.5 3.5V20a2.7 2.7 0 0 0-2.7-2.7H2.5z"/><path d="M21.5 4h-6A3.5 3.5 0 0 0 12 7.5V20a2.7 2.7 0 0 1 2.7-2.7h6.8z"/>',
+  spark: '<path d="M12 3l2.1 6.9L21 12l-6.9 2.1L12 21l-2.1-6.9L3 12l6.9-2.1z"/>',
+  moon: '<path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/>',
+  bulb: '<path d="M9 18h6M10 21.5h4"/><path d="M8.5 14.5C7 13.3 6 11.6 6 9.5a6 6 0 1 1 12 0c0 2.1-1 3.8-2.5 5-.6.5-1 1.2-1 2v.5h-5v-.5c0-.8-.4-1.5-1-2z"/>',
+  cap: '<path d="M22 9.5 12 4.5 2 9.5l10 5z"/><path d="M6 11.5v5c3.3 2.7 8.7 2.7 12 0v-5M22 9.5V15"/>',
+  pen: '<path d="M12 20.5h8.5"/><path d="M16.4 3.6a2.1 2.1 0 0 1 3 3L7.5 18.5l-4 1 1-4z"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  sliders: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>',
+  flag: '<path d="M5 21V4M5 4.5c4-2.5 7 2.5 14 0v9c-7 2.5-10-2.5-14 0"/>',
+  x: '<path d="M17 7 7 17M7 7l10 10"/>',
+  cal: '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4.5h6V7"/>',
+  coins: '<ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M9 15v2c0 1.7 2.7 3 6 3s6-1.3 6-3v-5c0-1.7-2.7-3-6-3"/>',
+  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+};
+const ic = (name, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+
 // ---------- Secciones ----------
 // Cada sección de notas define sus propios campos; "metas" y "mercado" tienen pantallas especiales.
 const SECTIONS = {
-  metas:      { name: 'Metas y ahorros', em: '🎯', c: '#16a34a', special: true },
-  mercado:    { name: 'Mercado',         em: '🛒', c: '#ea580c', special: true },
-  biblia:     { name: 'Biblia',          em: '📖', c: '#7c3aed', add: 'Nuevo estudio bíblico',
+  metas:      { name: 'Metas y ahorros', icon: 'target', c: '#16935f', special: true },
+  mercado:    { name: 'Mercado',         icon: 'cart',   c: '#df6c1f', special: true },
+  biblia:     { name: 'Biblia',          icon: 'book',   c: '#7656d6', add: 'Nuevo estudio bíblico',
                 fields: [
                   { k: 'ref', label: 'Cita (ej. Salmo 23:1-4)', title: true },
                   { k: 'verse', label: 'El versículo', type: 'area', small: true },
-                  { k: 'body', label: 'Lo que Dios me enseñó / reflexión', type: 'area' },
+                  { k: 'body', label: 'Lo que Dios me enseñó', type: 'area' },
                 ] },
-  profecias:  { name: 'Profecías',       em: '🕊️', c: '#0891b2', add: 'Nueva profecía',
+  profecias:  { name: 'Profecías',       icon: 'spark',  c: '#1f86c2', add: 'Nueva profecía',
                 fields: [
                   { k: 'title', label: 'Título', title: true },
-                  { k: 'who', label: '¿Quién la dio? / ¿Dónde?' },
+                  { k: 'who', label: '¿Quién la dio? ¿Dónde?' },
                   { k: 'when', label: 'Fecha en que la recibí', type: 'date' },
                   { k: 'status', label: 'Estado', type: 'select', options: ['Esperando', 'En proceso', 'Cumplida'], filter: true },
                   { k: 'body', label: 'La profecía', type: 'area' },
                 ] },
-  suenos:     { name: 'Sueños',          em: '🌙', c: '#4f46e5', add: 'Nuevo sueño',
+  suenos:     { name: 'Sueños',          icon: 'moon',   c: '#4d5ad8', add: 'Nuevo sueño',
                 fields: [
                   { k: 'title', label: 'Título del sueño', title: true },
                   { k: 'body', label: '¿Qué soñé?', type: 'area' },
-                  { k: 'meaning', label: 'Interpretación / enseñanza', type: 'area', small: true },
+                  { k: 'meaning', label: 'Interpretación o enseñanza', type: 'area', small: true },
                 ] },
-  ensenanzas: { name: 'Enseñanzas',      em: '💡', c: '#ca8a04', add: 'Nueva enseñanza',
+  ensenanzas: { name: 'Enseñanzas',      icon: 'bulb',   c: '#c48a0a', add: 'Nueva enseñanza',
                 fields: [
                   { k: 'title', label: 'La enseñanza en una frase', title: true },
                   { k: 'source', label: '¿De quién o de dónde la aprendí?' },
                   { k: 'body', label: 'Detalles', type: 'area' },
                 ] },
-  estudios:   { name: 'Estudios',        em: '🎓', c: '#db2777', add: 'Nuevo apunte',
+  estudios:   { name: 'Estudios',        icon: 'cap',    c: '#cf3f74', add: 'Nuevo apunte',
                 fields: [
                   { k: 'subject', label: 'Materia', type: 'list', filter: true },
                   { k: 'title', label: 'Tema', title: true },
                   { k: 'body', label: 'Apuntes', type: 'area' },
                 ] },
-  diario:     { name: 'Diario',          em: '📔', c: '#0d9488', add: 'Escribir en el diario',
+  diario:     { name: 'Diario',          icon: 'pen',    c: '#12968a', add: 'Escribir en el diario',
                 fields: [
                   { k: 'mood', label: '¿Cómo me siento?', type: 'select', options: ['😀 Feliz', '🙏 Agradecido', '😌 En paz', '😐 Normal', '😔 Triste', '😤 Estresado'], filter: true },
                   { k: 'title', label: 'Título (opcional)', title: true },
                   { k: 'body', label: '¿Qué pasó hoy?', type: 'area' },
                 ] },
 };
+const secIcon = (k, cls = '') => `<span class="chip-i ${cls}" style="--c:${SECTIONS[k].c}">${ic(SECTIONS[k].icon)}</span>`;
 
 // ---------- Datos ----------
 const KEY = 'segundoCerebro.v1';
@@ -226,7 +336,7 @@ try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
 db = Object.assign({ notes: [], goals: [], shop: [], shopRemind: '', theme: '' }, db || {});
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(db)); }
-  catch (e) { toast('⚠️ No se pudo guardar. Haz una copia de seguridad.'); }
+  catch (e) { toast('No se pudo guardar. Haz una copia de seguridad.'); }
 }
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -235,12 +345,13 @@ const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const money = n => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n || 0);
 const num = v => Number(String(v).replace(/[^\d]/g, '')) || 0;
+const toDate = d => new Date(d.length === 10 ? d + 'T00:00' : d);
 function fmtDate(d, withTime) {
   if (!d) return '';
-  const dt = new Date(d.length === 10 ? d + 'T00:00' : d);
-  const opt = { day: 'numeric', month: 'short', year: 'numeric' };
+  const opt = { day: 'numeric', month: 'short' };
+  if (toDate(d).getFullYear() !== new Date().getFullYear()) opt.year = 'numeric';
   if (withTime) Object.assign(opt, { hour: 'numeric', minute: '2-digit' });
-  return dt.toLocaleString('es-CO', opt);
+  return toDate(d).toLocaleString('es-CO', opt);
 }
 function daysUntil(d) {
   const t = new Date(d.length === 10 ? d + 'T23:59' : d) - new Date();
@@ -259,32 +370,43 @@ function calLink(text, when, details) {
   return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(text) +
     '&dates=' + f(s) + '/' + f(e) + '&details=' + encodeURIComponent(details || 'Desde Mi Segundo Cerebro');
 }
-function remindBadge(when) {
+const calA = (text, when, details, label = 'Pasar a Google Calendar') =>
+  `<a class="cal" target="_blank" rel="noopener" href="${calLink(text, when, details)}">${ic('cal')}${label}</a>`;
+function remindPill(when, icon = 'clock') {
   if (!when) return '';
   const d = daysUntil(when);
   const cls = d < 0 ? 'late' : d <= 2 ? 'warn' : '';
-  return `<span class="badge ${cls}">⏰ ${fmtDate(when, when.length > 10)}</span>`;
+  return `<span class="pill ${cls}">${ic(icon)}${fmtDate(when, when.length > 10)}</span>`;
 }
 function noteTitle(n) {
-  const sec = SECTIONS[n.sec];
-  const tf = sec.fields.find(f => f.title);
+  const tf = SECTIONS[n.sec].fields.find(f => f.title);
   return n[tf.k] || (n.body || '').split('\n')[0].slice(0, 60) || 'Sin título';
 }
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
 // ---------- Navegación ----------
 let route = { name: 'home' };
 let filter = '';
 function go(r) { route = r; filter = ''; render(); window.scrollTo(0, 0); }
-$('#back').onclick = () => go({ name: 'home' });
 window.addEventListener('popstate', () => { if (route.name !== 'home') go({ name: 'home' }); });
 
+function sectionCount(k) {
+  if (k === 'metas') return plural(db.goals.length, 'meta', 'metas');
+  if (k === 'mercado') { const c = db.shop.filter(i => !i.done).length; return c ? `${c} por comprar` : 'Lista vacía'; }
+  return plural(db.notes.filter(n => n.sec === k).length, 'nota', 'notas');
+}
 function render() {
   const home = route.name === 'home';
-  $('#back').hidden = home;
   if (!home) history.replaceState(null, '', '#' + route.name);
   const sec = SECTIONS[route.name];
-  $('#title').textContent = home ? '🧠 Mi Segundo Cerebro' : sec.em + ' ' + sec.name;
-  $('#fab').hidden = home || route.name === 'mercado';
+  $('#head').innerHTML = home
+    ? `<div class="htitle"></div><button class="icon-btn" id="menuBtn" aria-label="Opciones">${ic('sliders')}</button>`
+    : `<button class="icon-btn" id="back" aria-label="Volver">${ic('back')}</button>
+       <div class="htitle"><h1>${sec.name}</h1><p>${sectionCount(route.name)}</p></div>`;
+  if (home) $('#menuBtn').onclick = openSettings; else $('#back').onclick = () => go({ name: 'home' });
+  const fab = $('#fab');
+  fab.hidden = home || route.name === 'mercado';
+  fab.innerHTML = ic('plus') + (route.name === 'metas' ? 'Nueva meta' : 'Nueva nota');
   const v = $('#view');
   if (home) v.innerHTML = homeView();
   else if (route.name === 'metas') v.innerHTML = goalsView();
@@ -294,38 +416,43 @@ function render() {
 }
 
 // ---------- Inicio ----------
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+}
 function upcoming() {
   const list = [];
-  db.notes.forEach(n => n.remind && list.push({ when: n.remind, text: noteTitle(n), sec: n.sec, id: n.id }));
+  db.notes.forEach(n => n.remind && list.push({ when: n.remind, text: noteTitle(n), sec: n.sec }));
   db.goals.forEach(g => {
-    if (g.remind) list.push({ when: g.remind, text: g.title, sec: 'metas', id: g.id });
-    if (g.deadline && !goalDone(g)) list.push({ when: g.deadline, text: 'Fecha límite: ' + g.title, sec: 'metas', id: g.id });
+    if (g.remind) list.push({ when: g.remind, text: g.title, sec: 'metas' });
+    if (g.deadline && !goalDone(g)) list.push({ when: g.deadline, text: 'Fecha límite: ' + g.title, sec: 'metas', flag: true });
   });
   if (db.shopRemind) list.push({ when: db.shopRemind, text: 'Ir a mercar', sec: 'mercado' });
-  return list.filter(x => daysUntil(x.when) >= -1).sort((a, b) => new Date(a.when) - new Date(b.when)).slice(0, 6);
+  return list.filter(x => daysUntil(x.when) >= -1).sort((a, b) => toDate(a.when) - toDate(b.when)).slice(0, 5);
 }
 function homeView() {
-  const counts = k => k === 'metas' ? db.goals.length : k === 'mercado' ? db.shop.filter(i => !i.done).length : db.notes.filter(n => n.sec === k).length;
-  const label = (k, c) => k === 'mercado' ? (c ? `${c} por comprar` : 'Lista vacía') : `${c} ${k === 'metas' ? (c === 1 ? 'meta' : 'metas') : (c === 1 ? 'nota' : 'notas')}`;
-  let h = `<input class="search" id="q" type="search" placeholder="🔎 Buscar en todo mi cerebro…" autocomplete="off">
+  const today = new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  let h = `<div class="hero"><p>${today}</p><h1>${greeting()}</h1></div>
+    <div class="search">${ic('search')}<input id="q" type="search" placeholder="Buscar en todas mis notas" autocomplete="off"></div>
     <div id="results"></div><div id="homeBody">
     <div class="grid">` +
-    Object.entries(SECTIONS).map(([k, s]) => `<button class="tile" style="--c:${s.c}" data-go="${k}">
-      <span class="em">${s.em}</span><b>${s.name}</b><small>${label(k, counts(k))}</small></button>`).join('') + `</div>`;
+    Object.keys(SECTIONS).map(k => `<button class="tile" data-go="${k}">${secIcon(k)}
+      <span><b>${SECTIONS[k].name}</b><small>${sectionCount(k)}</small></span></button>`).join('') + `</div>`;
 
   const up = upcoming();
-  h += `<h2>⏰ Próximos recordatorios</h2>`;
-  h += up.length ? up.map(x => `<div class="card tap" style="--c:${SECTIONS[x.sec].c}" data-go="${x.sec}">
-      <div class="meta">${SECTIONS[x.sec].em} ${SECTIONS[x.sec].name} ${remindBadge(x.when)}</div><h3>${esc(x.text)}</h3></div>`).join('')
-    : `<div class="card"><div class="meta">Nada pendiente. Cuando le pongas fecha a algo, aparece aquí.</div></div>`;
+  h += `<div class="label"><h2>Próximo</h2></div>`;
+  h += up.length
+    ? `<div class="panel">` + up.map(x => `<button class="rowlink" data-go="${x.sec}">${secIcon(x.sec, 'sm')}
+        <span class="txt"><b>${esc(x.text)}</b><span class="sub">${remindPill(x.when, x.flag ? 'flag' : 'clock')}<small>${SECTIONS[x.sec].name}</small></span></span></button>`).join('') + `</div>`
+    : `<div class="panel"><div class="rowlink"><span class="txt"><small>Nada pendiente. Cuando le pongas fecha a algo, aparece aquí.</small></span></div></div>`;
 
   const active = db.goals.filter(g => g.target && !goalDone(g));
   if (active.length) {
-    h += `<h2>🎯 Cómo voy con mis ahorros</h2>` + active.slice(0, 3).map(g => {
+    h += `<div class="label"><h2>Ahorros</h2></div>` + active.slice(0, 3).map(g => {
       const p = pct(g);
-      return `<div class="card tap" style="--c:${SECTIONS.metas.c}" data-go="metas"><h3>${esc(g.title)}</h3>
+      return `<button class="card" data-go="metas" style="--c:${SECTIONS.metas.c}"><h3>${esc(g.title)}</h3>
         <div class="bar"><i style="width:${p}%"></i></div>
-        <div class="meta">${money(saved(g))} de ${money(g.target)} · ${p}%</div></div>`;
+        <div class="foot"><span>${money(saved(g))} de ${money(g.target)}</span><span style="margin-left:auto">${p}%</span></div></button>`;
     }).join('');
   }
   return h + `</div>`;
@@ -338,21 +465,23 @@ function searchResults(q) {
     const text = SECTIONS[n.sec].fields.map(f => n[f.k] || '').join(' ').toLowerCase();
     if (text.includes(q)) hits.push(noteCard(n, true));
   });
-  db.goals.forEach(g => { if ((g.title + ' ' + (g.why || '')).toLowerCase().includes(q)) hits.push(`<div class="card tap" style="--c:${SECTIONS.metas.c}" data-go="metas"><div class="meta">🎯 Meta</div><h3>${esc(g.title)}</h3></div>`); });
-  db.shop.forEach(i => { if (i.name.toLowerCase().includes(q)) hits.push(`<div class="card tap" style="--c:${SECTIONS.mercado.c}" data-go="mercado"><div class="meta">🛒 Mercado</div><h3>${esc(i.name)}</h3></div>`); });
-  return `<h2>${hits.length} resultado${hits.length === 1 ? '' : 's'}</h2>` + (hits.join('') || `<div class="empty">No encontré nada con “${esc(q)}”.</div>`);
+  const simple = (k, title) => `<button class="card" data-go="${k}" style="--c:${SECTIONS[k].c}"><div class="eyebrow"><i></i>${SECTIONS[k].name}</div><h3>${esc(title)}</h3></button>`;
+  db.goals.forEach(g => { if ((g.title + ' ' + (g.why || '')).toLowerCase().includes(q)) hits.push(simple('metas', g.title)); });
+  db.shop.forEach(i => { if (i.name.toLowerCase().includes(q)) hits.push(simple('mercado', i.name)); });
+  return `<div class="label"><h2>${plural(hits.length, 'resultado', 'resultados')}</h2></div>` +
+    (hits.join('') || `<div class="empty">No encontré nada con “${esc(q)}”.</div>`);
 }
 
 // ---------- Notas (Biblia, Profecías, Sueños, Enseñanzas, Estudios, Diario) ----------
 function noteCard(n, showSec) {
   const sec = SECTIONS[n.sec];
-  const extra = sec.fields.filter(f => !f.title && f.k !== 'body' && n[f.k] && f.type !== 'area')
-    .map(f => f.type === 'date' ? `<span>📅 ${fmtDate(n[f.k])}</span>` : `<span class="badge ${n[f.k] === 'Cumplida' ? 'ok' : ''}">${esc(n[f.k])}</span>`).join('');
-  const preview = [n.verse ? '“' + n.verse + '”' : '', n.body, n.meaning ? '💭 ' + n.meaning : ''].filter(Boolean).join('\n\n');
-  return `<div class="card tap" style="--c:${sec.c}" data-edit="${n.id}">
-    <div class="meta">${showSec ? sec.em + ' ' + sec.name + ' ·' : ''} <span>${fmtDate(n.created)}</span> ${extra} ${remindBadge(n.remind)}</div>
-    <h3>${esc(noteTitle(n))}</h3>
-    ${preview ? `<div class="body clip">${esc(preview)}</div>` : ''}</div>`;
+  const pills = sec.fields.filter(f => !f.title && n[f.k] && f.type !== 'area' && f.type !== 'date')
+    .map(f => `<span class="pill ${n[f.k] === 'Cumplida' ? 'ok' : ''}">${esc(n[f.k])}</span>`).join('');
+  const prev = n.verse ? `<p class="prev verse">“${esc(n.verse)}”</p>` : n.body ? `<p class="prev">${esc(n.body)}</p>` : n.meaning ? `<p class="prev">${esc(n.meaning)}</p>` : '';
+  return `<button class="card" data-edit="${n.id}" style="--c:${sec.c}">
+    ${showSec ? `<div class="eyebrow"><i></i>${sec.name}</div>` : ''}
+    <h3>${esc(noteTitle(n))}</h3>${prev}
+    <div class="foot"><span>${fmtDate(n.when || n.created)}</span>${pills}${remindPill(n.remind)}</div></button>`;
 }
 function notesView(k) {
   const sec = SECTIONS[k];
@@ -365,8 +494,19 @@ function notesView(k) {
       vals.map(v => `<button class="chip ${filter === v ? 'on' : ''}" data-filter="${esc(v)}">${esc(v)}</button>`).join('') + `</div>`;
     if (filter) notes = notes.filter(n => n[ff.k] === filter);
   }
-  return h + (notes.map(n => noteCard(n)).join('') ||
-    `<div class="empty"><span class="em">${sec.em}</span>Aún no hay nada aquí.<br>Toca <b>+</b> para empezar.</div>`);
+  if (!notes.length) return h + `<div class="empty">${secIcon(k)}<b>Aún no hay nada aquí</b>Toca “Nueva nota” para empezar.</div>`;
+  // Agrupadas por mes, para encontrar las cosas por fecha.
+  let last = '';
+  return h + notes.map(n => {
+    const m = new Date(n.created).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+    const head = m !== last ? `<div class="month">${m}</div>` : '';
+    last = m;
+    return head + noteCard(n);
+  }).join('');
+}
+function sheetHead(title, k) {
+  return `<div class="grab"></div><div class="shead">${k ? secIcon(k, 'sm') : ''}<h2>${title}</h2>
+    <button type="button" class="icon-btn" id="closeX" aria-label="Cerrar">${ic('x')}</button></div>`;
 }
 function noteForm(k, n) {
   const sec = SECTIONS[k];
@@ -374,88 +514,88 @@ function noteForm(k, n) {
   const fieldHtml = f => {
     const v = esc(n[f.k] || '');
     let input;
-    if (f.type === 'area') input = `<textarea name="${f.k}" ${f.small ? 'style="min-height:80px"' : ''}>${v}</textarea>`;
-    else if (f.type === 'select') input = `<select name="${f.k}"><option value=""></option>${f.options.map(o => `<option ${n[f.k] === o ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
-    else if (f.type === 'date') input = `<input type="date" name="${f.k}" value="${v}">`;
+    if (f.type === 'area') input = `<textarea name="${f.k}" id="f-${f.k}" class="${f.small ? 'short' : ''}">${v}</textarea>`;
+    else if (f.type === 'select') input = `<select name="${f.k}" id="f-${f.k}"><option value=""></option>${f.options.map(o => `<option ${n[f.k] === o ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+    else if (f.type === 'date') input = `<input type="date" name="${f.k}" id="f-${f.k}" value="${v}">`;
     else if (f.type === 'list') {
       const opts = [...new Set(db.notes.filter(x => x.sec === k).map(x => x[f.k]).filter(Boolean))];
-      input = `<input name="${f.k}" value="${v}" list="dl-${f.k}" autocomplete="off"><datalist id="dl-${f.k}">${opts.map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
-    } else input = `<input name="${f.k}" value="${v}" autocomplete="off">`;
+      input = `<input name="${f.k}" id="f-${f.k}" value="${v}" list="dl-${f.k}" autocomplete="off"><datalist id="dl-${f.k}">${opts.map(o => `<option value="${esc(o)}">`).join('')}</datalist>`;
+    } else input = `<input name="${f.k}" id="f-${f.k}" value="${v}" autocomplete="off">`;
     return `<label class="field"><span>${f.label}</span>${input}</label>`;
   };
-  openSheet(`<h2>${n.id ? sec.em + ' Editar' : sec.em + ' ' + sec.add}</h2>
+  openSheet(sheetHead(n.id ? 'Editar' : sec.add, k) + `
     <form id="f">${sec.fields.map(fieldHtml).join('')}
-      <label class="field"><span>⏰ Recordármelo (opcional)</span><input type="datetime-local" name="remind" value="${esc(n.remind || '')}"></label>
-      ${n.remind ? `<p><a class="link" target="_blank" rel="noopener" href="${calLink(noteTitle(n), n.remind)}">📅 Pasar recordatorio a Google Calendar</a></p>` : ''}
+      <label class="field"><span>Recordármelo (opcional)</span><input type="datetime-local" name="remind" id="f-remind" value="${esc(n.remind || '')}"></label>
+      ${n.remind ? calA(noteTitle(n), n.remind) : ''}
       <button class="btn main full">Guardar</button>
-      ${n.id ? `<div class="row"><button type="button" class="btn danger" id="del">🗑️ Borrar</button></div>` : ''}
+      ${n.id ? `<div class="row center"><button type="button" class="btn text danger" id="del">${ic('trash')}Borrar nota</button></div>` : ''}
     </form>`);
   $('#f').onsubmit = e => {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.target));
-    if (!Object.entries(data).some(([key, val]) => key !== 'remind' && val.trim())) return toast('Escribe algo primero 🙂');
+    if (!Object.entries(data).some(([key, val]) => key !== 'remind' && val.trim())) return toast('Escribe algo primero');
     if (n.id) { if (data.remind !== n.remind) n.notified = false; Object.assign(n, data); }
     else db.notes.push({ id: uid(), sec: k, created: new Date().toISOString(), ...data });
-    save(); closeSheet(); render(); toast('Guardado ✅');
+    save(); closeSheet(); render(); toast('Guardado');
   };
   if (n.id) $('#del').onclick = () => {
-    askConfirm('¿Borrar esta nota?', () => { db.notes = db.notes.filter(x => x.id !== n.id); save(); closeSheet(); render(); toast('Borrada'); }, () => noteForm(k, n));
+    askConfirm('¿Borrar esta nota?', () => { db.notes = db.notes.filter(x => x.id !== n.id); save(); closeSheet(); render(); toast('Nota borrada'); }, () => noteForm(k, n));
   };
 }
 
 // ---------- Metas y ahorros ----------
 const saved = g => (g.deposits || []).reduce((s, d) => s + d.amt, 0);
-const pct = g => g.target ? Math.min(100, Math.round(saved(g) / g.target * 100)) : stepsPct(g);
+const pct = g => g.target ? Math.max(0, Math.min(100, Math.round(saved(g) / g.target * 100))) : stepsPct(g);
 const stepsPct = g => (g.steps || []).length ? Math.round(g.steps.filter(s => s.done).length / g.steps.length * 100) : 0;
 const goalDone = g => g.target ? saved(g) >= g.target : (g.steps || []).length > 0 && g.steps.every(s => s.done);
 
 // Cuánto hay que guardar por semana/mes para llegar a tiempo.
 function savingPlan(g) {
   const left = g.target - saved(g);
-  if (left <= 0) return '🎉 ¡Meta cumplida! Gloria a Dios.';
+  if (left <= 0) return '¡Meta cumplida! Gloria a Dios.';
   if (!g.deadline) return `Te faltan <b>${money(left)}</b>. Ponle una fecha límite y te digo cuánto guardar.`;
   const days = daysUntil(g.deadline);
-  if (days <= 0) return `⚠️ Se pasó la fecha y faltan <b>${money(left)}</b>. Cambia la fecha y sigue con toda.`;
+  if (days <= 0) return `Se pasó la fecha y faltan <b>${money(left)}</b>. Cambia la fecha y sigue con toda.`;
   const weeks = Math.max(1, days / 7), months = Math.max(1, days / 30.4);
-  return `Faltan <b>${money(left)}</b> en ${days} día${days === 1 ? '' : 's'}.<br>
-    Guarda <b>${money(Math.ceil(left / weeks))}</b> por semana` + (days > 45 ? ` o <b>${money(Math.ceil(left / months))}</b> al mes.` : '.');
+  return `Faltan <b>${money(left)}</b> en ${plural(days, 'día', 'días')}. Guarda <b>${money(Math.ceil(left / weeks))}</b> por semana` +
+    (days > 45 ? ` o <b>${money(Math.ceil(left / months))}</b> al mes.` : '.');
 }
 function goalsView() {
-  if (!db.goals.length) return `<div class="empty"><span class="em">🎯</span>¿Qué quieres lograr?<br>Toca <b>+</b> y crea tu primera meta.<br><small>Puede ser de ahorro (con plata) o de pasos.</small></div>`;
+  if (!db.goals.length) return `<div class="empty">${secIcon('metas')}<b>¿Qué quieres lograr?</b>Crea tu primera meta. Puede ser de ahorro o de pasos.</div>`;
   const sorted = [...db.goals].sort((a, b) => goalDone(a) - goalDone(b));
   return sorted.map(g => {
-    const p = pct(g), done = goalDone(g);
+    const p = pct(g), done = goalDone(g), steps = g.steps || [];
     return `<div class="card" style="--c:${SECTIONS.metas.c}">
-      <div class="meta">${done ? '<span class="badge ok">✅ Cumplida</span>' : ''}
-        ${g.deadline ? `<span>🏁 ${fmtDate(g.deadline)}</span>` : ''} ${remindBadge(g.remind)}</div>
       <h3>${esc(g.title)}</h3>
-      ${g.why ? `<div class="body" style="color:var(--soft)">${esc(g.why)}</div>` : ''}
-      ${g.target || (g.steps || []).length ? `<div class="bar"><i style="width:${p}%"></i></div>` : ''}
-      ${g.target ? `<div class="meta">${money(saved(g))} de ${money(g.target)} · ${p}%</div><div class="plan">${savingPlan(g)}</div>` : ''}
-      ${(g.steps || []).length ? `<ul class="steps">${g.steps.map((s, i) => `<li class="${s.done ? 'done' : ''}">
-        <input type="checkbox" data-step="${g.id}:${i}" ${s.done ? 'checked' : ''}><span>${esc(s.text)}</span></li>`).join('')}</ul>` : ''}
-      <div class="row">
-        ${g.target ? `<button class="btn main" data-deposit="${g.id}">💰 Abonar</button>` : ''}
-        <button class="btn" data-goal="${g.id}">✏️ Editar</button>
-        ${(g.deposits || []).length ? `<button class="btn" data-history="${g.id}">📜 Abonos</button>` : ''}
+      ${g.why ? `<p class="why">${esc(g.why)}</p>` : ''}
+      ${g.target ? `<div class="amount"><strong>${money(saved(g))}</strong><span>de ${money(g.target)}</span><em>${p}%</em></div>` : ''}
+      ${g.target || steps.length ? `<div class="bar"><i style="width:${p}%"></i></div>` : ''}
+      ${g.target ? `<div class="plan">${savingPlan(g)}</div>` : ''}
+      ${steps.length ? `<ul class="checks">${steps.map((s, i) => `<li class="${s.done ? 'done' : ''}">
+        <input type="checkbox" data-step="${g.id}:${i}" ${s.done ? 'checked' : ''} aria-label="${esc(s.text)}"><span>${esc(s.text)}</span></li>`).join('')}</ul>` : ''}
+      <div class="foot">${done ? '<span class="pill ok">Cumplida</span>' : ''}${g.deadline ? remindPill(g.deadline, 'flag') : ''}${g.remind ? remindPill(g.remind) : ''}</div>
+      <div class="actions">
+        ${g.target ? `<button class="btn main" data-deposit="${g.id}">${ic('coins')}Abonar</button>` : ''}
+        <button class="btn" data-goal="${g.id}">${ic('edit')}Editar</button>
+        ${(g.deposits || []).length ? `<button class="btn" data-history="${g.id}">${ic('list')}Abonos</button>` : ''}
       </div></div>`;
   }).join('');
 }
 function goalForm(g) {
   g = g || {};
-  openSheet(`<h2>🎯 ${g.id ? 'Editar meta' : 'Nueva meta'}</h2>
+  openSheet(sheetHead(g.id ? 'Editar meta' : 'Nueva meta', 'metas') + `
     <form id="f">
-      <label class="field"><span>¿Qué quiero lograr?</span><input name="title" value="${esc(g.title || '')}" required placeholder="Ej. Comprar una moto"></label>
-      <label class="field"><span>¿Por qué es importante para mí?</span><textarea name="why" style="min-height:70px">${esc(g.why || '')}</textarea></label>
+      <label class="field"><span>¿Qué quiero lograr?</span><input name="title" id="g-title" value="${esc(g.title || '')}" required placeholder="Ej. Comprar una moto"></label>
+      <label class="field"><span>¿Por qué es importante para mí?</span><textarea name="why" id="g-why" class="short">${esc(g.why || '')}</textarea></label>
       <div class="two">
-        <label class="field"><span>💰 Plata que necesito</span><input name="target" inputmode="numeric" value="${g.target || ''}" placeholder="0 si no es de plata"></label>
-        <label class="field"><span>🏁 Fecha límite</span><input type="date" name="deadline" value="${esc(g.deadline || '')}"></label>
+        <label class="field"><span>Plata que necesito</span><input name="target" id="g-target" inputmode="numeric" value="${g.target || ''}" placeholder="0 si no es de plata"></label>
+        <label class="field"><span>Fecha límite</span><input type="date" name="deadline" id="g-deadline" value="${esc(g.deadline || '')}"></label>
       </div>
-      <label class="field"><span>✅ Pasos (uno por línea)</span><textarea name="steps" style="min-height:90px" placeholder="Abrir cuenta de ahorros&#10;Dejar de gastar en…">${esc((g.steps || []).map(s => s.text).join('\n'))}</textarea></label>
-      <label class="field"><span>⏰ Recordármelo (ej. el día de pago)</span><input type="datetime-local" name="remind" value="${esc(g.remind || '')}"></label>
-      ${g.remind ? `<p><a class="link" target="_blank" rel="noopener" href="${calLink('Meta: ' + g.title, g.remind, 'Abonar a mi meta')}">📅 Pasar recordatorio a Google Calendar</a></p>` : ''}
+      <label class="field"><span>Pasos, uno por línea</span><textarea name="steps" id="g-steps" class="short" placeholder="Abrir cuenta de ahorros&#10;Guardar cada quincena">${esc((g.steps || []).map(s => s.text).join('\n'))}</textarea></label>
+      <label class="field"><span>Recordármelo (ej. el día de pago)</span><input type="datetime-local" name="remind" id="g-remind" value="${esc(g.remind || '')}"></label>
+      ${g.remind ? calA('Meta: ' + g.title, g.remind, 'Abonar a mi meta') : ''}
       <button class="btn main full">Guardar</button>
-      ${g.id ? `<div class="row"><button type="button" class="btn danger" id="del">🗑️ Borrar meta</button></div>` : ''}
+      ${g.id ? `<div class="row center"><button type="button" class="btn text danger" id="del">${ic('trash')}Borrar meta</button></div>` : ''}
     </form>`);
   $('#f').onsubmit = e => {
     e.preventDefault();
@@ -467,18 +607,18 @@ function goalForm(g) {
     const item = Object.assign(g.id ? g : { id: uid(), created: new Date().toISOString(), deposits: [] },
       { title: d.title.trim(), why: d.why, target: num(d.target), deadline: d.deadline, remind: d.remind, steps });
     if (!g.id) db.goals.push(item);
-    save(); closeSheet(); render(); toast('Meta guardada 🎯');
+    save(); closeSheet(); render(); toast('Meta guardada');
   };
   if (g.id) $('#del').onclick = () => {
     askConfirm('¿Borrar esta meta y sus abonos?', () => { db.goals = db.goals.filter(x => x.id !== g.id); save(); closeSheet(); render(); }, () => goalForm(g));
   };
 }
 function depositForm(g) {
-  openSheet(`<h2>💰 Abonar a “${esc(g.title)}”</h2>
+  openSheet(sheetHead(`Abonar a “${esc(g.title)}”`, 'metas') + `
     <form id="f">
-      <label class="field"><span>¿Cuánto guardaste?</span><input name="amt" inputmode="numeric" required autofocus placeholder="Ej. 50000"></label>
-      <label class="field"><span>Nota (opcional)</span><input name="note" placeholder="Ej. de la quincena"></label>
-      <p class="meta">Si te tocó sacar plata, escribe el valor con un menos adelante (ej. -20000).</p>
+      <label class="field"><span>¿Cuánto guardaste?</span><input name="amt" id="d-amt" inputmode="numeric" required placeholder="Ej. 50000"></label>
+      <label class="field"><span>Nota (opcional)</span><input name="note" id="d-note" placeholder="Ej. de la quincena"></label>
+      <p class="hint">Si te tocó sacar plata, escribe el valor con un menos adelante (ej. -20000).</p>
       <button class="btn main full">Guardar abono</button>
     </form>`);
   $('#f').onsubmit = e => {
@@ -488,15 +628,13 @@ function depositForm(g) {
     if (!amt) return toast('Escribe un valor');
     (g.deposits = g.deposits || []).push({ amt, note: d.note, date: new Date().toISOString() });
     save(); closeSheet(); render();
-    toast(goalDone(g) ? '🎉 ¡Cumpliste la meta!' : 'Abono guardado 💪');
+    toast(goalDone(g) ? '¡Cumpliste la meta!' : 'Abono guardado');
   };
 }
 function historySheet(g) {
-  openSheet(`<h2>📜 Abonos de “${esc(g.title)}”</h2>
-    <ul class="steps">${[...g.deposits].reverse().map(d => `<li><span style="flex:1"><b>${money(d.amt)}</b> ${d.note ? '· ' + esc(d.note) : ''}<br><small class="meta">${fmtDate(d.date, true)}</small></span>
-      <button class="x" data-deldep="${d.date}">✕</button></li>`).join('')}</ul>
-    <div class="row"><button class="btn full" id="close">Cerrar</button></div>`);
-  $('#close').onclick = closeSheet;
+  openSheet(sheetHead(`Abonos de “${esc(g.title)}”`, 'metas') + `
+    <ul class="checks">${[...g.deposits].reverse().map(d => `<li><span><b>${money(d.amt)}</b>${d.note ? ' · ' + esc(d.note) : ''}<br><small>${fmtDate(d.date, true)}</small></span>
+      <button class="x" data-deldep="${d.date}" aria-label="Borrar abono">${ic('trash')}</button></li>`).join('')}</ul>`);
   $('#sheet').querySelectorAll('[data-deldep]').forEach(b => b.onclick = () => {
     askConfirm('¿Borrar este abono?', () => {
       g.deposits = g.deposits.filter(d => d.date !== b.dataset.deldep); save(); render(); g.deposits.length ? historySheet(g) : closeSheet();
@@ -507,32 +645,40 @@ function historySheet(g) {
 // ---------- Mercado ----------
 function shopView() {
   const pend = db.shop.filter(i => !i.done), got = db.shop.filter(i => i.done);
-  const li = i => `<li class="${i.done ? 'done' : ''}"><input type="checkbox" data-shop="${i.id}" ${i.done ? 'checked' : ''}>
-    <span>${esc(i.name)}</span>${i.qty ? `<small>${esc(i.qty)}</small>` : ''}<button class="x" data-delshop="${i.id}" aria-label="Quitar">✕</button></li>`;
-  return `<form class="quick" id="shopForm">
-      <input name="name" placeholder="¿Qué hay que comprar?" autocomplete="off" required>
-      <input name="qty" class="qty" placeholder="Cant.">
-      <button class="btn main">＋</button></form>
-    <label class="field"><span>⏰ ¿Cuándo voy a mercar?</span><input type="datetime-local" id="shopRemind" value="${esc(db.shopRemind)}"></label>
-    ${db.shopRemind ? `<p style="margin-top:-6px"><a class="link" target="_blank" rel="noopener" href="${calLink('Ir a mercar', db.shopRemind, pend.map(i => '• ' + i.name + (i.qty ? ' (' + i.qty + ')' : '')).join('\n'))}">📅 Pasar a Google Calendar con la lista</a></p>` : ''}
-    <h2>Por comprar (${pend.length})</h2>
-    ${pend.length ? `<ul class="shop">${pend.map(li).join('')}</ul>` : `<div class="empty"><span class="em">🛒</span>Todo comprado. ¡Bien ahí!</div>`}
-    ${got.length ? `<h2>Ya en el carrito (${got.length})</h2><ul class="shop">${got.map(li).join('')}</ul>
-      <div class="row"><button class="btn" id="clearShop">🧹 Borrar lo comprado</button></div>` : ''}`;
+  const li = i => `<li class="${i.done ? 'done' : ''}"><input type="checkbox" data-shop="${i.id}" ${i.done ? 'checked' : ''} aria-label="${esc(i.name)}">
+    <span>${esc(i.name)}</span>${i.qty ? `<small>${esc(i.qty)}</small>` : ''}<button class="x" data-delshop="${i.id}" aria-label="Quitar">${ic('x')}</button></li>`;
+  return `<div style="--c:${SECTIONS.mercado.c}">
+    <form class="adder" id="shopForm">
+      <input name="name" id="s-name" placeholder="¿Qué hay que comprar?" autocomplete="off" required>
+      <input name="qty" id="s-qty" class="qty" placeholder="Cant.">
+      <button class="btn main" aria-label="Agregar">${ic('plus')}</button></form>
+    <div class="panel"><div class="when">${secIcon('mercado', 'sm')}<span class="txt"><b>Día de mercar</b></span>
+      <input type="datetime-local" id="shopRemind" value="${esc(db.shopRemind)}" aria-label="Día de mercar"></div></div>
+    ${db.shopRemind ? `<div style="margin-top:12px">${calA('Ir a mercar', db.shopRemind, pend.map(i => '• ' + i.name + (i.qty ? ' (' + i.qty + ')' : '')).join('\n'), 'Pasar a Google Calendar con la lista')}</div>` : ''}
+    <div class="label"><h2>Por comprar</h2><span>${pend.length}</span></div>
+    ${pend.length ? `<div class="panel list"><ul class="checks">${pend.map(li).join('')}</ul></div>`
+      : `<div class="empty">${secIcon('mercado')}<b>Lista al día</b>Escribe arriba lo que haga falta.</div>`}
+    ${got.length ? `<div class="label"><h2>En el carrito</h2><span>${got.length}</span></div>
+      <div class="panel list"><ul class="checks">${got.map(li).join('')}</ul></div>
+      <div class="actions"><button class="btn" id="clearShop">${ic('trash')}Borrar lo comprado</button></div>` : ''}
+    </div>`;
 }
 
 // ---------- Eventos de la vista ----------
+function bindCards(root) {
+  root.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go({ name: b.dataset.go }));
+  root.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { const n = db.notes.find(x => x.id === b.dataset.edit); noteForm(n.sec, n); });
+}
 function bindView() {
   const v = $('#view');
-  v.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go({ name: b.dataset.go }));
-  v.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { const n = db.notes.find(x => x.id === b.dataset.edit); noteForm(n.sec, n); });
+  bindCards(v);
   v.querySelectorAll('[data-filter]').forEach(b => b.onclick = () => { filter = b.dataset.filter; render(); });
   v.querySelectorAll('[data-goal]').forEach(b => b.onclick = () => goalForm(db.goals.find(g => g.id === b.dataset.goal)));
   v.querySelectorAll('[data-deposit]').forEach(b => b.onclick = () => depositForm(db.goals.find(g => g.id === b.dataset.deposit)));
   v.querySelectorAll('[data-history]').forEach(b => b.onclick = () => historySheet(db.goals.find(g => g.id === b.dataset.history)));
   v.querySelectorAll('[data-step]').forEach(c => c.onchange = () => {
     const [id, i] = c.dataset.step.split(':'); const g = db.goals.find(x => x.id === id);
-    g.steps[i].done = c.checked; save(); render(); if (goalDone(g)) toast('🎉 ¡Cumpliste la meta!');
+    g.steps[i].done = c.checked; save(); render(); if (goalDone(g)) toast('¡Cumpliste la meta!');
   });
   v.querySelectorAll('[data-shop]').forEach(c => c.onchange = () => { db.shop.find(i => i.id === c.dataset.shop).done = c.checked; save(); render(); });
   v.querySelectorAll('[data-delshop]').forEach(b => b.onclick = () => { db.shop = db.shop.filter(i => i.id !== b.dataset.delshop); save(); render(); });
@@ -540,7 +686,7 @@ function bindView() {
   if (sf) {
     sf.onsubmit = e => {
       e.preventDefault(); const d = Object.fromEntries(new FormData(sf));
-      db.shop.push({ id: uid(), name: d.name.trim(), qty: d.qty.trim(), done: false }); save(); render(); $('#shopForm input').focus();
+      db.shop.push({ id: uid(), name: d.name.trim(), qty: d.qty.trim(), done: false }); save(); render(); $('#s-name').focus();
     };
     $('#shopRemind').onchange = e => { db.shopRemind = e.target.value; db.shopNotified = false; save(); render(); };
     const cl = $('#clearShop'); if (cl) cl.onclick = () => { db.shop = db.shop.filter(i => !i.done); save(); render(); };
@@ -549,36 +695,40 @@ function bindView() {
   if (q) q.oninput = () => {
     $('#results').innerHTML = searchResults(q.value);
     $('#homeBody').hidden = !!q.value.trim();
-    $('#results').querySelectorAll('[data-edit]').forEach(b => b.onclick = () => { const n = db.notes.find(x => x.id === b.dataset.edit); noteForm(n.sec, n); });
-    $('#results').querySelectorAll('[data-go]').forEach(b => b.onclick = () => go({ name: b.dataset.go }));
+    bindCards($('#results'));
   };
 }
 $('#fab').onclick = () => route.name === 'metas' ? goalForm() : noteForm(route.name);
 
 // ---------- Hoja (formularios) ----------
-function openSheet(html) { $('#sheet').innerHTML = html; $('#sheetBg').classList.add('open'); }
+function openSheet(html) {
+  $('#sheet').innerHTML = html; $('#sheetBg').classList.add('open'); $('#sheet').scrollTop = 0;
+  const x = $('#closeX'); if (x) x.onclick = closeSheet;
+}
 function closeSheet() { $('#sheetBg').classList.remove('open'); }
-function askConfirm(msg, onYes, onNo) {
-  openSheet(`<h2>${esc(msg)}</h2><div class="row"><button class="btn danger" id="yes">Sí, borrar</button><button class="btn" id="no">Cancelar</button></div>`);
-  if (msg.startsWith('Esto reemplaza')) $('#yes').textContent = 'Sí, restaurar';
+$('#sheetBg').onclick = e => { if (e.target.id === 'sheetBg') closeSheet(); };
+// Confirmación dentro de la app (los navegadores embebidos bloquean confirm()).
+function askConfirm(msg, onYes, onNo, yesLabel = 'Sí, borrar') {
+  openSheet(`<div class="grab"></div><div class="shead"><h2>${esc(msg)}</h2></div>
+    <div class="row"><button class="btn main" id="yes" style="flex:1;justify-content:center">${yesLabel}</button>
+    <button class="btn" id="no" style="flex:1;justify-content:center">Cancelar</button></div>`);
   $('#yes').onclick = onYes;
   $('#no').onclick = () => onNo ? onNo() : closeSheet();
 }
-$('#sheetBg').onclick = e => { if (e.target.id === 'sheetBg') closeSheet(); };
 
 // ---------- Opciones: copia de seguridad, tema, notificaciones ----------
-$('#menuBtn').onclick = () => {
+function openSettings() {
   const notif = 'Notification' in window;
-  openSheet(`<h2>⚙️ Opciones</h2>
-    <p class="meta">Todo se guarda en este celular. Haz una copia de seguridad de vez en cuando para no perder nada (guárdala en Drive o mándatela por WhatsApp).</p>
-    <div class="row"><button class="btn main" id="exp">⬇️ Descargar copia</button><button class="btn" id="imp">⬆️ Restaurar copia</button><button class="btn" id="copy">📋 Copiar copia</button><button class="btn" id="paste">📥 Pegar copia</button></div>
-    <h2 style="margin-top:20px">Recordatorios</h2>
-    <p class="meta">Con la app abierta te aviso cuando llegue la hora. Para que suene aunque esté cerrada, usa el botón “Pasar a Google Calendar” de cada recordatorio.</p>
-    ${notif ? `<div class="row"><button class="btn" id="perm">🔔 ${Notification.permission === 'granted' ? 'Avisos activados' : 'Activar avisos'}</button></div>` : ''}
-    <h2 style="margin-top:20px">Apariencia</h2>
-    <div class="chips">${[['', 'Automático'], ['light', '☀️ Claro'], ['dark', '🌙 Oscuro']].map(([v, l]) => `<button class="chip ${db.theme === v ? 'on' : ''}" data-theme="${v}">${l}</button>`).join('')}</div>
-    <div class="row"><button class="btn full" id="close">Listo</button></div>`);
-  $('#close').onclick = closeSheet;
+  openSheet(sheetHead('Opciones') + `
+    <div class="setting"><h3>Copia de seguridad</h3>
+      <p>Todo se guarda en este celular. Haz una copia de vez en cuando y guárdala en Drive o en WhatsApp.</p>
+      <div class="row"><button class="btn main" id="exp">Descargar copia</button><button class="btn" id="imp">Restaurar desde archivo</button></div>
+      <div class="row" style="margin-top:8px"><button class="btn" id="copy">Copiar como texto</button><button class="btn" id="paste">Pegar copia</button></div></div>
+    <div class="setting"><h3>Recordatorios</h3>
+      <p>Con la app abierta te aviso cuando llegue la hora. Para que suene aunque esté cerrada, usa “Pasar a Google Calendar”.</p>
+      ${notif ? `<button class="btn" id="perm">${Notification.permission === 'granted' ? 'Avisos activados' : 'Activar avisos'}</button>` : ''}</div>
+    <div class="setting"><h3>Apariencia</h3>
+      <div class="chips">${[['', 'Automático'], ['light', 'Claro'], ['dark', 'Oscuro']].map(([v, l]) => `<button class="chip ${db.theme === v ? 'on' : ''}" data-theme="${v}">${l}</button>`).join('')}</div></div>`);
   $('#exp').onclick = () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 1)], { type: 'application/json' }));
@@ -586,26 +736,26 @@ $('#menuBtn').onclick = () => {
   };
   $('#imp').onclick = () => $('#importFile').click();
   $('#paste').onclick = () => {
-    openSheet(`<h2>📥 Pegar copia</h2><label class="field"><span>Pega aquí el texto de tu copia</span><textarea id="pasted"></textarea></label>
+    openSheet(sheetHead('Pegar copia') + `<label class="field"><span>Pega aquí el texto de tu copia</span><textarea id="pasted"></textarea></label>
       <button class="btn main full" id="doPaste">Restaurar</button>`);
     $('#doPaste').onclick = () => restore($('#pasted').value);
   };
   $('#copy').onclick = () => {
     try {
-      navigator.clipboard.writeText(JSON.stringify(db)).then(() => toast('Copia copiada 📋 Pégala en una nota o en WhatsApp'), () => toast('No se pudo copiar'));
+      navigator.clipboard.writeText(JSON.stringify(db)).then(() => toast('Copia copiada. Pégala en una nota o en WhatsApp'), () => toast('No se pudo copiar'));
     } catch (e) { toast('No se pudo copiar'); }
   };
-  if (notif) $('#perm').onclick = () => Notification.requestPermission().then(p => { toast(p === 'granted' ? 'Avisos activados 🔔' : 'No se dio permiso'); closeSheet(); });
-  $('#sheet').querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { db.theme = b.dataset.theme; save(); applyTheme(); $('#menuBtn').onclick(); });
-};
+  if (notif) $('#perm').onclick = () => Notification.requestPermission().then(p => { toast(p === 'granted' ? 'Avisos activados' : 'No se dio permiso'); closeSheet(); });
+  $('#sheet').querySelectorAll('[data-theme]').forEach(b => b.onclick = () => { db.theme = b.dataset.theme; save(); applyTheme(); openSettings(); });
+}
 function restore(text) {
   return Promise.resolve(text).then(t => {
     const data = JSON.parse(t);
     if (!Array.isArray(data.notes)) throw new Error();
     askConfirm('Esto reemplaza lo que tienes ahora con la copia. ¿Seguir?', () => {
       db = Object.assign({ notes: [], goals: [], shop: [], shopRemind: '', theme: '' }, data);
-      save(); applyTheme(); closeSheet(); go({ name: 'home' }); toast('Copia restaurada ✅');
-    });
+      save(); applyTheme(); closeSheet(); go({ name: 'home' }); toast('Copia restaurada');
+    }, null, 'Sí, restaurar');
   }).catch(() => toast('Eso no es una copia válida'));
 }
 $('#importFile').onchange = e => {
@@ -628,13 +778,13 @@ function checkReminders() {
   const now = new Date();
   const due = [];
   const isDue = w => w && new Date(w.length === 10 ? w + 'T08:00' : w) <= now;
-  db.notes.forEach(n => { if (isDue(n.remind) && !n.notified) { n.notified = true; due.push(SECTIONS[n.sec].em + ' ' + noteTitle(n)); } });
-  db.goals.forEach(g => { if (isDue(g.remind) && !g.notified) { g.notified = true; due.push('🎯 ' + g.title); } });
-  if (isDue(db.shopRemind) && !db.shopNotified) { db.shopNotified = true; due.push('🛒 Ir a mercar'); }
+  db.notes.forEach(n => { if (isDue(n.remind) && !n.notified) { n.notified = true; due.push(SECTIONS[n.sec].name + ': ' + noteTitle(n)); } });
+  db.goals.forEach(g => { if (isDue(g.remind) && !g.notified) { g.notified = true; due.push('Meta: ' + g.title); } });
+  if (isDue(db.shopRemind) && !db.shopNotified) { db.shopNotified = true; due.push('Ir a mercar'); }
   if (!due.length) return;
   save();
   due.forEach(text => {
-    toast('⏰ ' + text);
+    toast('Recordatorio: ' + text);
     if ('Notification' in window && Notification.permission === 'granted') {
       const opts = { body: text, icon: 'icon-192.png', badge: 'icon-192.png' };
       if (swReg) swReg.showNotification('Mi Segundo Cerebro', opts).catch(() => {});
