@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#4f46e5">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi Cerebro">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>Mi Segundo Cerebro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&display=swap">
@@ -594,6 +599,11 @@ function applyTheme() {
 }
 
 // ---------- Avisos con la app abierta ----------
+// El service worker deja la app instalada en el celular y funcionando sin internet.
+let swReg = null;
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').then(r => { swReg = r; }).catch(() => {});
+}
 function checkReminders() {
   const now = new Date();
   const due = [];
@@ -606,7 +616,9 @@ function checkReminders() {
   due.forEach(text => {
     toast('⏰ ' + text);
     if ('Notification' in window && Notification.permission === 'granted') {
-      try { new Notification('Mi Segundo Cerebro', { body: text }); } catch (e) {}
+      const opts = { body: text, icon: 'icon-192.png', badge: 'icon-192.png' };
+      if (swReg) swReg.showNotification('Mi Segundo Cerebro', opts).catch(() => {});
+      else try { new Notification('Mi Segundo Cerebro', opts); } catch (e) {}
     }
   });
 }
