@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4f4f3">
+<meta name="theme-color" content="#050a08">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Mi Cerebro">
@@ -14,38 +14,59 @@
 <title>Mi Segundo Cerebro</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Onest:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600&family=Onest:wght@400;500;600&display=swap">
 <style>
-  /* Una columna tipo app: encabezado grande, superficies blancas planas, cada sección con su color solo en el ícono. */
+  /* Liquid glass: fondo oscuro con luces verdes, superficies de vidrio esmerilado y un solo acento verde neón. */
   :root {
-    --bg: #f4f4f3;
-    --surface: #ffffff;
-    --ink: #111111;
-    --muted: #76767a;
-    --line: #e6e6e4;
-    --field: #f1f1f0;
-    --brand: #111111;
-    --on-brand: #ffffff;
-    --gold: #111111;
-    --good: #2f7a57;
-    --warn: #a86a12;
-    --bad: #b5463e;
-    --display: "Fraunces", Georgia, "Times New Roman", serif;
+    --bg: #050a08;
+    --ink: #f2f7f4;
+    --muted: #9db0a6;
+    --glass: linear-gradient(140deg, rgba(255,255,255,.11), rgba(255,255,255,.035));
+    --glass-solid: rgba(18,28,23,.78);
+    --edge: rgba(255,255,255,.13);
+    --hi: rgba(255,255,255,.2);
+    --line: rgba(255,255,255,.09);
+    --field: rgba(255,255,255,.07);
+    --check: rgba(255,255,255,.32);
+    --neon: #39ff88;
+    --neon-ink: #39ff88;
+    --on-neon: #03140a;
+    --glow: rgba(57,255,136,.42);
+    --blob1: rgba(57,255,136,.30);
+    --blob2: rgba(0,214,170,.18);
+    --blob3: rgba(57,255,136,.14);
+    --head: rgba(5,10,8,.55);
+    --scrim: rgba(0,0,0,.5);
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+    --good: #39ff88;
+    --warn: #ffd166;
+    --bad: #ff7272;
+    --display: "Sora", system-ui, -apple-system, sans-serif;
     --text: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
-    --r: 18px;
-    color-scheme: light;
+    --r: 22px;
+    color-scheme: dark;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #121212; --surface: #1b1b1b; --ink: #f2f2f2; --muted: #9a9a9e; --line: #2b2b2b;
-      --field: #232323; --brand: #f2f2f2; --on-brand: #111111; --gold: #f2f2f2; --good: #6cc196; --warn: #e2a64e; --bad: #e57b70;
-      color-scheme: dark;
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #e8efeb; --ink: #0b1510; --muted: #5a6a62;
+      --glass: linear-gradient(140deg, rgba(255,255,255,.82), rgba(255,255,255,.5)); --glass-solid: rgba(250,253,251,.86);
+      --edge: rgba(255,255,255,.9); --hi: rgba(255,255,255,.95); --line: rgba(11,21,16,.08); --field: rgba(255,255,255,.6);
+      --check: rgba(11,21,16,.25); --neon-ink: #07964a; --glow: rgba(57,255,136,.35);
+      --blob1: rgba(57,255,136,.38); --blob2: rgba(0,214,170,.2); --blob3: rgba(57,255,136,.2);
+      --head: rgba(232,239,235,.6); --scrim: rgba(10,20,15,.3); --shadow: 0 8px 26px rgba(20,50,35,.09);
+      --good: #07964a; --warn: #a86a12; --bad: #c2453c;
+      color-scheme: light;
     }
   }
-  :root[data-theme="dark"] {
-    --bg: #121212; --surface: #1b1b1b; --ink: #f2f2f2; --muted: #9a9a9e; --line: #2b2b2b;
-    --field: #232323; --brand: #f2f2f2; --on-brand: #111111; --gold: #f2f2f2; --good: #6cc196; --warn: #e2a64e; --bad: #e57b70;
-    color-scheme: dark;
+  :root[data-theme="light"] {
+    --bg: #e8efeb; --ink: #0b1510; --muted: #5a6a62;
+    --glass: linear-gradient(140deg, rgba(255,255,255,.82), rgba(255,255,255,.5)); --glass-solid: rgba(250,253,251,.86);
+    --edge: rgba(255,255,255,.9); --hi: rgba(255,255,255,.95); --line: rgba(11,21,16,.08); --field: rgba(255,255,255,.6);
+    --check: rgba(11,21,16,.25); --neon-ink: #07964a; --glow: rgba(57,255,136,.35);
+    --blob1: rgba(57,255,136,.38); --blob2: rgba(0,214,170,.2); --blob3: rgba(57,255,136,.2);
+    --head: rgba(232,239,235,.6); --scrim: rgba(10,20,15,.3); --shadow: 0 8px 26px rgba(20,50,35,.09);
+    --good: #07964a; --warn: #a86a12; --bad: #c2453c;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
@@ -55,61 +76,73 @@
     font-size: 16px; line-height: 1.5; min-height: 100vh;
     -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
   }
-  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+  /* Luces de fondo que se ven a través del vidrio */
+  #fx {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(42% 32% at 88% 6%, var(--blob1), transparent 70%),
+      radial-gradient(50% 38% at 0% 42%, var(--blob2), transparent 70%),
+      radial-gradient(55% 40% at 85% 96%, var(--blob3), transparent 70%);
+  }
+  header, main { position: relative; z-index: 1; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--head); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
   button, input, textarea, select { font: inherit; color: inherit; }
   button { cursor: pointer; }
-  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  ::placeholder { color: var(--muted); opacity: .8; }
+  :focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
   svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+  /* El vidrio: degradado translúcido, desenfoque, borde de luz arriba */
+  .icon-btn, .search input, .tile, .panel, .card, .chip, .btn, .adder {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid var(--edge);
+    box-shadow: inset 0 1px 0 var(--hi), var(--shadow);
+  }
 
   .wrap { max-width: 640px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
   /* Encabezado */
-  header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); }
+  header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; transition: background .2s; }
+  header.scrolled { background: var(--head); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%); }
   header .wrap { display: flex; align-items: center; gap: 10px; padding-block: 14px 10px; }
   .htitle { flex: 1; min-width: 0; }
-  .htitle h1 { font-family: var(--display); font-weight: 500; font-size: 24px; letter-spacing: -.01em; margin: 0; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .htitle h1 { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: -.02em; margin: 0; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .htitle p { margin: 0; color: var(--muted); font-size: 13px; }
-  .icon-btn {
-    width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
-    display: grid; place-items: center; color: var(--ink); flex: none;
-  }
-  .hero { padding-block: 6px 18px; }
-  .hero p { margin: 0; color: var(--muted); font-size: 14px; }
+  .icon-btn { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; color: var(--ink); flex: none; }
+  .hero { padding-block: 4px 18px; }
+  .hero p { margin: 0; color: var(--neon-ink); font-size: 14px; font-weight: 500; }
   .hero p::first-letter, .month::first-letter { text-transform: uppercase; }
-  .hero h1 { font-family: var(--display); font-weight: 400; font-size: 38px; letter-spacing: -.02em; line-height: 1.1; margin: 2px 0 0; text-wrap: balance; }
+  .hero h1 { font-family: var(--display); font-weight: 600; font-size: 36px; letter-spacing: -.035em; line-height: 1.1; margin: 4px 0 0; text-wrap: balance; }
 
   main { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
 
-  .search { position: relative; margin-bottom: 22px; }
-  .search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
-  .search input {
-    width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 14px;
-    padding: 13px 14px 13px 44px; outline: none; font-size: 16px;
-  }
-  .search input:focus { border-color: var(--gold); }
+  .search { position: relative; margin-bottom: 8px; }
+  .search svg { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--muted); z-index: 1; }
+  .search input { width: 100%; border-radius: 16px; padding: 14px 14px 14px 46px; outline: none; font-size: 16px; }
+  .search input:focus { border-color: var(--neon); }
 
-  .label { display: flex; justify-content: space-between; align-items: baseline; margin: 26px 2px 10px; }
+  .label { display: flex; justify-content: space-between; align-items: center; margin: 26px 4px 10px; }
   .label h2 { margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); }
   .label span { font-size: 13px; color: var(--muted); }
+  .more { border: 0; background: none; color: var(--neon-ink); font-weight: 600; font-size: 13px; padding: 2px 0; }
 
-  /* Ícono de sección: el único lugar donde aparece el color de cada sección */
+  /* Ícono de sección: trazo neón sobre vidrio */
   .chip-i {
-    width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none;
-    color: var(--ink); background: var(--field);
+    width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; flex: none;
+    color: var(--neon-ink); background: var(--field); border: 1px solid var(--edge);
   }
-  .chip-i.sm { width: 32px; height: 32px; border-radius: 10px; }
+  .chip-i svg { filter: drop-shadow(0 0 6px var(--glow)); }
+  .chip-i.sm { width: 34px; height: 34px; border-radius: 11px; }
   .chip-i.sm svg { width: 17px; height: 17px; }
 
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .tile {
-    border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 14px;
-    text-align: left; display: flex; flex-direction: column; gap: 14px; transition: transform .12s;
-  }
-  .tile:active { transform: scale(.98); }
+  .tile { border-radius: var(--r); padding: 15px; text-align: left; display: flex; flex-direction: column; gap: 14px; transition: transform .12s; }
+  .tile:active { transform: scale(.97); }
   .tile b { display: block; font-weight: 600; font-size: 16px; line-height: 1.25; }
   .tile small { color: var(--muted); font-size: 13px; }
 
-  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .panel { border-radius: var(--r); overflow: hidden; }
   .rowlink { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 0; background: none; width: 100%; text-align: left; }
   .rowlink + .rowlink { border-top: 1px solid var(--line); }
   .rowlink .txt { flex: 1; min-width: 0; }
@@ -117,10 +150,7 @@
   .rowlink .txt small { color: var(--muted); font-size: 13px; }
   .rowlink .sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px; }
 
-  .card {
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px;
-    display: block; width: 100%; text-align: left; margin-bottom: 10px;
-  }
+  .card { border-radius: var(--r); padding: 16px; display: block; width: 100%; text-align: left; margin-bottom: 10px; }
   button.card:active { transform: scale(.99); }
   .card h3 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
   .card .prev { margin: 6px 0 0; color: var(--muted); font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere;
@@ -128,71 +158,79 @@
   .card .verse { font-style: italic; }
   .foot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--muted); }
   .eyebrow { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-  .eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
+  .eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: var(--neon); box-shadow: 0 0 8px var(--glow); }
 
   .pill {
     display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 3px 10px;
-    font-size: 12.5px; font-weight: 500; background: var(--field); color: var(--ink); white-space: nowrap;
+    font-size: 12.5px; font-weight: 500; background: var(--field); border: 1px solid var(--line); color: var(--ink); white-space: nowrap;
   }
   .pill svg { width: 13px; height: 13px; }
-  .pill.ok { background: color-mix(in srgb, var(--good) 14%, var(--surface)); color: var(--good); }
-  .pill.warn { background: color-mix(in srgb, var(--warn) 14%, var(--surface)); color: var(--warn); }
-  .pill.late { background: color-mix(in srgb, var(--bad) 13%, var(--surface)); color: var(--bad); }
+  .pill.ok { color: var(--good); border-color: color-mix(in srgb, var(--good) 40%, transparent); }
+  .pill.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+  .pill.late { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
 
-  .month { font-size: 13px; font-weight: 600; color: var(--muted); margin: 22px 2px 8px; }
+  .month { font-size: 13px; font-weight: 600; color: var(--muted); margin: 22px 4px 8px; }
   .month:first-child { margin-top: 4px; }
 
-  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 6px; scrollbar-width: none; }
-  .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; white-space: nowrap; font-size: 14px; font-weight: 500; }
-  .chip.on { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; margin-bottom: 6px; scrollbar-width: none; }
+  .chip { border-radius: 999px; padding: 7px 15px; white-space: nowrap; font-size: 14px; font-weight: 500; }
+  .chip.on, .btn.main {
+    background: var(--neon); color: var(--on-neon); border-color: transparent;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 6px 22px var(--glow);
+  }
 
   .empty { text-align: center; color: var(--muted); padding: 48px 24px; }
-  .empty .chip-i { width: 56px; height: 56px; border-radius: 18px; margin: 0 auto 14px; }
+  .empty .chip-i { width: 58px; height: 58px; border-radius: 19px; margin: 0 auto 14px; }
   .empty .chip-i svg { width: 26px; height: 26px; }
   .empty b { display: block; color: var(--ink); font-size: 17px; font-weight: 600; margin-bottom: 4px; }
 
   /* Metas */
   .amount { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-  .amount strong { font-family: var(--display); font-size: 30px; font-weight: 500; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .amount strong { font-family: var(--display); font-size: 30px; font-weight: 600; letter-spacing: -.03em; font-variant-numeric: tabular-nums; color: var(--neon-ink); text-shadow: 0 0 22px var(--glow); }
   .amount span { color: var(--muted); font-size: 14px; }
   .amount em { margin-left: auto; font-style: normal; font-weight: 600; font-variant-numeric: tabular-nums; }
   .bar { height: 8px; background: var(--field); border-radius: 99px; overflow: hidden; margin: 10px 0 2px; }
-  .bar > i { display: block; height: 100%; background: var(--gold); border-radius: 99px; transition: width .4s; }
-  .plan { background: var(--field); border-radius: 12px; padding: 11px 13px; font-size: 14px; margin-top: 12px; line-height: 1.55; }
+  .bar > i { display: block; height: 100%; background: var(--neon); border-radius: 99px; box-shadow: 0 0 12px var(--glow); transition: width .4s; }
+  .plan { background: var(--field); border: 1px solid var(--line); border-radius: 14px; padding: 11px 13px; font-size: 14px; margin-top: 12px; line-height: 1.55; }
   .plan b { font-variant-numeric: tabular-nums; }
   .why { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
 
   .checks { list-style: none; padding: 0; margin: 12px 0 0; }
-  .checks li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .checks li { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); }
   .checks li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .checks li small { color: var(--muted); font-size: 13px; }
   .checks .done span { text-decoration: line-through; color: var(--muted); }
+  .checks .tap { flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; display: flex; flex-direction: column; align-items: flex-start; gap: 5px; }
+  .checks .tap span { flex: none; }
   input[type="checkbox"] {
     appearance: none; -webkit-appearance: none; width: 24px; height: 24px; margin: 0; border-radius: 50%;
-    border: 2px solid color-mix(in srgb, var(--muted) 45%, var(--surface)); background: var(--surface); flex: none; display: grid; place-items: center; transition: background .15s;
+    border: 2px solid var(--check); background: transparent; flex: none; display: grid; place-items: center; transition: background .15s, box-shadow .15s;
   }
-  input[type="checkbox"]:checked { background: var(--brand); border-color: var(--brand); }
+  input[type="checkbox"]:checked { background: var(--neon); border-color: var(--neon); box-shadow: 0 0 12px var(--glow); }
   input[type="checkbox"]:checked::after {
-    content: ""; width: 6px; height: 11px; border: solid var(--on-brand); border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg);
+    content: ""; width: 6px; height: 11px; border: solid var(--on-neon); border-width: 0 2.5px 2.5px 0; transform: translateY(-1px) rotate(45deg);
   }
 
   .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-  .btn {
-    border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 14px;
-    font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 7px;
-  }
+  .btn { border-radius: 14px; padding: 10px 15px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 7px; }
   .btn svg { width: 17px; height: 17px; }
-  .btn.main { background: var(--brand); color: var(--on-brand); border-color: var(--brand); }
   .btn.danger { color: var(--bad); }
-  .btn.full { width: 100%; justify-content: center; padding: 15px; font-size: 16px; border-radius: 14px; }
-  .btn.text { border: 0; background: none; padding: 10px 4px; }
+  .btn.full { width: 100%; justify-content: center; padding: 15px; font-size: 16px; border-radius: 16px; }
+  .btn.text { border: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; padding: 10px 4px; }
 
-  /* Mercado */
-  .adder { display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 6px; margin-bottom: 10px; }
-  .adder:focus-within { border-color: var(--gold); }
+  /* Mercado y pendientes */
+  .adder { display: flex; flex-wrap: wrap; gap: 8px; border-radius: 18px; padding: 6px; margin-bottom: 10px; }
+  .adder:focus-within { border-color: var(--neon); }
   .adder input { flex: 1; min-width: 0; border: 0; background: none; padding: 8px 10px; outline: none; font-size: 16px; }
   .adder input.qty { flex: 0 0 72px; border-left: 1px solid var(--line); }
-  .adder .btn { padding: 8px 12px; }
+  .adder .btn { padding: 8px 12px; border-radius: 13px; }
+  .whenrow { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--line); padding: 8px 8px 2px; color: var(--muted); font-size: 14px; }
+  .whenrow svg { width: 17px; height: 17px; }
+  .whenrow span { white-space: nowrap; }
+  .adder .whenrow input { flex: 1; min-width: 0; background: var(--field); border-radius: 10px; padding: 6px 8px; font-size: 14px; }
+  .todo-home .adder { margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; padding: 8px; }
+  .todo-home .checks { margin: 0; padding: 0 14px; border-top: 1px solid var(--line); }
+  .todo-home .checks li:first-child { border-top: 0; }
   .when { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 14px; }
   .when .txt { flex: 1 0 auto; }
   .when .txt b { display: block; font-weight: 600; font-size: 15px; white-space: nowrap; }
@@ -205,36 +243,39 @@
 
   .fab {
     position: fixed; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 6;
-    height: 56px; padding: 0 22px 0 18px; border-radius: 18px; border: 0; background: var(--brand); color: var(--on-brand);
+    height: 56px; padding: 0 22px 0 18px; border-radius: 20px; border: 0; background: var(--neon); color: var(--on-neon);
     display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 16px;
-    box-shadow: 0 10px 28px rgba(0,0,0,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 10px 32px var(--glow);
   }
   .fab svg { width: 22px; height: 22px; }
 
   /* Hoja inferior para formularios */
-  .sheet-bg { position: fixed; inset: 0; background: rgba(8,9,12,.42); z-index: 20; display: none; align-items: flex-end; justify-content: center; }
+  .sheet-bg { position: fixed; inset: 0; background: var(--scrim); z-index: 20; display: none; align-items: flex-end; justify-content: center; }
   .sheet-bg.open { display: flex; }
   .sheet {
-    background: var(--surface); width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
-    border-radius: 24px 24px 0 0; padding: 10px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
-    animation: up .22s cubic-bezier(.2,.8,.2,1);
+    background: var(--glass-solid); -webkit-backdrop-filter: blur(30px) saturate(170%); backdrop-filter: blur(30px) saturate(170%);
+    border: 1px solid var(--edge); border-bottom: 0; box-shadow: inset 0 1px 0 var(--hi);
+    width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto;
+    border-radius: 28px 28px 0 0; padding: 10px max(18px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px));
+    animation: up .24s cubic-bezier(.2,.8,.2,1);
   }
   @keyframes up { from { transform: translateY(30px); opacity: .4; } }
   @media (prefers-reduced-motion: reduce) { .sheet { animation: none; } .tile, .bar > i { transition: none; } }
-  .grab { width: 38px; height: 5px; border-radius: 9px; background: var(--line); margin: 0 auto 14px; }
+  .grab { width: 38px; height: 5px; border-radius: 9px; background: var(--check); margin: 0 auto 14px; }
   .shead { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .shead h2 { flex: 1; margin: 0; font-family: var(--display); font-weight: 500; font-size: 23px; letter-spacing: -.01em; line-height: 1.25; text-wrap: balance; }
+  .shead h2 { flex: 1; margin: 0; font-family: var(--display); font-weight: 600; font-size: 21px; letter-spacing: -.02em; line-height: 1.25; text-wrap: balance; }
   .field { display: block; margin-bottom: 14px; }
   .field > span { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
   .field input, .field textarea, .field select {
-    width: 100%; border: 1px solid transparent; background: var(--field); border-radius: 12px; padding: 12px 13px; outline: none; font-size: 16px;
+    width: 100%; border: 1px solid var(--line); background: var(--field); border-radius: 14px; padding: 12px 13px; outline: none; font-size: 16px;
   }
-  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--gold); background: var(--surface); }
+  .field select option { background: var(--bg); color: var(--ink); }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--neon); box-shadow: 0 0 0 3px color-mix(in srgb, var(--neon) 18%, transparent); }
   .field textarea { min-height: 130px; resize: vertical; line-height: 1.5; }
   .field textarea.short { min-height: 84px; }
   .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .hint { color: var(--muted); font-size: 13px; margin: -4px 0 14px; }
-  .cal { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; margin: -2px 0 16px; }
+  .cal { display: inline-flex; align-items: center; gap: 6px; color: var(--neon-ink); font-weight: 600; font-size: 14px; text-decoration: none; margin: -2px 0 16px; }
   .cal svg { width: 16px; height: 16px; }
   .sheet .row { display: flex; gap: 8px; flex-wrap: wrap; }
   .sheet .center { justify-content: center; margin-top: 6px; }
@@ -244,13 +285,16 @@
 
   .toast {
     position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
-    background: var(--brand); color: var(--on-brand); padding: 11px 18px; border-radius: 14px; z-index: 30;
-    font-weight: 500; font-size: 15px; max-width: calc(100% - 32px); display: none; box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    background: var(--glass-solid); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+    border: 1px solid color-mix(in srgb, var(--neon) 45%, transparent); color: var(--ink);
+    padding: 11px 18px; border-radius: 16px; z-index: 30;
+    font-weight: 500; font-size: 15px; max-width: calc(100% - 32px); display: none; box-shadow: 0 8px 28px rgba(0,0,0,.25), 0 0 18px var(--glow);
   }
   .toast.show { display: block; }
 </style>
 </head>
 <body>
+<div id="fx" aria-hidden="true"></div>
 <header><div class="wrap" id="head"></div></header>
 <main class="wrap" id="view"></main>
 <button class="fab" id="fab" hidden></button>
@@ -281,12 +325,14 @@ const ICONS = {
   coins: '<ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M9 15v2c0 1.7 2.7 3 6 3s6-1.3 6-3v-5c0-1.7-2.7-3-6-3"/>',
   edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   list: '<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',
+  check: '<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="m8.5 12 2.5 2.5 5-5"/>',
 };
 const ic = (name, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
 
 // ---------- Secciones ----------
 // Cada sección de notas define sus propios campos; "metas" y "mercado" tienen pantallas especiales.
 const SECTIONS = {
+  pendientes: { name: 'Pendientes',      icon: 'check',  c: '#39ff88', special: true },
   metas:      { name: 'Metas y ahorros', icon: 'target', c: '#3d7a5e', special: true },
   mercado:    { name: 'Mercado',         icon: 'cart',   c: '#b0673f', special: true },
   biblia:     { name: 'Biblia',          icon: 'book',   c: '#6f5a9a', add: 'Nuevo estudio bíblico',
@@ -334,7 +380,7 @@ const secIcon = (k, cls = '') => `<span class="chip-i ${cls}" style="--c:${SECTI
 const KEY = 'segundoCerebro.v1';
 let db;
 try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
-db = Object.assign({ notes: [], goals: [], shop: [], shopRemind: '', theme: '' }, db || {});
+db = Object.assign({ notes: [], goals: [], shop: [], todos: [], shopRemind: '', theme: '' }, db || {});
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(db)); }
   catch (e) { toast('No se pudo guardar. Haz una copia de seguridad.'); }
@@ -394,6 +440,7 @@ window.addEventListener('popstate', () => { if (route.name !== 'home') go({ name
 function sectionCount(k) {
   if (k === 'metas') return plural(db.goals.length, 'meta', 'metas');
   if (k === 'mercado') { const c = db.shop.filter(i => !i.done).length; return c ? `${c} por comprar` : 'Lista vacía'; }
+  if (k === 'pendientes') { const c = db.todos.filter(t => !t.done).length; return c ? `${c} por hacer` : 'Todo al día'; }
   return plural(db.notes.filter(n => n.sec === k).length, 'nota', 'notas');
 }
 function render() {
@@ -406,12 +453,13 @@ function render() {
        <div class="htitle"><h1>${sec.name}</h1><p>${sectionCount(route.name)}</p></div>`;
   if (home) $('#menuBtn').onclick = openSettings; else $('#back').onclick = () => go({ name: 'home' });
   const fab = $('#fab');
-  fab.hidden = home || route.name === 'mercado';
+  fab.hidden = home || route.name === 'mercado' || route.name === 'pendientes';
   fab.innerHTML = ic('plus') + (route.name === 'metas' ? 'Nueva meta' : 'Nueva nota');
   const v = $('#view');
   if (home) v.innerHTML = homeView();
   else if (route.name === 'metas') v.innerHTML = goalsView();
   else if (route.name === 'mercado') v.innerHTML = shopView();
+  else if (route.name === 'pendientes') v.innerHTML = todoView();
   else v.innerHTML = notesView(route.name);
   bindView();
 }
@@ -429,15 +477,17 @@ function upcoming() {
     if (g.deadline && !goalDone(g)) list.push({ when: g.deadline, text: 'Fecha límite: ' + g.title, sec: 'metas', flag: true });
   });
   if (db.shopRemind) list.push({ when: db.shopRemind, text: 'Ir a mercar', sec: 'mercado' });
+  db.todos.forEach(t => !t.done && t.when && list.push({ when: t.when, text: t.text, sec: 'pendientes' }));
   return list.filter(x => daysUntil(x.when) >= -1).sort((a, b) => toDate(a.when) - toDate(b.when)).slice(0, 5);
 }
 function homeView() {
   const today = new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
   let h = `<div class="hero"><p>${today}</p><h1>${greeting()}</h1></div>
     <div class="search">${ic('search')}<input id="q" type="search" placeholder="Buscar en todas mis notas" autocomplete="off"></div>
-    <div id="results"></div><div id="homeBody">
+    <div id="results"></div><div id="homeBody">${homeTodos()}
+    <div class="label"><h2>Secciones</h2></div>
     <div class="grid">` +
-    Object.keys(SECTIONS).map(k => `<button class="tile" data-go="${k}">${secIcon(k)}
+    Object.keys(SECTIONS).filter(k => k !== 'pendientes').map(k => `<button class="tile" data-go="${k}">${secIcon(k)}
       <span><b>${SECTIONS[k].name}</b><small>${sectionCount(k)}</small></span></button>`).join('') + `</div>`;
 
   const up = upcoming();
@@ -469,6 +519,7 @@ function searchResults(q) {
   const simple = (k, title) => `<button class="card" data-go="${k}" style="--c:${SECTIONS[k].c}"><div class="eyebrow"><i></i>${SECTIONS[k].name}</div><h3>${esc(title)}</h3></button>`;
   db.goals.forEach(g => { if ((g.title + ' ' + (g.why || '')).toLowerCase().includes(q)) hits.push(simple('metas', g.title)); });
   db.shop.forEach(i => { if (i.name.toLowerCase().includes(q)) hits.push(simple('mercado', i.name)); });
+  db.todos.forEach(t => { if (t.text.toLowerCase().includes(q)) hits.push(simple('pendientes', t.text)); });
   return `<div class="label"><h2>${plural(hits.length, 'resultado', 'resultados')}</h2></div>` +
     (hits.join('') || `<div class="empty">No encontré nada con “${esc(q)}”.</div>`);
 }
@@ -665,6 +716,56 @@ function shopView() {
     </div>`;
 }
 
+// ---------- Pendientes ----------
+// Primero lo que tiene fecha (lo más cercano arriba), después lo demás en el orden en que se anotó.
+const sortTodos = list => [...list].sort((a, b) => (a.when ? 0 : 1) - (b.when ? 0 : 1) ||
+  (a.when && b.when ? toDate(a.when) - toDate(b.when) : a.created.localeCompare(b.created)));
+function todoItem(t) {
+  return `<li class="${t.done ? 'done' : ''}"><input type="checkbox" data-todo="${t.id}" ${t.done ? 'checked' : ''} aria-label="${esc(t.text)}">
+    <button class="tap" data-edittodo="${t.id}"><span>${esc(t.text)}</span>${t.when && !t.done ? remindPill(t.when) : ''}</button>
+    <button class="x" data-deltodo="${t.id}" aria-label="Borrar">${ic('x')}</button></li>`;
+}
+function todoAdder(withDate) {
+  return `<form class="adder" id="todoForm">
+    <input name="text" id="t-text" placeholder="¿Qué tienes pendiente?" autocomplete="off" required>
+    <button class="btn main" aria-label="Agregar">${ic('plus')}</button>
+    ${withDate ? `<label class="whenrow">${ic('clock')}<span>Para cuándo</span><input type="datetime-local" name="when" id="t-when"></label>` : ''}
+  </form>`;
+}
+function homeTodos() {
+  const pend = sortTodos(db.todos.filter(t => !t.done));
+  return `<div class="label"><h2>Pendientes</h2><button class="more" data-go="pendientes">${pend.length > 4 ? `Ver todos (${pend.length})` : 'Abrir'}</button></div>
+    <div class="panel todo-home">${todoAdder(false)}${pend.length ? `<ul class="checks">${pend.slice(0, 4).map(todoItem).join('')}</ul>` : ''}</div>`;
+}
+function todoView() {
+  const pend = sortTodos(db.todos.filter(t => !t.done)), done = db.todos.filter(t => t.done);
+  return todoAdder(true) +
+    `<div class="label"><h2>Por hacer</h2><span>${pend.length}</span></div>` +
+    (pend.length ? `<div class="panel list"><ul class="checks">${pend.map(todoItem).join('')}</ul></div>`
+      : `<div class="empty">${secIcon('pendientes')}<b>Todo al día</b>Escribe arriba lo que tengas pendiente.</div>`) +
+    (done.length ? `<div class="label"><h2>Hechos</h2><span>${done.length}</span></div>
+      <div class="panel list"><ul class="checks">${done.map(todoItem).join('')}</ul></div>
+      <div class="actions"><button class="btn" id="clearTodos">${ic('trash')}Borrar los hechos</button></div>` : '');
+}
+function todoForm(t) {
+  openSheet(sheetHead('Editar pendiente', 'pendientes') + `
+    <form id="f">
+      <label class="field"><span>¿Qué hay que hacer?</span><input name="text" id="e-text" value="${esc(t.text)}" required></label>
+      <label class="field"><span>Para cuándo (opcional)</span><input type="datetime-local" name="when" id="e-when" value="${esc(t.when || '')}"></label>
+      ${t.when ? calA(t.text, t.when) : ''}
+      <button class="btn main full">Guardar</button>
+      <div class="row center"><button type="button" class="btn text danger" id="del">${ic('trash')}Borrar</button></div>
+    </form>`);
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    if (d.when !== t.when) t.notified = false;
+    t.text = d.text.trim(); t.when = d.when;
+    save(); closeSheet(); render(); toast('Guardado');
+  };
+  $('#del').onclick = () => { db.todos = db.todos.filter(x => x.id !== t.id); save(); closeSheet(); render(); toast('Pendiente borrado'); };
+}
+
 // ---------- Eventos de la vista ----------
 function bindCards(root) {
   root.querySelectorAll('[data-go]').forEach(b => b.onclick = () => go({ name: b.dataset.go }));
@@ -683,6 +784,18 @@ function bindView() {
   });
   v.querySelectorAll('[data-shop]').forEach(c => c.onchange = () => { db.shop.find(i => i.id === c.dataset.shop).done = c.checked; save(); render(); });
   v.querySelectorAll('[data-delshop]').forEach(b => b.onclick = () => { db.shop = db.shop.filter(i => i.id !== b.dataset.delshop); save(); render(); });
+  v.querySelectorAll('[data-todo]').forEach(c => c.onchange = () => {
+    db.todos.find(t => t.id === c.dataset.todo).done = c.checked; save(); render(); if (c.checked) toast('¡Hecho!');
+  });
+  v.querySelectorAll('[data-edittodo]').forEach(b => b.onclick = () => todoForm(db.todos.find(t => t.id === b.dataset.edittodo)));
+  v.querySelectorAll('[data-deltodo]').forEach(b => b.onclick = () => { db.todos = db.todos.filter(t => t.id !== b.dataset.deltodo); save(); render(); });
+  const tf = $('#todoForm');
+  if (tf) tf.onsubmit = e => {
+    e.preventDefault(); const d = Object.fromEntries(new FormData(tf));
+    db.todos.push({ id: uid(), text: d.text.trim(), when: d.when || '', done: false, created: new Date().toISOString() });
+    save(); render(); $('#t-text').focus();
+  };
+  const ct = $('#clearTodos'); if (ct) ct.onclick = () => { db.todos = db.todos.filter(t => !t.done); save(); render(); };
   const sf = $('#shopForm');
   if (sf) {
     sf.onsubmit = e => {
@@ -729,7 +842,7 @@ function openSettings() {
       <p>Con la app abierta te aviso cuando llegue la hora. Para que suene aunque esté cerrada, usa “Pasar a Google Calendar”.</p>
       ${notif ? `<button class="btn" id="perm">${Notification.permission === 'granted' ? 'Avisos activados' : 'Activar avisos'}</button>` : ''}</div>
     <div class="setting"><h3>Apariencia</h3>
-      <div class="chips">${[['', 'Claro'], ['dark', 'Oscuro']].map(([v, l]) => `<button class="chip ${(db.theme === 'dark' ? 'dark' : '') === v ? 'on' : ''}" data-theme="${v}">${l}</button>`).join('')}</div></div>`);
+      <div class="chips">${[['', 'Oscuro neón'], ['light', 'Claro']].map(([v, l]) => `<button class="chip ${(db.theme === 'light' ? 'light' : '') === v ? 'on' : ''}" data-theme="${v}">${l}</button>`).join('')}</div></div>`);
   $('#exp').onclick = () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 1)], { type: 'application/json' }));
@@ -754,7 +867,7 @@ function restore(text) {
     const data = JSON.parse(t);
     if (!Array.isArray(data.notes)) throw new Error();
     askConfirm('Esto reemplaza lo que tienes ahora con la copia. ¿Seguir?', () => {
-      db = Object.assign({ notes: [], goals: [], shop: [], shopRemind: '', theme: '' }, data);
+      db = Object.assign({ notes: [], goals: [], shop: [], todos: [], shopRemind: '', theme: '' }, data);
       save(); applyTheme(); closeSheet(); go({ name: 'home' }); toast('Copia restaurada');
     }, null, 'Sí, restaurar');
   }).catch(() => toast('Eso no es una copia válida'));
@@ -765,7 +878,7 @@ $('#importFile').onchange = e => {
   e.target.value = '';
 };
 function applyTheme() {
-  document.documentElement.dataset.theme = db.theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = db.theme === 'light' ? 'light' : 'dark';
 }
 
 // ---------- Avisos con la app abierta ----------
@@ -781,6 +894,7 @@ function checkReminders() {
   db.notes.forEach(n => { if (isDue(n.remind) && !n.notified) { n.notified = true; due.push(SECTIONS[n.sec].name + ': ' + noteTitle(n)); } });
   db.goals.forEach(g => { if (isDue(g.remind) && !g.notified) { g.notified = true; due.push('Meta: ' + g.title); } });
   if (isDue(db.shopRemind) && !db.shopNotified) { db.shopNotified = true; due.push('Ir a mercar'); }
+  db.todos.forEach(t => { if (!t.done && isDue(t.when) && !t.notified) { t.notified = true; due.push('Pendiente: ' + t.text); } });
   if (!due.length) return;
   save();
   due.forEach(text => {
@@ -794,6 +908,7 @@ function checkReminders() {
 }
 
 // ---------- Arranque ----------
+window.addEventListener('scroll', () => document.querySelector('header').classList.toggle('scrolled', window.scrollY > 4), { passive: true });
 applyTheme();
 const start = location.hash.slice(1);
 if (SECTIONS[start]) route = { name: start };
