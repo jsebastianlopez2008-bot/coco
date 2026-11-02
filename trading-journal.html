@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trading Journal</title>
+<title>Trading Journal · MGC & MCL</title>
 <style>
-  /* ---------- Tema (claro por defecto, oscuro si el sistema lo pide) ---------- */
   /* Estilo glass (cristal) con acento verde neón */
   :root{
     --bg:#040806;
@@ -18,7 +17,6 @@
     --glow:0 0 18px rgba(57,255,20,.35);
     --radius:18px;
   }
-
   *{box-sizing:border-box}
   body{
     margin:0;color:var(--text);
@@ -28,20 +26,21 @@
       radial-gradient(circle at 88% 92%, rgba(0,255,170,.14) 0%, transparent 42%),
       radial-gradient(circle at 60% 40%, rgba(20,120,60,.12) 0%, transparent 50%),
       var(--bg);
-    background-attachment:fixed;
-    min-height:100vh;
+    background-attachment:fixed;min-height:100vh;
   }
   h1{font-size:24px;margin:0;letter-spacing:-.01em}
   h2{font-size:15px;margin:0 0 12px;font-weight:650}
   .muted{color:var(--muted)}
   .sm{font-size:13px}
-  .pos{color:var(--green);text-shadow:0 0 12px rgba(57,255,20,.45)} .neg{color:var(--red);text-shadow:0 0 12px rgba(255,77,109,.35)}
+  .pos{color:var(--green);text-shadow:0 0 12px rgba(57,255,20,.45)}
+  .neg{color:var(--red);text-shadow:0 0 12px rgba(255,77,109,.35)}
 
   .app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
-  aside{background:rgba(255,255,255,.04);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);border-right:1px solid var(--border);box-shadow:inset -1px 0 0 rgba(255,255,255,.04);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:18px}
+  aside{background:rgba(255,255,255,.04);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);border-right:1px solid var(--border);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:18px}
   .brand{font-weight:750;font-size:17px;padding:0 10px}
+  .brand small{display:block;color:var(--muted);font-weight:500;font-size:12px}
   .nav{display:flex;flex-direction:column;gap:4px}
-  .nav button{background:none;border:0;text-align:left;padding:10px 12px;border-radius:10px;color:var(--muted);cursor:pointer;font:inherit;font-weight:550}
+  .nav button{background:none;border:0;text-align:left;padding:10px 12px;border-radius:10px;color:var(--muted);font:inherit;font-weight:550;cursor:pointer}
   .nav button:hover{background:var(--panel2);color:var(--text)}
   .nav button.active{background:rgba(57,255,20,.1);color:var(--accent);box-shadow:inset 3px 0 0 var(--accent)}
   .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px}
@@ -51,28 +50,29 @@
 
   .header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .between{justify-content:space-between}
   .grid{display:grid;gap:14px}
-  .stats{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .stats{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
   .two{grid-template-columns:1.3fr 1fr}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;min-width:0;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07)}
   .stat .label{color:var(--muted);font-size:13px}
   .stat .value{font-size:24px;font-weight:650;margin-top:2px;letter-spacing:-.01em}
-  .stat .sub{margin-top:2px}
 
   button{font:inherit;cursor:pointer}
   .btn{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 13px;font-weight:550}
-  .btn:hover{border-color:var(--muted)}
+  .btn:hover{border-color:var(--accent)}
   .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;box-shadow:var(--glow)}
-  .btn.primary:hover{filter:brightness(1.07)}
+  .btn.primary:hover{filter:brightness(1.08)}
   .btn.danger{color:var(--red)}
   .btn.small{padding:4px 9px;font-size:13px}
 
   input,select,textarea{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font:inherit;width:100%;min-width:0}
   input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;box-shadow:var(--glow)}
   option{background:#0a140e;color:var(--text)}
-  textarea{min-height:130px;resize:vertical}
+  textarea{min-height:120px;resize:vertical}
   label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
   label.inline{display:flex;align-items:center;gap:8px;color:var(--text);font-size:14px}
+  input[type=checkbox]{width:auto;accent-color:#39ff14}
 
   .table-wrap{overflow-x:auto}
   table{width:100%;border-collapse:collapse}
@@ -81,34 +81,40 @@
   tr:last-child td{border-bottom:0}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   .tag{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--panel2);border:1px solid var(--border);font-size:12px;color:var(--muted)}
-  .tag.long{color:var(--green);border-color:rgba(57,255,20,.35)} .tag.short{color:var(--red);border-color:rgba(255,77,109,.35)}
+  .tag.long{color:var(--green);border-color:rgba(57,255,20,.35)}
+  .tag.short{color:var(--red);border-color:rgba(255,77,109,.35)}
 
+  .today-big{font-size:40px;font-weight:700;letter-spacing:-.02em;margin:4px 0 10px}
+  .bar{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+  .bar>span{display:block;height:100%;background:var(--accent);box-shadow:var(--glow);border-radius:99px;transition:width .4s}
   .chart-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:6px}
   .chart{width:100%;height:220px;display:block}
   .chart .line{fill:none;stroke:currentColor;stroke-width:2.5;vector-effect:non-scaling-stroke}
   .chart .area{fill:currentColor;opacity:.12}
   .chart .base{stroke:var(--border);stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
-  .chart.up{color:var(--green);filter:drop-shadow(0 0 6px rgba(57,255,20,.55))} .chart.down{color:var(--red)}
+  .chart.up{color:var(--green);filter:drop-shadow(0 0 6px rgba(57,255,20,.55))}
+  .chart.down{color:var(--red)}
 
-  .alert{border:1px solid var(--amber);color:var(--amber);background:color-mix(in srgb,var(--amber) 10%,transparent);border-radius:12px;padding:12px 14px;font-size:14px}
+  .alert{border:1px solid var(--amber);color:var(--amber);background:rgba(255,214,10,.08);border-radius:12px;padding:12px 14px;font-size:14px}
+  .ok{border:1px solid var(--accent);color:var(--accent);background:rgba(57,255,20,.08);border-radius:12px;padding:12px 14px;font-size:14px;box-shadow:var(--glow)}
   .empty{color:var(--muted);text-align:center;padding:34px 10px}
   .filters{display:flex;gap:10px;flex-wrap:wrap}
   .filters select{width:auto;min-width:160px}
-
-  .rules-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
-  .rules-grid .card h2{display:flex;justify-content:space-between;align-items:center}
   .hint{font-size:12px;color:var(--muted);margin-top:6px}
-  .gen{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+
+  .sys-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .gen{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .checklist-box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px;display:grid;gap:12px}
+  .checklist{display:grid;gap:8px}
+  .check-group h3{margin:0 0 6px;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
 
   dialog{background:rgba(10,20,14,.72);backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);color:var(--text);border:1px solid var(--border);border-radius:20px;width:min(760px,94vw);padding:0;max-height:92vh;box-shadow:0 24px 80px rgba(0,0,0,.6),var(--glow)}
   dialog::backdrop{background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
-  #tradeForm{display:flex;flex-direction:column}
+  #tradeForm{display:flex;flex-direction:column;max-height:92vh}
   .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--border)}
   .modal-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:20px;overflow-y:auto}
   .modal-body .full{grid-column:1/-1}
   .modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)}
-  .checklist{display:grid;gap:8px;margin-top:6px}
-  .checklist-box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px}
 
   #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
   #toast.show{opacity:1;transform:translateX(-50%)}
@@ -117,6 +123,7 @@
     .app{grid-template-columns:minmax(0,1fr)}
     aside{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;gap:10px;padding:10px 12px;overflow-x:auto;z-index:5}
     .brand{white-space:nowrap}
+    .brand small{display:none}
     .nav{flex-direction:row;gap:2px}
     .nav button{white-space:nowrap;padding:8px 10px}
     .side-foot{margin:0 0 0 auto;flex-direction:row;flex-shrink:0}
@@ -124,15 +131,16 @@
     main{padding:16px}
     .two{grid-template-columns:minmax(0,1fr)}
     h1{font-size:21px}
+    .today-big{font-size:32px}
   }
 </style>
 </head>
 <body>
 <div class="app">
   <aside>
-    <div class="brand">📒 Trading Journal</div>
+    <div class="brand">📒 Trading Journal<small>MGC · MCL · VWAP</small></div>
     <nav class="nav">
-      <button data-view="dashboard" onclick="go('dashboard')">📊 Dashboard</button>
+      <button data-view="dashboard" onclick="go('dashboard')">📊 Hoy y resumen</button>
       <button data-view="trades" onclick="go('trades')">🧾 Trades</button>
       <button data-view="rules" onclick="go('rules')">📐 Mi sistema</button>
     </nav>
@@ -169,29 +177,40 @@
 
 <script>
 /* =========================================================
-   Datos y constantes
+   Configuración fija
    ========================================================= */
-const KEY = 'trading-journal-v1';
-const MARKETS = ['Forex', 'Cripto', 'Acciones', 'Índices', 'Futuros', 'Opciones', 'Otro'];
-const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-const EMOTIONS = ['Neutral', 'Calmo', 'Confiado', 'Ansioso', 'FOMO', 'Venganza', 'Codicioso', 'Miedo'];
+const KEY = 'journal-mgc-mcl-v1';
+// Multiplicador: cuánto vale $1 de movimiento por contrato.
+const INSTRUMENTS = {
+  MGC: { name: 'Micro Oro (MGC)', mult: 10 },
+  MCL: { name: 'Micro Petróleo (MCL)', mult: 100 }
+};
+// Reglas que tú marcas a mano en cada trade.
+const RULE_GROUPS = [
+  { key: 'vwap', title: 'VWAP' },
+  { key: 'cuadro', title: 'Mi cuadro' },
+  { key: 'noticias', title: 'Noticias' }
+];
 
 function defaultState(){
   return {
     trades: [],
-    general: { capital: 1000, riskPct: 1, maxDailyLoss: 50, maxTrades: 3 },
-    markets: {
-      'Forex': ['Esperar cierre de vela de confirmación', 'Riesgo máximo 1% del capital', 'No operar 30 min antes ni después de noticias de alto impacto'],
-      'Cripto': ['Stop colocado al entrar', 'Máximo 2 posiciones abiertas'],
-      'Acciones': ['Volumen relativo > 1.5x', 'Nunca mover el stop en contra'],
-      'Índices': ['Operar solo los primeros 60 min de la sesión'],
-      'Futuros': [], 'Opciones': [], 'Otro': []
-    },
-    days: {
-      'Lunes': ['Revisar plan semanal y calendario de noticias'],
-      'Martes': [], 'Miércoles': [], 'Jueves': [],
-      'Viernes': ['Cerrar posiciones antes del cierre', 'Sin operaciones después de las 14:00'],
-      'Sábado': [], 'Domingo': ['Revisar el diario de la semana']
+    config: { capital: 1000, meta: 100, perdidaMax: 50 },
+    horario: { inicio: '09:00', fin: '11:30' },
+    rules: {
+      vwap: [
+        'Largo solo si el precio está por encima del VWAP; corto solo si está por debajo',
+        'Esperar retesteo del VWAP antes de entrar',
+        'Stop al otro lado del VWAP o del último swing'
+      ],
+      cuadro: [
+        'Marqué mi cuadro (zona de entrada) antes de la sesión',
+        'Entré solo dentro de mi cuadro'
+      ],
+      noticias: [
+        'Revisé el calendario: sin noticias de alto impacto 30 min antes ni después',
+        'Petróleo: sin operar durante el inventario semanal de crudo (EIA)'
+      ]
     }
   };
 }
@@ -200,16 +219,16 @@ function normalize(s){
   const d = defaultState();
   return {
     trades: Array.isArray(s.trades) ? s.trades : [],
-    general: { ...d.general, ...(s.general || {}) },
-    markets: { ...d.markets, ...(s.markets || {}) },
-    days: { ...d.days, ...(s.days || {}) }
+    config: { ...d.config, ...(s.config || {}) },
+    horario: { ...d.horario, ...(s.horario || {}) },
+    rules: { ...d.rules, ...(s.rules || {}) }
   };
 }
 
 function load(){
   try{
     const raw = localStorage.getItem(KEY);
-    if(raw) return normalize(JSON.parse(raw));
+    if (raw) return normalize(JSON.parse(raw));
   }catch(e){}
   return defaultState();
 }
@@ -220,7 +239,7 @@ function save(){
 }
 
 let state = load();
-const ui = { view: 'dashboard', fMarket: '', fResult: '' };
+const ui = { view: 'dashboard', fInstr: '', fResult: '' };
 let editingId = null;
 
 /* =========================================================
@@ -232,8 +251,8 @@ const money = (n) => (n < 0 ? '-' : '') + '$' + Math.abs(n || 0).toLocaleString(
 const num = (v) => (v === '' || v == null || isNaN(Number(v))) ? null : Number(v);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const today = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
-const dayName = (dateStr) => { const d = new Date(dateStr + 'T12:00:00'); return DAYS[(d.getDay() + 6) % 7]; };
 const pnlClass = (n) => n > 0 ? 'pos' : n < 0 ? 'neg' : '';
+const fmtDate = (s) => { const [y, m, d] = s.split('-'); return `${d}/${m}/${y}`; };
 
 function toast(msg){
   const t = $('#toast');
@@ -246,31 +265,35 @@ function toast(msg){
 /* =========================================================
    Cálculos
    ========================================================= */
-// P&L: manual si lo pusiste; si no, (salida - entrada) x lado x tamaño - comisiones.
-// R: P&L dividido por el riesgo inicial (|entrada - stop| x tamaño).
+// P&L: el manual si lo pusiste; si no, (salida - entrada) x lado x contratos x multiplicador - comisiones.
+// R: P&L dividido entre el riesgo inicial (|entrada - stop| x contratos x multiplicador).
 function calc(t){
   const dir = t.side === 'Short' ? -1 : 1;
+  const mult = (INSTRUMENTS[t.instrument] || {}).mult || 1;
+  const qty = num(t.contracts) || 1;
   let pnl = 0;
   if (num(t.pnlManual) !== null) pnl = num(t.pnlManual);
   else if (num(t.entry) !== null && num(t.exit) !== null)
-    pnl = (t.exit - t.entry) * dir * (num(t.size) || 1) - (num(t.fees) || 0);
+    pnl = (t.exit - t.entry) * dir * qty * mult - (num(t.fees) || 0);
   const risk = (num(t.entry) !== null && num(t.stop) !== null)
-    ? Math.abs(t.entry - t.stop) * (num(t.size) || 1) : 0;
-  const r = risk > 0 ? pnl / risk : null;
-  return { pnl, r };
+    ? Math.abs(t.entry - t.stop) * qty * mult : 0;
+  return { pnl, r: risk > 0 ? pnl / risk : null };
 }
 
-// Reglas que aplican a un trade: las de su mercado + las de su día.
-function rulesFor(market, date){
-  return [...(state.markets[market] || []), ...(state.days[dayName(date)] || [])];
+// Horario: la hora del trade debe estar entre inicio y fin (formato HH:MM).
+function inWindow(hhmm){
+  return !!hhmm && hhmm >= state.horario.inicio && hhmm <= state.horario.fin;
 }
 
-// true = siguió todas las reglas, false = no, null = sin reglas que comprobar.
-function planState(t){
-  const rules = rulesFor(t.market, t.date);
-  if (!rules.length) return null;
+// Todas las reglas que se marcan a mano, como claves "grupo|regla".
+function checklistKeys(){
+  return RULE_GROUPS.flatMap(g => (state.rules[g.key] || []).map(r => g.key + '|' + r));
+}
+
+// Seguiste el plan = marcaste todas las reglas Y entraste en horario.
+function followed(t){
   const checked = t.checked || [];
-  return rules.every(r => checked.includes(r));
+  return checklistKeys().every(k => checked.includes(k)) && inWindow(t.time);
 }
 
 function sortedTrades(){
@@ -285,19 +308,30 @@ function metrics(list){
   const gw = wins.reduce((a, r) => a + r.pnl, 0);
   const gl = Math.abs(losses.reduce((a, r) => a + r.pnl, 0));
   const rs = rows.map(r => r.r).filter(x => x !== null);
-  const planned = rows.map(r => planState(r.t)).filter(x => x !== null);
-  let eq = state.general.capital, peak = eq, maxDD = 0;
+  let eq = state.config.capital, peak = eq, maxDD = 0;
   rows.forEach(r => { eq += r.pnl; peak = Math.max(peak, eq); maxDD = Math.max(maxDD, peak - eq); });
   return {
-    n, total, wins: wins.length, losses: losses.length,
+    n, total,
+    wins: wins.length, losses: losses.length,
     winRate: n ? wins.length / n * 100 : 0,
     pf: gl > 0 ? gw / gl : (gw > 0 ? Infinity : null),
     avgR: rs.length ? rs.reduce((a, b) => a + b, 0) / rs.length : null,
-    best: n ? Math.max(...rows.map(r => r.pnl)) : null,
-    worst: n ? Math.min(...rows.map(r => r.pnl)) : null,
+    avgTrade: n ? total / n : null,
     maxDD,
-    followPct: planned.length ? planned.filter(Boolean).length / planned.length * 100 : null
+    followPct: n ? list.filter(followed).length / n * 100 : null
   };
+}
+
+// Resumen por día: P&L, reglas seguidas y si cumpliste la meta.
+function byDay(list){
+  const map = {};
+  list.forEach(t => (map[t.date] = map[t.date] || []).push(t));
+  return Object.entries(map)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([date, ts]) => {
+      const pnl = ts.reduce((a, t) => a + calc(t).pnl, 0);
+      return { date, n: ts.length, pnl, fol: ts.filter(followed).length, goal: pnl >= state.config.meta };
+    });
 }
 
 /* =========================================================
@@ -320,13 +354,14 @@ window.addEventListener('hashchange', () => {
 });
 
 /* =========================================================
-   Dashboard
+   Hoy y resumen
    ========================================================= */
 const stat = (label, value, cls = '', sub = '') =>
-  `<div class="card stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div><div class="muted sm sub">${sub}</div></div>`;
+  `<div class="card stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div><div class="muted sm">${sub}</div></div>`;
 
-function equityChart(list, capital){
-  if (!list.length) return '<div class="empty">Aún no hay trades. Registra el primero para ver tu curva de capital.</div>';
+function equityChart(list){
+  const capital = state.config.capital;
+  if (!list.length) return '<div class="empty">Aún no hay trades. Registra el primero para ver tu curva.</div>';
   let eq = capital; const pts = [eq];
   list.forEach(t => { eq += calc(t).pnl; pts.push(eq); });
   const min = Math.min(...pts), max = Math.max(...pts), span = (max - min) || 1;
@@ -348,61 +383,87 @@ function equityChart(list, capital){
 function renderDashboard(){
   const list = sortedTrades();
   const m = metrics(list);
-  const cap = state.general.capital + m.total;
+  const days = byDay(list);
   const t = today();
-  const todayTrades = list.filter(x => x.date === t);
-  const todayPnl = todayTrades.reduce((a, x) => a + calc(x).pnl, 0);
+  const hoy = days.find(d => d.date === t) || { n: 0, pnl: 0, fol: 0, goal: false };
+  const meta = state.config.meta;
+  const pct = meta > 0 ? Math.max(0, Math.min(100, hoy.pnl / meta * 100)) : 0;
+  const faltan = meta - hoy.pnl;
 
   let alerts = '';
-  if (state.general.maxDailyLoss > 0 && todayPnl < -state.general.maxDailyLoss)
-    alerts += `<div class="alert">⚠️ Hoy llevas ${money(todayPnl)}, superaste tu pérdida diaria máxima (${money(-state.general.maxDailyLoss)}). Mejor parar por hoy.</div>`;
-  if (state.general.maxTrades > 0 && todayTrades.length >= state.general.maxTrades)
-    alerts += `<div class="alert">⚠️ Ya registraste ${todayTrades.length} trade(s) hoy. Tu límite es ${state.general.maxTrades}.</div>`;
-
-  const byMarket = MARKETS.map(mk => {
-    const mm = metrics(list.filter(x => x.market === mk));
-    return { mk, ...mm };
-  }).filter(x => x.n > 0);
-
-  const recent = [...list].reverse().slice(0, 5);
+  if (state.config.perdidaMax > 0 && hoy.pnl <= -state.config.perdidaMax)
+    alerts += `<div class="alert">⚠️ Hoy llevas ${money(hoy.pnl)}: llegaste a tu pérdida máxima (${money(-state.config.perdidaMax)}). Para por hoy.</div>`;
+  if (hoy.goal && hoy.n)
+    alerts += `<div class="ok">🎯 ¡Meta del día cumplida! Llevas ${money(hoy.pnl)} de ${money(meta)}.</div>`;
 
   $('#view-dashboard').innerHTML = `
     <div class="header">
-      <div><h1>Dashboard</h1><div class="muted sm">Tu rendimiento de un vistazo</div></div>
+      <div><h1>Hoy y resumen</h1><div class="muted sm">${fmtDate(t)} · MGC y MCL con VWAP</div></div>
       <button class="btn primary" onclick="openTrade()">+ Nuevo trade</button>
     </div>
     ${alerts}
+
+    <div class="grid two">
+      <div class="card">
+        <div class="label muted sm">P&amp;L de hoy</div>
+        <div class="today-big ${pnlClass(hoy.pnl)}">${money(hoy.pnl)}</div>
+        <div class="bar"><span style="width:${pct}%"></span></div>
+        <div class="row between sm" style="margin-top:8px">
+          <span class="muted">Meta: ${money(meta)}</span>
+          <span>${hoy.goal ? '✅ Cumplida' : faltan > 0 ? `Te faltan ${money(faltan)}` : ''}</span>
+        </div>
+        <div class="row" style="margin-top:14px">
+          <span class="tag">Trades hoy: ${hoy.n}</span>
+          <span class="tag">Reglas seguidas: ${hoy.fol}/${hoy.n}</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Por instrumento</h2>
+        ${instrumentTable(list)}
+      </div>
+    </div>
+
     <div class="grid stats">
-      ${stat('P&L neto', money(m.total), pnlClass(m.total), `${m.n} trades`)}
-      ${stat('Capital actual', money(cap), '', `Inicio: ${money(state.general.capital)}`)}
+      ${stat('P&L total', money(m.total), pnlClass(m.total), `${m.n} trades`)}
+      ${stat('Capital actual', money(state.config.capital + m.total), '', `Inicio: ${money(state.config.capital)}`)}
       ${stat('Win rate', m.winRate.toFixed(1) + '%', '', `${m.wins} ganadoras · ${m.losses} perdedoras`)}
       ${stat('Profit factor', m.pf === null ? '—' : m.pf === Infinity ? '∞' : m.pf.toFixed(2), '', 'Ganancias / pérdidas')}
-      ${stat('R promedio', m.avgR === null ? '—' : m.avgR.toFixed(2) + 'R', pnlClass(m.avgR), 'Por trade')}
-      ${stat('Máx. drawdown', m.n ? money(-m.maxDD) : '—', m.maxDD > 0 ? 'neg' : '', 'Peor caída desde un pico')}
-      ${stat('Seguimiento del plan', m.followPct === null ? '—' : m.followPct.toFixed(0) + '%', '', 'Trades con todas las reglas')}
+      ${stat('Seguí el plan', m.followPct === null ? '—' : m.followPct.toFixed(0) + '%', '', 'Trades con todas las reglas')}
+      ${stat('Máx. drawdown', m.n ? money(-m.maxDD) : '—', m.maxDD > 0 ? 'neg' : '', 'Peor caída')}
     </div>
+
     <div class="grid two">
       <div class="card">
         <h2>Curva de capital</h2>
-        ${equityChart(list, state.general.capital)}
+        ${equityChart(list)}
       </div>
       <div class="card">
-        <h2>Por mercado</h2>
-        ${byMarket.length ? `
+        <h2>Días</h2>
+        ${days.length ? `
           <div class="table-wrap"><table>
-            <thead><tr><th>Mercado</th><th class="num">Trades</th><th class="num">Win</th><th class="num">P&amp;L</th></tr></thead>
-            <tbody>${byMarket.map(x => `
-              <tr><td>${esc(x.mk)}</td><td class="num">${x.n}</td>
-              <td class="num">${x.winRate.toFixed(0)}%</td>
-              <td class="num ${pnlClass(x.total)}">${money(x.total)}</td></tr>`).join('')}
+            <thead><tr><th>Día</th><th class="num">P&amp;L</th><th class="num">Reglas</th><th>Meta</th></tr></thead>
+            <tbody>${days.slice(0, 10).map(d => `
+              <tr><td>${fmtDate(d.date)}</td>
+              <td class="num ${pnlClass(d.pnl)}">${money(d.pnl)}</td>
+              <td class="num">${d.fol}/${d.n}</td>
+              <td>${d.goal ? '✅' : '❌'}</td></tr>`).join('')}
             </tbody></table></div>`
-          : '<div class="empty">Sin datos todavía</div>'}
+          : '<div class="empty">Sin días registrados</div>'}
       </div>
-    </div>
-    <div class="card">
-      <h2>Últimos trades</h2>
-      ${recent.length ? tradesTable(recent, false) : '<div class="empty">No hay trades registrados.</div>'}
     </div>`;
+}
+
+function instrumentTable(list){
+  const rows = Object.keys(INSTRUMENTS).map(k => ({ k, ...metrics(list.filter(t => t.instrument === k)) })).filter(x => x.n > 0);
+  if (!rows.length) return '<div class="empty">Sin trades todavía</div>';
+  return `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Instrumento</th><th class="num">Trades</th><th class="num">Win</th><th class="num">P&amp;L</th></tr></thead>
+      <tbody>${rows.map(x => `
+        <tr><td><strong>${x.k}</strong></td><td class="num">${x.n}</td>
+        <td class="num">${x.winRate.toFixed(0)}%</td>
+        <td class="num ${pnlClass(x.total)}">${money(x.total)}</td></tr>`).join('')}
+      </tbody></table></div>`;
 }
 
 /* =========================================================
@@ -412,21 +473,20 @@ function tradesTable(list, withActions = true){
   return `
     <div class="table-wrap"><table>
       <thead><tr>
-        <th>Fecha</th><th>Mercado</th><th>Activo</th><th>Lado</th><th>Setup</th>
-        <th class="num">P&amp;L</th><th class="num">R</th><th>Plan</th>${withActions ? '<th></th>' : ''}
+        <th>Fecha</th><th>Hora</th><th>Instr.</th><th>Lado</th><th class="num">Cont.</th>
+        <th class="num">P&amp;L</th><th class="num">R</th><th>Reglas</th>${withActions ? '<th></th>' : ''}
       </tr></thead>
       <tbody>${list.map(t => {
         const { pnl, r } = calc(t);
-        const ps = planState(t);
         return `<tr>
-          <td>${esc(t.date)}${t.time ? ' <span class="muted">' + esc(t.time) + '</span>' : ''}</td>
-          <td>${esc(t.market)}</td>
-          <td><strong>${esc(t.symbol)}</strong></td>
+          <td>${fmtDate(t.date)}</td>
+          <td>${esc(t.time)}</td>
+          <td><strong>${esc(t.instrument)}</strong></td>
           <td><span class="tag ${t.side === 'Short' ? 'short' : 'long'}">${esc(t.side)}</span></td>
-          <td class="muted">${esc(t.setup)}</td>
+          <td class="num">${num(t.contracts) || 1}</td>
           <td class="num ${pnlClass(pnl)}">${money(pnl)}</td>
           <td class="num">${r === null ? '—' : r.toFixed(2) + 'R'}</td>
-          <td>${ps === null ? '<span class="muted">—</span>' : ps ? '✅' : '❌'}</td>
+          <td>${followed(t) ? '✅ Sí' : '❌ No'}</td>
           ${withActions ? `<td style="text-align:right">
             <button class="btn small" onclick="openTrade('${t.id}')">Editar</button>
             <button class="btn small danger" onclick="deleteTrade('${t.id}')">Borrar</button>
@@ -438,9 +498,11 @@ function tradesTable(list, withActions = true){
 
 function renderTrades(){
   let list = sortedTrades().reverse();
-  if (ui.fMarket) list = list.filter(t => t.market === ui.fMarket);
+  if (ui.fInstr) list = list.filter(t => t.instrument === ui.fInstr);
   if (ui.fResult === 'win') list = list.filter(t => calc(t).pnl > 0);
   if (ui.fResult === 'loss') list = list.filter(t => calc(t).pnl < 0);
+  if (ui.fResult === 'plan') list = list.filter(followed);
+  if (ui.fResult === 'noplan') list = list.filter(t => !followed(t));
 
   $('#view-trades').innerHTML = `
     <div class="header">
@@ -449,78 +511,80 @@ function renderTrades(){
     </div>
     <div class="card">
       <div class="filters" style="margin-bottom:14px">
-        <select onchange="ui.fMarket=this.value;renderTrades()">
-          <option value="">Todos los mercados</option>
-          ${MARKETS.map(m => `<option ${m === ui.fMarket ? 'selected' : ''}>${m}</option>`).join('')}
+        <select onchange="ui.fInstr=this.value;renderTrades()">
+          <option value="">Todos los instrumentos</option>
+          ${Object.keys(INSTRUMENTS).map(k => `<option value="${k}" ${k === ui.fInstr ? 'selected' : ''}>${k}</option>`).join('')}
         </select>
         <select onchange="ui.fResult=this.value;renderTrades()">
-          <option value="" ${ui.fResult === '' ? 'selected' : ''}>Todos los resultados</option>
+          <option value="" ${ui.fResult === '' ? 'selected' : ''}>Todos</option>
           <option value="win" ${ui.fResult === 'win' ? 'selected' : ''}>Ganadoras</option>
           <option value="loss" ${ui.fResult === 'loss' ? 'selected' : ''}>Perdedoras</option>
+          <option value="plan" ${ui.fResult === 'plan' ? 'selected' : ''}>Seguí las reglas</option>
+          <option value="noplan" ${ui.fResult === 'noplan' ? 'selected' : ''}>No seguí las reglas</option>
         </select>
       </div>
       ${list.length ? tradesTable(list) : '<div class="empty">No hay trades con esos filtros.</div>'}
     </div>`;
 }
 
-function rulesCheckboxes(rules, checked){
-  return rules.map(r => `
-    <label class="inline"><input type="checkbox" data-rule="${esc(r)}" ${checked.includes(r) ? 'checked' : ''} style="width:auto"> ${esc(r)}</label>`).join('');
-}
-
-function getCheckedRules(){
-  return [...document.querySelectorAll('#checklistBox input[data-rule]:checked')].map(i => i.dataset.rule);
+/* =========================================================
+   Formulario de trade + checklist
+   ========================================================= */
+function getChecked(){
+  return [...document.querySelectorAll('#checklistBox input[data-key]:checked')].map(i => i.dataset.key);
 }
 
 function renderChecklist(checked){
   const f = $('#tradeForm').elements;
-  const rules = rulesFor(f.market.value, f.date.value);
   const box = $('#checklistBox');
-  if (!rules.length){
-    box.innerHTML = `<div class="muted sm">No tienes reglas para ${esc(f.market.value)} ni para este día. Puedes añadirlas en "Mi sistema".</div>`;
-    return;
-  }
+  const horarioOk = inWindow(f.time.value);
+  const horarioTxt = f.time.value
+    ? (horarioOk ? `✅ Dentro de mi horario (${state.horario.inicio}–${state.horario.fin})` : `❌ Fuera de mi horario (${state.horario.inicio}–${state.horario.fin})`)
+    : `Pon la hora para revisar tu horario (${state.horario.inicio}–${state.horario.fin})`;
+
   box.innerHTML = `
-    <h2>Checklist de mi sistema</h2>
-    <div class="checklist">${rulesCheckboxes(rules, checked)}</div>
-    <div class="hint" id="planHint"></div>`;
-  const update = () => {
-    const done = getCheckedRules();
-    const all = rules.every(r => done.includes(r));
-    $('#planHint').textContent = all ? '✅ Cumples todas las reglas' : `Marcadas: ${done.length}/${rules.length}`;
-  };
-  box.querySelectorAll('input').forEach(i => i.addEventListener('change', update));
-  update();
+    <h2 style="margin:0">Checklist</h2>
+    ${RULE_GROUPS.map(g => {
+      const rules = state.rules[g.key] || [];
+      if (!rules.length) return '';
+      return `<div class="check-group"><h3>${esc(g.title)}</h3><div class="checklist">
+        ${rules.map(r => {
+          const key = g.key + '|' + r;
+          return `<label class="inline"><input type="checkbox" data-key="${esc(key)}" ${checked.includes(key) ? 'checked' : ''}> ${esc(r)}</label>`;
+        }).join('')}
+      </div></div>`;
+    }).join('') || '<div class="muted sm">No tienes reglas escritas. Añádelas en "Mi sistema".</div>'}
+    <div class="sm ${horarioOk ? '' : 'muted'}" id="horarioHint" style="color:${f.time.value ? (horarioOk ? 'var(--green)' : 'var(--red)') : ''}">${horarioTxt}</div>`;
+
+  box.querySelectorAll('input[data-key]').forEach(i => i.addEventListener('change', () => {}));
 }
 
 function openTrade(id){
   editingId = id || null;
   const t = id ? state.trades.find(x => x.id === id) : null;
-  const v = t || { date: today(), time: '', market: 'Forex', symbol: '', side: 'Long', setup: '', entry: '', stop: '', exit: '', size: '', fees: '', pnlManual: '', emotion: 'Neutral', notes: '', checked: [] };
+  const v = t || { date: today(), time: '', instrument: 'MGC', side: 'Long', entry: '', stop: '', exit: '', contracts: 1, fees: '', pnlManual: '', notes: '', checked: [] };
   $('#tradeTitle').textContent = t ? 'Editar trade' : 'Nuevo trade';
   $('#tradeFields').innerHTML = `
     <label>Fecha<input type="date" name="date" value="${esc(v.date)}" required></label>
-    <label>Hora<input type="time" name="time" value="${esc(v.time)}"></label>
-    <label>Mercado<select name="market">${MARKETS.map(m => `<option ${m === v.market ? 'selected' : ''}>${m}</option>`).join('')}</select></label>
-    <label>Activo<input name="symbol" value="${esc(v.symbol)}" placeholder="EURUSD, BTC, AAPL…" required></label>
+    <label>Hora de entrada<input type="time" name="time" value="${esc(v.time)}" required></label>
+    <label>Instrumento<select name="instrument">${Object.keys(INSTRUMENTS).map(k => `<option value="${k}" ${k === v.instrument ? 'selected' : ''}>${k}</option>`).join('')}</select></label>
     <label>Lado<select name="side"><option ${v.side !== 'Short' ? 'selected' : ''}>Long</option><option ${v.side === 'Short' ? 'selected' : ''}>Short</option></select></label>
-    <label>Setup<input name="setup" value="${esc(v.setup)}" placeholder="Ruptura, pullback…"></label>
     <label>Entrada<input type="number" step="any" name="entry" value="${esc(v.entry)}"></label>
     <label>Stop loss<input type="number" step="any" name="stop" value="${esc(v.stop)}"></label>
     <label>Salida<input type="number" step="any" name="exit" value="${esc(v.exit)}"></label>
-    <label>Tamaño<input type="number" step="any" name="size" value="${esc(v.size)}" placeholder="Unidades / contratos"></label>
+    <label>Contratos<input type="number" step="1" min="1" name="contracts" value="${esc(v.contracts)}"></label>
     <label>Comisiones ($)<input type="number" step="any" name="fees" value="${esc(v.fees)}"></label>
     <label>Resultado manual ($)<input type="number" step="any" name="pnlManual" value="${esc(v.pnlManual)}" placeholder="Opcional"></label>
-    <label>Emoción<select name="emotion">${EMOTIONS.map(e => `<option ${e === v.emotion ? 'selected' : ''}>${e}</option>`).join('')}</select></label>
     <div class="full checklist-box" id="checklistBox"></div>
-    <label class="full">Notas / lecciones<textarea name="notes">${esc(v.notes)}</textarea></label>`;
+    <label class="full">Notas<textarea name="notes">${esc(v.notes)}</textarea></label>`;
 
   const f = $('#tradeForm').elements;
-  f.market.onchange = () => renderChecklist(getCheckedRules());
-  f.date.onchange = () => renderChecklist(getCheckedRules());
+  const refresh = () => renderChecklist(getChecked());
+  f.time.oninput = refresh;
+  f.time.onchange = refresh;
   renderChecklist(v.checked || []);
   $('#tradeModal').showModal();
-  f.symbol.focus();
+  f.entry.focus();
 }
 
 function closeModal(){ $('#tradeModal').close(); }
@@ -532,19 +596,16 @@ function saveTrade(e){
     id: editingId || uid(),
     date: f.date.value,
     time: f.time.value,
-    market: f.market.value,
-    symbol: f.symbol.value.trim().toUpperCase(),
+    instrument: f.instrument.value,
     side: f.side.value,
-    setup: f.setup.value.trim(),
     entry: num(f.entry.value),
     stop: num(f.stop.value),
     exit: num(f.exit.value),
-    size: num(f.size.value),
+    contracts: num(f.contracts.value) || 1,
     fees: num(f.fees.value),
     pnlManual: num(f.pnlManual.value),
-    emotion: f.emotion.value,
     notes: f.notes.value.trim(),
-    checked: getCheckedRules()
+    checked: getChecked()
   };
   if (t.pnlManual === null && !(t.entry !== null && t.exit !== null)){
     toast('Pon entrada y salida, o un resultado manual');
@@ -558,7 +619,7 @@ function saveTrade(e){
   }
   save();
   closeModal();
-  toast('Trade guardado');
+  toast(followed(t) ? 'Trade guardado · seguiste el plan ✅' : 'Trade guardado · no seguiste todo el plan');
   render();
 }
 
@@ -571,65 +632,70 @@ function deleteTrade(id){
 }
 
 /* =========================================================
-   Mi sistema (reglas)
+   Mi sistema
    ========================================================= */
 const linesOf = (s) => s.split('\n').map(x => x.trim()).filter(Boolean);
 
-function ruleCard(title, kind, key, rules){
-  return `
-    <div class="card">
-      <h2>${esc(title)}</h2>
-      <textarea oninput="setRules('${kind}','${esc(key)}',this.value)" placeholder="Una regla por línea">${esc(rules.join('\n'))}</textarea>
-      <div class="hint">${rules.length} regla(s)</div>
-    </div>`;
-}
-
-function setRules(kind, key, text){
-  state[kind][key] = linesOf(text);
+function setRules(key, text){
+  state.rules[key] = linesOf(text);
   save();
 }
 
-function setGeneral(key, value){
-  state.general[key] = num(value) ?? 0;
+function setConfig(key, value){
+  state.config[key] = num(value) ?? 0;
+  save();
+  toast('Guardado');
+}
+
+function setHorario(key, value){
+  state.horario[key] = value || (key === 'inicio' ? '09:00' : '11:30');
   save();
   toast('Guardado');
 }
 
 function renderRules(){
-  const g = state.general;
+  const c = state.config, h = state.horario;
   $('#view-rules').innerHTML = `
     <div class="header">
-      <div><h1>Mi sistema</h1><div class="muted sm">Lo que decides antes de operar. Se guarda solo.</div></div>
+      <div><h1>Mi sistema</h1><div class="muted sm">Se guarda solo al escribir.</div></div>
     </div>
+
     <div class="card">
-      <h2>Reglas generales de riesgo</h2>
+      <h2>Meta y límites del día</h2>
       <div class="gen">
-        <label>Capital inicial ($)<input type="number" step="any" value="${g.capital}" onchange="setGeneral('capital',this.value)"></label>
-        <label>Riesgo máx. por trade (%)<input type="number" step="any" value="${g.riskPct}" onchange="setGeneral('riskPct',this.value)"></label>
-        <label>Pérdida diaria máx. ($)<input type="number" step="any" value="${g.maxDailyLoss}" onchange="setGeneral('maxDailyLoss',this.value)"></label>
-        <label>Máx. trades por día<input type="number" step="1" value="${g.maxTrades}" onchange="setGeneral('maxTrades',this.value)"></label>
+        <label>Capital inicial ($)<input type="number" step="any" value="${c.capital}" onchange="setConfig('capital',this.value)"></label>
+        <label>Meta diaria ($)<input type="number" step="any" value="${c.meta}" onchange="setConfig('meta',this.value)"></label>
+        <label>Pérdida máxima diaria ($)<input type="number" step="any" value="${c.perdidaMax}" onchange="setConfig('perdidaMax',this.value)"></label>
       </div>
     </div>
 
-    <div>
-      <h2 style="font-size:17px;margin-bottom:4px">Reglas por mercado</h2>
-      <div class="muted sm" style="margin-bottom:12px">Se añaden al checklist de cada trade de ese mercado.</div>
-      <div class="rules-grid">
-        ${MARKETS.map(m => ruleCard(m, 'markets', m, state.markets[m] || [])).join('')}
+    <div class="card">
+      <h2>Mi horario</h2>
+      <div class="gen">
+        <label>Inicio<input type="time" value="${h.inicio}" onchange="setHorario('inicio',this.value)"></label>
+        <label>Fin<input type="time" value="${h.fin}" onchange="setHorario('fin',this.value)"></label>
       </div>
+      <div class="hint">Un trade fuera de esta hora no cuenta como "seguí el plan".</div>
     </div>
 
-    <div>
-      <h2 style="font-size:17px;margin-bottom:4px">Reglas por día</h2>
-      <div class="muted sm" style="margin-bottom:12px">Reglas que aplican según el día de la semana.</div>
-      <div class="rules-grid">
-        ${DAYS.map(d => ruleCard(d, 'days', d, state.days[d] || [])).join('')}
-      </div>
+    <div class="sys-grid">
+      ${ruleCard('Reglas del VWAP', 'vwap', state.rules.vwap)}
+      ${ruleCard('Mi cuadro', 'cuadro', state.rules.cuadro)}
+      ${ruleCard('Noticias', 'noticias', state.rules.noticias)}
+    </div>`;
+}
+
+function ruleCard(title, key, rules){
+  return `
+    <div class="card">
+      <h2>${esc(title)}</h2>
+      <textarea oninput="setRules('${key}',this.value)" placeholder="Una regla por línea">${esc(rules.join('\n'))}</textarea>
+      <div class="hint">${rules.length} regla(s) · una por línea</div>
     </div>`;
 }
 
 /* =========================================================
-   Backup: exportar / importar
+   Respaldo: exportar / importar
    ========================================================= */
 function exportData(){
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
