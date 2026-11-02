@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading Journal</title>
+<style>
+  /* ---------- Tema (claro por defecto, oscuro si el sistema lo pide) ---------- */
+  :root{
+    --bg:#f5f6fa; --panel:#ffffff; --panel2:#f0f2f7; --border:#e2e5ee;
+    --text:#1a1d26; --muted:#6b7280;
+    --accent:#4f6bff; --green:#16a34a; --red:#dc2626; --amber:#d97706;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --border:#2a2f3a;
+      --text:#e7e9ee; --muted:#8b92a1;
+      --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --border:#2a2f3a;
+    --text:#e7e9ee; --muted:#8b92a1;
+    --green:#22c55e; --red:#ef4444; --amber:#f59e0b;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  h1{font-size:24px;margin:0;letter-spacing:-.01em}
+  h2{font-size:15px;margin:0 0 12px;font-weight:650}
+  .muted{color:var(--muted)}
+  .sm{font-size:13px}
+  .pos{color:var(--green)} .neg{color:var(--red)}
+
+  .app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+  aside{background:var(--panel);border-right:1px solid var(--border);padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:18px}
+  .brand{font-weight:750;font-size:17px;padding:0 10px}
+  .nav{display:flex;flex-direction:column;gap:4px}
+  .nav button{background:none;border:0;text-align:left;padding:10px 12px;border-radius:10px;color:var(--muted);cursor:pointer;font:inherit;font-weight:550}
+  .nav button:hover{background:var(--panel2);color:var(--text)}
+  .nav button.active{background:var(--panel2);color:var(--text)}
+  .side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+  main{padding:28px;max-width:1200px;width:100%}
+  section{display:flex;flex-direction:column;gap:18px}
+  section[hidden]{display:none}
+
+  .header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .grid{display:grid;gap:14px}
+  .stats{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+  .two{grid-template-columns:1.3fr 1fr}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;min-width:0}
+  .stat .label{color:var(--muted);font-size:13px}
+  .stat .value{font-size:24px;font-weight:650;margin-top:2px;letter-spacing:-.01em}
+  .stat .sub{margin-top:2px}
+
+  button{font:inherit;cursor:pointer}
+  .btn{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 13px;font-weight:550}
+  .btn:hover{border-color:var(--muted)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  .btn.primary:hover{filter:brightness(1.07)}
+  .btn.danger{color:var(--red)}
+  .btn.small{padding:4px 9px;font-size:13px}
+
+  input,select,textarea{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font:inherit;width:100%;min-width:0}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  textarea{min-height:130px;resize:vertical}
+  label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+  label.inline{display:flex;align-items:center;gap:8px;color:var(--text);font-size:14px}
+
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--border);font-size:14px;white-space:nowrap}
+  th{color:var(--muted);font-weight:550;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  tr:last-child td{border-bottom:0}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .tag{display:inline-block;padding:2px 9px;border-radius:999px;background:var(--panel2);border:1px solid var(--border);font-size:12px;color:var(--muted)}
+  .tag.long{color:var(--green)} .tag.short{color:var(--red)}
+
+  .chart-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:6px}
+  .chart{width:100%;height:220px;display:block}
+  .chart .line{fill:none;stroke:currentColor;stroke-width:2.5;vector-effect:non-scaling-stroke}
+  .chart .area{fill:currentColor;opacity:.12}
+  .chart .base{stroke:var(--border);stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
+  .chart.up{color:var(--green)} .chart.down{color:var(--red)}
+
+  .alert{border:1px solid var(--amber);color:var(--amber);background:color-mix(in srgb,var(--amber) 10%,transparent);border-radius:12px;padding:12px 14px;font-size:14px}
+  .empty{color:var(--muted);text-align:center;padding:34px 10px}
+  .filters{display:flex;gap:10px;flex-wrap:wrap}
+  .filters select{width:auto;min-width:160px}
+
+  .rules-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+  .rules-grid .card h2{display:flex;justify-content:space-between;align-items:center}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .gen{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+
+  dialog{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:16px;width:min(760px,94vw);padding:0;max-height:92vh}
+  dialog::backdrop{background:rgba(5,8,15,.55)}
+  #tradeForm{display:flex;flex-direction:column}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:1px solid var(--border)}
+  .modal-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:20px;overflow-y:auto}
+  .modal-body .full{grid-column:1/-1}
+  .modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--border)}
+  .checklist{display:grid;gap:8px;margin-top:6px}
+  .checklist-box{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px}
+
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:99}
+  #toast.show{opacity:1;transform:translateX(-50%)}
+
+  @media (max-width:820px){
+    .app{grid-template-columns:minmax(0,1fr)}
+    aside{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;gap:10px;padding:10px 12px;overflow-x:auto;z-index:5}
+    .brand{white-space:nowrap}
+    .nav{flex-direction:row;gap:2px}
+    .nav button{white-space:nowrap;padding:8px 10px}
+    .side-foot{margin:0 0 0 auto;flex-direction:row;flex-shrink:0}
+    .side-foot .btn{white-space:nowrap}
+    main{padding:16px}
+    .two{grid-template-columns:minmax(0,1fr)}
+    h1{font-size:21px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">📒 Trading Journal</div>
+    <nav class="nav">
+      <button data-view="dashboard" onclick="go('dashboard')">📊 Dashboard</button>
+      <button data-view="trades" onclick="go('trades')">🧾 Trades</button>
+      <button data-view="rules" onclick="go('rules')">📐 Mi sistema</button>
+    </nav>
+    <div class="side-foot">
+      <button class="btn primary" onclick="openTrade()">+ Nuevo trade</button>
+      <button class="btn" onclick="exportData()">Exportar</button>
+      <button class="btn" onclick="$('#importFile').click()">Importar</button>
+      <input type="file" id="importFile" accept="application/json" hidden onchange="importData(this.files[0]); this.value=''">
+    </div>
+  </aside>
+
+  <main>
+    <section id="view-dashboard"></section>
+    <section id="view-trades" hidden></section>
+    <section id="view-rules" hidden></section>
+  </main>
+</div>
+
+<dialog id="tradeModal">
+  <form id="tradeForm" onsubmit="saveTrade(event)">
+    <div class="modal-head">
+      <h2 id="tradeTitle" style="margin:0;font-size:17px">Nuevo trade</h2>
+      <button type="button" class="btn small" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="tradeFields"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
+      <button type="submit" class="btn primary">Guardar trade</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   Datos y constantes
+   ========================================================= */
+const KEY = 'trading-journal-v1';
+const MARKETS = ['Forex', 'Cripto', 'Acciones', 'Índices', 'Futuros', 'Opciones', 'Otro'];
+const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const EMOTIONS = ['Neutral', 'Calmo', 'Confiado', 'Ansioso', 'FOMO', 'Venganza', 'Codicioso', 'Miedo'];
+
+function defaultState(){
+  return {
+    trades: [],
+    general: { capital: 1000, riskPct: 1, maxDailyLoss: 50, maxTrades: 3 },
+    markets: {
+      'Forex': ['Esperar cierre de vela de confirmación', 'Riesgo máximo 1% del capital', 'No operar 30 min antes ni después de noticias de alto impacto'],
+      'Cripto': ['Stop colocado al entrar', 'Máximo 2 posiciones abiertas'],
+      'Acciones': ['Volumen relativo > 1.5x', 'Nunca mover el stop en contra'],
+      'Índices': ['Operar solo los primeros 60 min de la sesión'],
+      'Futuros': [], 'Opciones': [], 'Otro': []
+    },
+    days: {
+      'Lunes': ['Revisar plan semanal y calendario de noticias'],
+      'Martes': [], 'Miércoles': [], 'Jueves': [],
+      'Viernes': ['Cerrar posiciones antes del cierre', 'Sin operaciones después de las 14:00'],
+      'Sábado': [], 'Domingo': ['Revisar el diario de la semana']
+    }
+  };
+}
+
+function normalize(s){
+  const d = defaultState();
+  return {
+    trades: Array.isArray(s.trades) ? s.trades : [],
+    general: { ...d.general, ...(s.general || {}) },
+    markets: { ...d.markets, ...(s.markets || {}) },
+    days: { ...d.days, ...(s.days || {}) }
+  };
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw) return normalize(JSON.parse(raw));
+  }catch(e){}
+  return defaultState();
+}
+
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }
+  catch(e){ toast('No se pudo guardar en este navegador'); }
+}
+
+let state = load();
+const ui = { view: 'dashboard', fMarket: '', fResult: '' };
+let editingId = null;
+
+/* =========================================================
+   Utilidades
+   ========================================================= */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = (n) => (n < 0 ? '-' : '') + '$' + Math.abs(n || 0).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = (v) => (v === '' || v == null || isNaN(Number(v))) ? null : Number(v);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const today = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const dayName = (dateStr) => { const d = new Date(dateStr + 'T12:00:00'); return DAYS[(d.getDay() + 6) % 7]; };
+const pnlClass = (n) => n > 0 ? 'pos' : n < 0 ? 'neg' : '';
+
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+/* =========================================================
+   Cálculos
+   ========================================================= */
+// P&L: manual si lo pusiste; si no, (salida - entrada) x lado x tamaño - comisiones.
+// R: P&L dividido por el riesgo inicial (|entrada - stop| x tamaño).
+function calc(t){
+  const dir = t.side === 'Short' ? -1 : 1;
+  let pnl = 0;
+  if (num(t.pnlManual) !== null) pnl = num(t.pnlManual);
+  else if (num(t.entry) !== null && num(t.exit) !== null)
+    pnl = (t.exit - t.entry) * dir * (num(t.size) || 1) - (num(t.fees) || 0);
+  const risk = (num(t.entry) !== null && num(t.stop) !== null)
+    ? Math.abs(t.entry - t.stop) * (num(t.size) || 1) : 0;
+  const r = risk > 0 ? pnl / risk : null;
+  return { pnl, r };
+}
+
+// Reglas que aplican a un trade: las de su mercado + las de su día.
+function rulesFor(market, date){
+  return [...(state.markets[market] || []), ...(state.days[dayName(date)] || [])];
+}
+
+// true = siguió todas las reglas, false = no, null = sin reglas que comprobar.
+function planState(t){
+  const rules = rulesFor(t.market, t.date);
+  if (!rules.length) return null;
+  const checked = t.checked || [];
+  return rules.every(r => checked.includes(r));
+}
+
+function sortedTrades(){
+  return [...state.trades].sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+}
+
+function metrics(list){
+  const rows = list.map(t => ({ t, ...calc(t) }));
+  const n = rows.length;
+  const total = rows.reduce((a, r) => a + r.pnl, 0);
+  const wins = rows.filter(r => r.pnl > 0), losses = rows.filter(r => r.pnl < 0);
+  const gw = wins.reduce((a, r) => a + r.pnl, 0);
+  const gl = Math.abs(losses.reduce((a, r) => a + r.pnl, 0));
+  const rs = rows.map(r => r.r).filter(x => x !== null);
+  const planned = rows.map(r => planState(r.t)).filter(x => x !== null);
+  let eq = state.general.capital, peak = eq, maxDD = 0;
+  rows.forEach(r => { eq += r.pnl; peak = Math.max(peak, eq); maxDD = Math.max(maxDD, peak - eq); });
+  return {
+    n, total, wins: wins.length, losses: losses.length,
+    winRate: n ? wins.length / n * 100 : 0,
+    pf: gl > 0 ? gw / gl : (gw > 0 ? Infinity : null),
+    avgR: rs.length ? rs.reduce((a, b) => a + b, 0) / rs.length : null,
+    best: n ? Math.max(...rows.map(r => r.pnl)) : null,
+    worst: n ? Math.min(...rows.map(r => r.pnl)) : null,
+    maxDD,
+    followPct: planned.length ? planned.filter(Boolean).length / planned.length * 100 : null
+  };
+}
+
+/* =========================================================
+   Navegación
+   ========================================================= */
+function go(view){ location.hash = view; }
+
+function render(){
+  document.querySelectorAll('main section').forEach(s => s.hidden = s.id !== 'view-' + ui.view);
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.view === ui.view));
+  if (ui.view === 'dashboard') renderDashboard();
+  if (ui.view === 'trades') renderTrades();
+  if (ui.view === 'rules') renderRules();
+}
+
+window.addEventListener('hashchange', () => {
+  const h = location.hash.slice(1);
+  ui.view = ['dashboard', 'trades', 'rules'].includes(h) ? h : 'dashboard';
+  render();
+});
+
+/* =========================================================
+   Dashboard
+   ========================================================= */
+const stat = (label, value, cls = '', sub = '') =>
+  `<div class="card stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div><div class="muted sm sub">${sub}</div></div>`;
+
+function equityChart(list, capital){
+  if (!list.length) return '<div class="empty">Aún no hay trades. Registra el primero para ver tu curva de capital.</div>';
+  let eq = capital; const pts = [eq];
+  list.forEach(t => { eq += calc(t).pnl; pts.push(eq); });
+  const min = Math.min(...pts), max = Math.max(...pts), span = (max - min) || 1;
+  const W = 600, H = 200, P = 10;
+  const x = i => P + i * (W - 2 * P) / Math.max(pts.length - 1, 1);
+  const y = v => H - P - (v - min) / span * (H - 2 * P);
+  const d = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const area = `${d} L${x(pts.length - 1).toFixed(1)},${H - P} L${x(0).toFixed(1)},${H - P} Z`;
+  const up = pts[pts.length - 1] >= capital;
+  return `
+    <div class="chart-meta"><span>Mín ${money(min)}</span><span>Máx ${money(max)}</span></div>
+    <svg class="chart ${up ? 'up' : 'down'}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <line class="base" x1="0" x2="${W}" y1="${y(capital).toFixed(1)}" y2="${y(capital).toFixed(1)}"/>
+      <path class="area" d="${area}"/>
+      <path class="line" d="${d}"/>
+    </svg>`;
+}
+
+function renderDashboard(){
+  const list = sortedTrades();
+  const m = metrics(list);
+  const cap = state.general.capital + m.total;
+  const t = today();
+  const todayTrades = list.filter(x => x.date === t);
+  const todayPnl = todayTrades.reduce((a, x) => a + calc(x).pnl, 0);
+
+  let alerts = '';
+  if (state.general.maxDailyLoss > 0 && todayPnl < -state.general.maxDailyLoss)
+    alerts += `<div class="alert">⚠️ Hoy llevas ${money(todayPnl)}, superaste tu pérdida diaria máxima (${money(-state.general.maxDailyLoss)}). Mejor parar por hoy.</div>`;
+  if (state.general.maxTrades > 0 && todayTrades.length >= state.general.maxTrades)
+    alerts += `<div class="alert">⚠️ Ya registraste ${todayTrades.length} trade(s) hoy. Tu límite es ${state.general.maxTrades}.</div>`;
+
+  const byMarket = MARKETS.map(mk => {
+    const mm = metrics(list.filter(x => x.market === mk));
+    return { mk, ...mm };
+  }).filter(x => x.n > 0);
+
+  const recent = [...list].reverse().slice(0, 5);
+
+  $('#view-dashboard').innerHTML = `
+    <div class="header">
+      <div><h1>Dashboard</h1><div class="muted sm">Tu rendimiento de un vistazo</div></div>
+      <button class="btn primary" onclick="openTrade()">+ Nuevo trade</button>
+    </div>
+    ${alerts}
+    <div class="grid stats">
+      ${stat('P&L neto', money(m.total), pnlClass(m.total), `${m.n} trades`)}
+      ${stat('Capital actual', money(cap), '', `Inicio: ${money(state.general.capital)}`)}
+      ${stat('Win rate', m.winRate.toFixed(1) + '%', '', `${m.wins} ganadoras · ${m.losses} perdedoras`)}
+      ${stat('Profit factor', m.pf === null ? '—' : m.pf === Infinity ? '∞' : m.pf.toFixed(2), '', 'Ganancias / pérdidas')}
+      ${stat('R promedio', m.avgR === null ? '—' : m.avgR.toFixed(2) + 'R', pnlClass(m.avgR), 'Por trade')}
+      ${stat('Máx. drawdown', m.n ? money(-m.maxDD) : '—', m.maxDD > 0 ? 'neg' : '', 'Peor caída desde un pico')}
+      ${stat('Seguimiento del plan', m.followPct === null ? '—' : m.followPct.toFixed(0) + '%', '', 'Trades con todas las reglas')}
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <h2>Curva de capital</h2>
+        ${equityChart(list, state.general.capital)}
+      </div>
+      <div class="card">
+        <h2>Por mercado</h2>
+        ${byMarket.length ? `
+          <div class="table-wrap"><table>
+            <thead><tr><th>Mercado</th><th class="num">Trades</th><th class="num">Win</th><th class="num">P&amp;L</th></tr></thead>
+            <tbody>${byMarket.map(x => `
+              <tr><td>${esc(x.mk)}</td><td class="num">${x.n}</td>
+              <td class="num">${x.winRate.toFixed(0)}%</td>
+              <td class="num ${pnlClass(x.total)}">${money(x.total)}</td></tr>`).join('')}
+            </tbody></table></div>`
+          : '<div class="empty">Sin datos todavía</div>'}
+      </div>
+    </div>
+    <div class="card">
+      <h2>Últimos trades</h2>
+      ${recent.length ? tradesTable(recent, false) : '<div class="empty">No hay trades registrados.</div>'}
+    </div>`;
+}
+
+/* =========================================================
+   Trades
+   ========================================================= */
+function tradesTable(list, withActions = true){
+  return `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Fecha</th><th>Mercado</th><th>Activo</th><th>Lado</th><th>Setup</th>
+        <th class="num">P&amp;L</th><th class="num">R</th><th>Plan</th>${withActions ? '<th></th>' : ''}
+      </tr></thead>
+      <tbody>${list.map(t => {
+        const { pnl, r } = calc(t);
+        const ps = planState(t);
+        return `<tr>
+          <td>${esc(t.date)}${t.time ? ' <span class="muted">' + esc(t.time) + '</span>' : ''}</td>
+          <td>${esc(t.market)}</td>
+          <td><strong>${esc(t.symbol)}</strong></td>
+          <td><span class="tag ${t.side === 'Short' ? 'short' : 'long'}">${esc(t.side)}</span></td>
+          <td class="muted">${esc(t.setup)}</td>
+          <td class="num ${pnlClass(pnl)}">${money(pnl)}</td>
+          <td class="num">${r === null ? '—' : r.toFixed(2) + 'R'}</td>
+          <td>${ps === null ? '<span class="muted">—</span>' : ps ? '✅' : '❌'}</td>
+          ${withActions ? `<td style="text-align:right">
+            <button class="btn small" onclick="openTrade('${t.id}')">Editar</button>
+            <button class="btn small danger" onclick="deleteTrade('${t.id}')">Borrar</button>
+          </td>` : ''}
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+}
+
+function renderTrades(){
+  let list = sortedTrades().reverse();
+  if (ui.fMarket) list = list.filter(t => t.market === ui.fMarket);
+  if (ui.fResult === 'win') list = list.filter(t => calc(t).pnl > 0);
+  if (ui.fResult === 'loss') list = list.filter(t => calc(t).pnl < 0);
+
+  $('#view-trades').innerHTML = `
+    <div class="header">
+      <div><h1>Trades</h1><div class="muted sm">${state.trades.length} registrados</div></div>
+      <button class="btn primary" onclick="openTrade()">+ Nuevo trade</button>
+    </div>
+    <div class="card">
+      <div class="filters" style="margin-bottom:14px">
+        <select onchange="ui.fMarket=this.value;renderTrades()">
+          <option value="">Todos los mercados</option>
+          ${MARKETS.map(m => `<option ${m === ui.fMarket ? 'selected' : ''}>${m}</option>`).join('')}
+        </select>
+        <select onchange="ui.fResult=this.value;renderTrades()">
+          <option value="" ${ui.fResult === '' ? 'selected' : ''}>Todos los resultados</option>
+          <option value="win" ${ui.fResult === 'win' ? 'selected' : ''}>Ganadoras</option>
+          <option value="loss" ${ui.fResult === 'loss' ? 'selected' : ''}>Perdedoras</option>
+        </select>
+      </div>
+      ${list.length ? tradesTable(list) : '<div class="empty">No hay trades con esos filtros.</div>'}
+    </div>`;
+}
+
+function rulesCheckboxes(rules, checked){
+  return rules.map(r => `
+    <label class="inline"><input type="checkbox" data-rule="${esc(r)}" ${checked.includes(r) ? 'checked' : ''} style="width:auto"> ${esc(r)}</label>`).join('');
+}
+
+function getCheckedRules(){
+  return [...document.querySelectorAll('#checklistBox input[data-rule]:checked')].map(i => i.dataset.rule);
+}
+
+function renderChecklist(checked){
+  const f = $('#tradeForm').elements;
+  const rules = rulesFor(f.market.value, f.date.value);
+  const box = $('#checklistBox');
+  if (!rules.length){
+    box.innerHTML = `<div class="muted sm">No tienes reglas para ${esc(f.market.value)} ni para este día. Puedes añadirlas en "Mi sistema".</div>`;
+    return;
+  }
+  box.innerHTML = `
+    <h2>Checklist de mi sistema</h2>
+    <div class="checklist">${rulesCheckboxes(rules, checked)}</div>
+    <div class="hint" id="planHint"></div>`;
+  const update = () => {
+    const done = getCheckedRules();
+    const all = rules.every(r => done.includes(r));
+    $('#planHint').textContent = all ? '✅ Cumples todas las reglas' : `Marcadas: ${done.length}/${rules.length}`;
+  };
+  box.querySelectorAll('input').forEach(i => i.addEventListener('change', update));
+  update();
+}
+
+function openTrade(id){
+  editingId = id || null;
+  const t = id ? state.trades.find(x => x.id === id) : null;
+  const v = t || { date: today(), time: '', market: 'Forex', symbol: '', side: 'Long', setup: '', entry: '', stop: '', exit: '', size: '', fees: '', pnlManual: '', emotion: 'Neutral', notes: '', checked: [] };
+  $('#tradeTitle').textContent = t ? 'Editar trade' : 'Nuevo trade';
+  $('#tradeFields').innerHTML = `
+    <label>Fecha<input type="date" name="date" value="${esc(v.date)}" required></label>
+    <label>Hora<input type="time" name="time" value="${esc(v.time)}"></label>
+    <label>Mercado<select name="market">${MARKETS.map(m => `<option ${m === v.market ? 'selected' : ''}>${m}</option>`).join('')}</select></label>
+    <label>Activo<input name="symbol" value="${esc(v.symbol)}" placeholder="EURUSD, BTC, AAPL…" required></label>
+    <label>Lado<select name="side"><option ${v.side !== 'Short' ? 'selected' : ''}>Long</option><option ${v.side === 'Short' ? 'selected' : ''}>Short</option></select></label>
+    <label>Setup<input name="setup" value="${esc(v.setup)}" placeholder="Ruptura, pullback…"></label>
+    <label>Entrada<input type="number" step="any" name="entry" value="${esc(v.entry)}"></label>
+    <label>Stop loss<input type="number" step="any" name="stop" value="${esc(v.stop)}"></label>
+    <label>Salida<input type="number" step="any" name="exit" value="${esc(v.exit)}"></label>
+    <label>Tamaño<input type="number" step="any" name="size" value="${esc(v.size)}" placeholder="Unidades / contratos"></label>
+    <label>Comisiones ($)<input type="number" step="any" name="fees" value="${esc(v.fees)}"></label>
+    <label>Resultado manual ($)<input type="number" step="any" name="pnlManual" value="${esc(v.pnlManual)}" placeholder="Opcional"></label>
+    <label>Emoción<select name="emotion">${EMOTIONS.map(e => `<option ${e === v.emotion ? 'selected' : ''}>${e}</option>`).join('')}</select></label>
+    <div class="full checklist-box" id="checklistBox"></div>
+    <label class="full">Notas / lecciones<textarea name="notes">${esc(v.notes)}</textarea></label>`;
+
+  const f = $('#tradeForm').elements;
+  f.market.onchange = () => renderChecklist(getCheckedRules());
+  f.date.onchange = () => renderChecklist(getCheckedRules());
+  renderChecklist(v.checked || []);
+  $('#tradeModal').showModal();
+  f.symbol.focus();
+}
+
+function closeModal(){ $('#tradeModal').close(); }
+
+function saveTrade(e){
+  e.preventDefault();
+  const f = $('#tradeForm').elements;
+  const t = {
+    id: editingId || uid(),
+    date: f.date.value,
+    time: f.time.value,
+    market: f.market.value,
+    symbol: f.symbol.value.trim().toUpperCase(),
+    side: f.side.value,
+    setup: f.setup.value.trim(),
+    entry: num(f.entry.value),
+    stop: num(f.stop.value),
+    exit: num(f.exit.value),
+    size: num(f.size.value),
+    fees: num(f.fees.value),
+    pnlManual: num(f.pnlManual.value),
+    emotion: f.emotion.value,
+    notes: f.notes.value.trim(),
+    checked: getCheckedRules()
+  };
+  if (t.pnlManual === null && !(t.entry !== null && t.exit !== null)){
+    toast('Pon entrada y salida, o un resultado manual');
+    return;
+  }
+  if (editingId){
+    const i = state.trades.findIndex(x => x.id === editingId);
+    if (i >= 0) state.trades[i] = t;
+  } else {
+    state.trades.push(t);
+  }
+  save();
+  closeModal();
+  toast('Trade guardado');
+  render();
+}
+
+function deleteTrade(id){
+  if (!confirm('¿Borrar este trade?')) return;
+  state.trades = state.trades.filter(x => x.id !== id);
+  save();
+  toast('Trade borrado');
+  render();
+}
+
+/* =========================================================
+   Mi sistema (reglas)
+   ========================================================= */
+const linesOf = (s) => s.split('\n').map(x => x.trim()).filter(Boolean);
+
+function ruleCard(title, kind, key, rules){
+  return `
+    <div class="card">
+      <h2>${esc(title)}</h2>
+      <textarea oninput="setRules('${kind}','${esc(key)}',this.value)" placeholder="Una regla por línea">${esc(rules.join('\n'))}</textarea>
+      <div class="hint">${rules.length} regla(s)</div>
+    </div>`;
+}
+
+function setRules(kind, key, text){
+  state[kind][key] = linesOf(text);
+  save();
+}
+
+function setGeneral(key, value){
+  state.general[key] = num(value) ?? 0;
+  save();
+  toast('Guardado');
+}
+
+function renderRules(){
+  const g = state.general;
+  $('#view-rules').innerHTML = `
+    <div class="header">
+      <div><h1>Mi sistema</h1><div class="muted sm">Lo que decides antes de operar. Se guarda solo.</div></div>
+    </div>
+    <div class="card">
+      <h2>Reglas generales de riesgo</h2>
+      <div class="gen">
+        <label>Capital inicial ($)<input type="number" step="any" value="${g.capital}" onchange="setGeneral('capital',this.value)"></label>
+        <label>Riesgo máx. por trade (%)<input type="number" step="any" value="${g.riskPct}" onchange="setGeneral('riskPct',this.value)"></label>
+        <label>Pérdida diaria máx. ($)<input type="number" step="any" value="${g.maxDailyLoss}" onchange="setGeneral('maxDailyLoss',this.value)"></label>
+        <label>Máx. trades por día<input type="number" step="1" value="${g.maxTrades}" onchange="setGeneral('maxTrades',this.value)"></label>
+      </div>
+    </div>
+
+    <div>
+      <h2 style="font-size:17px;margin-bottom:4px">Reglas por mercado</h2>
+      <div class="muted sm" style="margin-bottom:12px">Se añaden al checklist de cada trade de ese mercado.</div>
+      <div class="rules-grid">
+        ${MARKETS.map(m => ruleCard(m, 'markets', m, state.markets[m] || [])).join('')}
+      </div>
+    </div>
+
+    <div>
+      <h2 style="font-size:17px;margin-bottom:4px">Reglas por día</h2>
+      <div class="muted sm" style="margin-bottom:12px">Reglas que aplican según el día de la semana.</div>
+      <div class="rules-grid">
+        ${DAYS.map(d => ruleCard(d, 'days', d, state.days[d] || [])).join('')}
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+   Backup: exportar / importar
+   ========================================================= */
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `trading-journal-${today()}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function importData(file){
+  if (!file) return;
+  if (!confirm('Importar reemplazará los datos actuales en este navegador. ¿Continuar?')) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const d = JSON.parse(reader.result);
+      if (!Array.isArray(d.trades)) throw new Error('formato');
+      state = normalize(d);
+      save();
+      render();
+      toast('Datos importados');
+    }catch(e){
+      toast('Archivo no válido');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* =========================================================
+   Arranque
+   ========================================================= */
+(function init(){
+  const h = location.hash.slice(1);
+  ui.view = ['dashboard', 'trades', 'rules'].includes(h) ? h : 'dashboard';
+  render();
+})();
+</script>
+</body>
+</html>
